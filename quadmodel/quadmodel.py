@@ -153,7 +153,7 @@ class QuadLensSystem(object):
         self.clear_static_lensmodel()
 
         return
-    
+
     def get_smooth_lens_system(self):
 
         """
