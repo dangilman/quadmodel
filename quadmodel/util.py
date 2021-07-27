@@ -1,6 +1,26 @@
 import numpy as np
 from scipy.interpolate import interp1d
 
+def approx_theta_E(ximg,yimg):
+
+    dis = []
+    xinds,yinds = [0,0,0,1,1,2],[1,2,3,2,3,3]
+
+    for (i,j) in zip(xinds,yinds):
+
+        dx,dy = ximg[i] - ximg[j], yimg[i] - yimg[j]
+        dr = (dx**2+dy**2)**0.5
+        dis.append(dr)
+    dis = np.array(dis)
+
+    greatest = np.argmax(dis)
+    dr_greatest = dis[greatest]
+    dis[greatest] = 0
+
+    second_greatest = np.argmax(dis)
+    dr_second = dis[second_greatest]
+
+    return 0.5*(dr_greatest*dr_second)**0.5
 
 def ray_angles(alpha_x, alpha_y, lens_model, kwargs_lens, zsource):
     redshift_list = lens_model.redshift_list + [zsource]
