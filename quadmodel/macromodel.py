@@ -84,3 +84,4 @@ class MacroLensModel(object):
     def kwargs(self):
         _, _, kwargs = self.get_lenstronomy_args()
         return kwargs
+

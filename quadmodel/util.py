@@ -65,9 +65,6 @@ def ray_angles(alpha_x, alpha_y, lens_model, kwargs_lens, zsource):
 
     return x_angle_list, y_angle_list, tz
 
-
-
-
 def interpolate_ray_paths(x_image, y_image, lens_model, kwargs_lens, zsource,
                           terminate_at_source=False, source_x=None, source_y=None):
     """
@@ -99,9 +96,6 @@ def interpolate_ray_paths(x_image, y_image, lens_model, kwargs_lens, zsource,
         ray_angles_y.append(interp1d(tz, angle_y))
 
     return ray_angles_x, ray_angles_y
-
-
-
 
 def interpolate_ray_paths_system(x_image, y_image, lens_system,
                                  include_substructure=True, realization=None, terminate_at_source=False,

@@ -1,6 +1,4 @@
-from lenstronomywrapper.LensSystem.LensComponents.macromodel_base import ComponentBase
-
-pi = 3.14159265359
+from quadmodel.deflector_models.model_base import ComponentBase
 
 class Multipole(ComponentBase):
 
