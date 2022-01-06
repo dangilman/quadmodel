@@ -54,7 +54,7 @@ def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
 
     x = kwargs_rendering['x_wdm']
     a_wdm = 0.27 - 0.05 * (x - 0.85)
-    b_wdm = -1 * (0.5 + 0.95 * (x - 0.6))
+    b_wdm = 1 * (0.5 + 0.95 * (x - 0.6))
     c_wdm = -3.
 
     a_mc = 0.64 - 0.35 * (x - 0.7)
@@ -62,14 +62,14 @@ def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
 
     kwargs_suppresion_field = {'a_mc': a_mc, 'b_mc': b_mc}
     kwargs_rendering['a_wdm_los'] = a_wdm
-    kwargs_rendering['b_wdm_los'] = -b_wdm
+    kwargs_rendering['b_wdm_los'] = b_wdm
     kwargs_rendering['c_wdm_los'] = c_wdm
     kwargs_rendering['a_wdm_sub'] = a_wdm
-    kwargs_rendering['b_wdm_sub'] = -b_wdm
+    kwargs_rendering['b_wdm_sub'] = b_wdm
     kwargs_rendering['c_wdm_sub'] = c_wdm
     kwargs_rendering['kwargs_suppression_field'] = kwargs_suppresion_field
     kwargs_rendering['kwargs_suppression_sub'] = kwargs_suppresion_field
     kwargs_rendering['suppression_model_field'], kwargs_rendering['suppression_model_sub'] = \
         'hyperbolic', 'hyperbolic'
-    print(kwargs_rendering)
+    WDM = preset_model_from_name('WDM')
     return WDM(zlens, zsource, **kwargs_rendering)
