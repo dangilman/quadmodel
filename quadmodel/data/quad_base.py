@@ -65,7 +65,8 @@ class Quad(object):
             model = EPLShearMultipole(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude, self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
             params_sampled = np.array([gamma_macro, shear_amplitude, multipole_amplitude])
-            return model, constrain_params, optimization_routine, params_sampled
+            param_names_macro = ['gamma', 'gamma_ext', 'a4']
+            return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
         elif self._macromodel_type == 'EPL_FREE_SHEAR_MULTIPOLE':
 
@@ -80,7 +81,8 @@ class Quad(object):
                                       self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
             params_sampled = np.array([gamma_macro, shear_amplitude, multipole_amplitude])
-            return model, constrain_params, optimization_routine, params_sampled
+            param_names_macro = ['gamma', 'a4']
+            return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
         else:
             raise Exception('other macromodels not yet implemented.')
@@ -92,22 +94,25 @@ class Quad(object):
             source_size_pc = default_priors(self._sourcemodel_type)
             kwargs_source_model = {'source_model': 'GAUSSIAN'}
             source_samples = np.array(source_size_pc)
-            return source_size_pc, kwargs_source_model, source_samples
+            param_names_source = ['source_size_pc']
+            return source_size_pc, kwargs_source_model, source_samples, param_names_source
 
         elif self._sourcemodel_type == 'midIR_Gaussian':
 
             source_size_pc = default_priors(self._sourcemodel_type)
             kwargs_source_model = {'source_model': 'GAUSSIAN'}
             source_samples = np.array(source_size_pc)
-            return source_size_pc, kwargs_source_model, source_samples
+            param_names_source = ['source_size_pc']
+            return source_size_pc, kwargs_source_model, source_samples, param_names_source
 
         elif self._sourcemodel_type == 'DOUBLE_NL_Gaussian':
 
             source_size_pc, dx, dy, amp_scale, size_scale = default_priors(self._sourcemodel_type)
             kwargs_source_model = {'source_model': 'DOUBLE_GAUSSIAN', 'dx': dx, 'dy': dy, 'amp_scale': amp_scale, 'size_scale': size_scale}
             kwargs_source_model = kwargs_source_model.update(self._kwargs_source_model)
-            source_samples = np.array([source_size_pc, dy, amp_scale, size_scale])
-            return source_size_pc, kwargs_source_model, source_samples
+            source_samples = np.array([source_size_pc, dx, dy, amp_scale, size_scale])
+            param_names_source = ['source_size_pc', 'dx', 'dy', 'amp_scale', 'size_scale']
+            return source_size_pc, kwargs_source_model, source_samples, param_names_source
 
         else:
             raise Exception('other macromodels not yet implemented.')

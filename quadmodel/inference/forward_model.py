@@ -10,6 +10,20 @@ import numpy as np
 import dill
 from copy import deepcopy
 
+class SimulationOutputContainer(object):
+
+    """
+    This class contains the output of a forward modeling simulation for a single accepted set of parameters.
+    It includes the lens data class, the accepted lens system, and the corresponding set of parameters
+    """
+
+    def __init__(self, lens_data, lens_system, magnifications, parameters):
+
+        self.data = lens_data
+        self.lens_system = lens_system
+        self.parameters = parameters
+        self.magnifications = magnifications
+
 def compute_flux_ratios(lens_system, lens_data_class, constrain_params_macro, optimization_routine,
                                       source_size_pc, kwargs_source_model, verbose):
 
@@ -28,7 +42,7 @@ def compute_flux_ratios(lens_system, lens_data_class, constrain_params_macro, op
 
     return mags
 
-def forward_model(output_path, job_index, lens_name, n_keep, kwargs_sample_realization, tolerance=0.5,
+def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_realization, tolerance=0.5,
                   verbose=False, readout_steps=2, kwargs_realization_other={}):
 
     """
@@ -37,7 +51,8 @@ def forward_model(output_path, job_index, lens_name, n_keep, kwargs_sample_reali
 
     :param output_path: a string specifying the directory where output will be generated
     :param job_index: a unique integer added to output file names
-    :param lens_name: a string specifying the name of the lens data class, see class in quadmodel.data
+    :param lens_data: either a string specifying the name of the lens data class, see class in quadmodel.data, or an
+    instance of a lens data class
     :param n_keep: the number of samples to generate from the posterior; the function will run until n_keep samples are
     generated
     :param kwargs_sample_realization: a dictionary of parameters that will be sampled in the forward model
@@ -75,7 +90,11 @@ def forward_model(output_path, job_index, lens_name, n_keep, kwargs_sample_reali
         print(filename_parameters)
         print(filename_mags)
 
-    lens_data_class = load_preset_lens(lens_name)
+    if isinstance(lens_data, str):
+        lens_data_class = load_preset_lens(lens_data)
+    else:
+        lens_data_class = lens_data
+
     uncertainty_in_magnifications, keep_flux_ratio_index, magnifications, magnification_uncertainties, astrometric_uncertainty, R_ein_approx = \
         lens_data_class.uncertainty_in_magnifications, lens_data_class.keep_flux_ratio_index, lens_data_class.m, lens_data_class.delta_m, \
         lens_data_class.delta_xy, lens_data_class.approx_einstein_radius
@@ -92,13 +111,16 @@ def forward_model(output_path, job_index, lens_name, n_keep, kwargs_sample_reali
             n_kept = _m.shape[0]
         except:
             n_kept = 1
+        write_param_names = False
     else:
         n_kept = 0
         _m = None
+        write_param_names = True
 
     parameter_array = None
     mags_out = None
     saved_lens_systems = []
+    lens_data_class_sampling_list = []
     idx_init = n_kept
     readout = False
     break_loop = False
@@ -110,8 +132,13 @@ def forward_model(output_path, job_index, lens_name, n_keep, kwargs_sample_reali
     t0 = time()
 
     if verbose:
+        print('starting with '+str(n_kept)+' samples accepted, '+str(n_keep - n_kept)+' remain')
         print('existing magnifications: ', _m)
         print('samples remaining: ', n_keep - n_kept)
+
+    if n_kept >= n_keep:
+        print('\nSIMULATION ALREADY FINISHED.')
+        return
 
     # start the simulation
     while True:
@@ -127,11 +154,11 @@ def forward_model(output_path, job_index, lens_name, n_keep, kwargs_sample_reali
         lens_data_class_sampling.y += delta_y
 
         # parse the input dictionaries into arrays with parameters drawn from their respective priors
-        realization_samples, preset_model, kwargs_preset_model = setup_realization(kwargs_sample_realization, kwargs_realization_other)
+        realization_samples, preset_model, kwargs_preset_model, param_names_realization = setup_realization(kwargs_sample_realization, kwargs_realization_other)
         # setup the source model
-        source_size_pc, kwargs_source_model, source_samples = lens_data_class_sampling.generate_sourcemodel()
+        source_size_pc, kwargs_source_model, source_samples, param_names_source = lens_data_class_sampling.generate_sourcemodel()
         # load the lens macromodel defined in the data class
-        model, constrain_params_macro, optimization_routine, macromodel_samples = lens_data_class_sampling.generate_macromodel()
+        model, constrain_params_macro, optimization_routine, macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel()
         macromodel = MacroLensModel(model.component_list)
 
         # create the realization
@@ -145,7 +172,7 @@ def forward_model(output_path, job_index, lens_name, n_keep, kwargs_sample_reali
         lens_system = QuadLensSystem.shift_background_auto(lens_data_class, macromodel, zsource, realization)
 
         params = np.append(np.append(realization_samples, source_samples), macromodel_samples)
-
+        param_names = param_names_realization + param_names_source + param_names_macro + ['summary_statistic']
         mags = compute_flux_ratios(lens_system, lens_data_class_sampling, constrain_params_macro,
                                                  optimization_routine, source_size_pc, kwargs_source_model, verbose)
 
@@ -197,7 +224,7 @@ def forward_model(output_path, job_index, lens_name, n_keep, kwargs_sample_reali
             accepted_realizations_counter += 1
             n_kept += 1
             saved_lens_systems.append(lens_system)
-
+            lens_data_class_sampling_list.append(lens_data_class_sampling)
             acceptance_ratio = accepted_realizations_counter/iteration_counter
 
             if parameter_array is None:
@@ -232,6 +259,12 @@ def forward_model(output_path, job_index, lens_name, n_keep, kwargs_sample_reali
                 f.write('\n')
 
             with open(filename_parameters, 'a') as f:
+                if write_param_names:
+                    param_name_string = ''
+                    for name in param_names:
+                        param_name_string += name + ' '
+                    f.write(param_name_string+'\n')
+
                 nrows, ncols = int(parameter_array.shape[0]), int(parameter_array.shape[1])
                 for row in range(0, nrows):
                     for col in range(0, ncols):
@@ -247,12 +280,18 @@ def forward_model(output_path, job_index, lens_name, n_keep, kwargs_sample_reali
 
             i = idx_init + 1
             for idx_system, system in enumerate(saved_lens_systems):
-                f = open(filename_realizations + 'system_' + str(i + idx_system), 'wb')
-                dill.dump(system, f)
+                container = SimulationOutputContainer(lens_data_class_sampling_list[idx_system], system,
+                                                      mags_out[idx_system,:],
+                                                      parameter_array[idx_system,:])
+                f = open(filename_realizations + 'simulation_output_' + str(i + idx_system), 'wb')
+                dill.dump(container, f)
                 idx_init += 1
 
             parameter_array = None
             mags_out = None
+            lens_data_class_sampling_list = []
             saved_lens_systems = []
 
-        if break_loop: break
+        if break_loop:
+            print('\nSIMULATION FINISHED')
+            break

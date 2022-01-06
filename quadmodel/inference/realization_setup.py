@@ -19,7 +19,7 @@ def setup_realization(priors, kwargs_other={}):
         raise Exception('preset model '+str(preset_model_name)+' not recognized.')
 
     del realization_priors['PRESET_MODEL']
-
+    param_names_realization = []
     for parameter_name in realization_priors.keys():
 
         prior_type = realization_priors[parameter_name][0]
@@ -38,6 +38,8 @@ def setup_realization(priors, kwargs_other={}):
 
         if prior_type == 'FIXED':
             continue
+        else:
+            param_names_realization.append(parameter_name)
 
         if realization_params is None:
             realization_params = value
@@ -47,7 +49,7 @@ def setup_realization(priors, kwargs_other={}):
     for arg in kwargs_other.keys():
         kwargs_realization[arg] = kwargs_other[arg]
 
-    return realization_params, preset_model, kwargs_realization
+    return realization_params, preset_model, kwargs_realization, param_names_realization
 
 def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
 
