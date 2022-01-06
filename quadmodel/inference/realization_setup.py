@@ -54,7 +54,7 @@ def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
 
     x = kwargs_rendering['x_wdm']
     a_wdm = 0.27 - 0.05 * (x - 0.85)
-    b_wdm = 1 * (0.5 + 0.95 * (x - 0.6))
+    b_wdm = 0.5 + 0.95 * (x - 0.6)
     c_wdm = -3.
 
     a_mc = 0.64 - 0.35 * (x - 0.7)
