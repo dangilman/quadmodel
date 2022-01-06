@@ -1,4 +1,4 @@
-from pyHalo.preset_models import CDM, WDM
+from pyHalo.preset_models import preset_model_from_name
 import numpy as np
 from copy import deepcopy
 
@@ -9,14 +9,13 @@ def setup_realization(priors, kwargs_other={}):
     kwargs_realization = {}
     preset_model_name = realization_priors['PRESET_MODEL']
 
-    if preset_model_name == 'CDM':
-        preset_model = CDM
-    elif preset_model_name == 'WDM':
-        preset_model = WDM
-    elif preset_model_name == 'WDM_x':
+    if preset_model_name == 'WDM_x':
         preset_model = CUSTOM_WDM
     else:
-        raise Exception('preset model '+str(preset_model_name)+' not recognized.')
+        try:
+            preset_model = preset_model_from_name(preset_model_name)
+        except:
+            raise Exception('preset model '+str(preset_model_name)+' not recognized.')
 
     del realization_priors['PRESET_MODEL']
     param_names_realization = []
