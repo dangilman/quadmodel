@@ -81,6 +81,10 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     filename_sampling_rate = output_path + 'job_' + str(job_index) + '/sampling_rate.txt'
     filename_acceptance_ratio = output_path + 'job_' + str(job_index) + '/acceptance_ratio.txt'
 
+    if os.path.exists(output_path) is False:
+        proc = subprocess.Popen(['mkdir', output_path])
+        proc.wait()
+    
     if os.path.exists(output_path + 'job_' + str(job_index)) is False:
         proc = subprocess.Popen(['mkdir', output_path + 'job_' + str(job_index)])
         proc.wait()
