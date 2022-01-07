@@ -84,7 +84,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     if os.path.exists(output_path) is False:
         proc = subprocess.Popen(['mkdir', output_path])
         proc.wait()
-    
+
     if os.path.exists(output_path + 'job_' + str(job_index)) is False:
         proc = subprocess.Popen(['mkdir', output_path + 'job_' + str(job_index)])
         proc.wait()
@@ -241,6 +241,14 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             else:
                 mags_out = np.vstack((mags_out, mags))
 
+            if verbose:
+                print('N_kept: ', n_kept)
+                print('N remaining: ', n_keep - n_kept)
+
+        if verbose:
+            print('accepeted realizations counter: ', acceptance_rate_counter)
+            print('readout steps: ', readout_steps)
+
         if accepted_realizations_counter == readout_steps:
             readout = True
             accepted_realizations_counter = 0
@@ -268,6 +276,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                     for name in param_names:
                         param_name_string += name + ' '
                     f.write(param_name_string+'\n')
+                    write_param_names = False
 
                 nrows, ncols = int(parameter_array.shape[0]), int(parameter_array.shape[1])
                 for row in range(0, nrows):
