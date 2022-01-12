@@ -24,24 +24,6 @@ class SimulationOutputContainer(object):
         self.parameters = parameters
         self.magnifications = magnifications
 
-def compute_flux_ratios(lens_system, lens_data_class, constrain_params_macro, optimization_routine,
-                                      source_size_pc, kwargs_source_model, verbose):
-
-    # compute macromodel parameters that map the images to a common source coordinate
-    optimizer = HierarchicalOptimization(lens_system)
-    kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class,
-                                                                           constrain_params=constrain_params_macro,
-                                                                           param_class_name=optimization_routine,
-                                                                           verbose=verbose)
-
-    mags = lens_system.quasar_magnification(lens_data_class.x,
-                                            lens_data_class.y, source_size_pc, lens_model=lens_model_full,
-                                            kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=0.5,
-                                            grid_resolution_rescale=2., **kwargs_source_model)
-
-
-    return mags
-
 def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_realization, tolerance=0.5,
                   verbose=False, readout_steps=2, kwargs_realization_other={}):
 
@@ -75,16 +57,18 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     :param kwargs_realization_other: additional keyword arguments to be passed into a pyHalo preset model
     :return:
     """
+
+    # set up the filenames and folders for writing output
     filename_parameters = output_path + 'job_' + str(job_index) + '/parameters.txt'
     filename_mags = output_path + 'job_' + str(job_index) + '/fluxes.txt'
     filename_realizations = output_path + 'job_' + str(job_index) + '/'
     filename_sampling_rate = output_path + 'job_' + str(job_index) + '/sampling_rate.txt'
     filename_acceptance_ratio = output_path + 'job_' + str(job_index) + '/acceptance_ratio.txt'
 
+    # if the required directories do not exist, create them
     if os.path.exists(output_path) is False:
         proc = subprocess.Popen(['mkdir', output_path])
         proc.wait()
-
     if os.path.exists(output_path + 'job_' + str(job_index)) is False:
         proc = subprocess.Popen(['mkdir', output_path + 'job_' + str(job_index)])
         proc.wait()
@@ -94,21 +78,25 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         print(filename_parameters)
         print(filename_mags)
 
+    # Now load the lens data, this can either be specified as a string, which is used to load a lens system with image
+    # positions and magnifications specified in a lens-specific class (see quadmodel.data), or you can pass in a lens
+    # data class directly. For the required structure of the lens data class, see quad_base and the preset data classes
     if isinstance(lens_data, str):
         lens_data_class = load_preset_lens(lens_data)
     else:
         lens_data_class = lens_data
-
-    uncertainty_in_magnifications, keep_flux_ratio_index, magnifications, magnification_uncertainties, astrometric_uncertainty, R_ein_approx = \
-        lens_data_class.uncertainty_in_magnifications, lens_data_class.keep_flux_ratio_index, lens_data_class.m, lens_data_class.delta_m, \
+    magnifications, magnification_uncertainties, astrometric_uncertainty, R_ein_approx = \
+        lens_data_class.m, lens_data_class.delta_m, \
         lens_data_class.delta_xy, lens_data_class.approx_einstein_radius
 
+    # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
     cone_opening_angle = 6 * R_ein_approx
-
     magnifications = np.array(magnifications)
-
     _flux_ratios_data = magnifications[1:] / magnifications[0]
 
+    # You can restart inferences from previous runs by simply running the function again. In the following lines, the
+    # code looks for existing output files, and determines how many samples to add based on how much output already
+    # exists.
     if os.path.exists(filename_mags):
         _m = np.loadtxt(filename_mags)
         try:
@@ -121,13 +109,18 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         _m = None
         write_param_names = True
 
+    if n_kept >= n_keep:
+        print('\nSIMULATION ALREADY FINISHED.')
+        return
+
+    # Initialize stuff for the inference
+    idx_init = n_kept
     parameter_array = None
     mags_out = None
-    saved_lens_systems = []
-    lens_data_class_sampling_list = []
-    idx_init = n_kept
     readout = False
     break_loop = False
+    saved_lens_systems = []
+    lens_data_class_sampling_list = []
     accepted_realizations_counter = 0
     acceptance_rate_counter = 0
     iteration_counter = 0
@@ -140,13 +133,10 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         print('existing magnifications: ', _m)
         print('samples remaining: ', n_keep - n_kept)
 
-    if n_kept >= n_keep:
-        print('\nSIMULATION ALREADY FINISHED.')
-        return
-
-    # start the simulation
+    # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
     while True:
 
+        # get the lens redshift, for some deflectors with photometrically-estimated redshifts, we have to sample a PDF
         lens_data_class.set_zlens()
         zlens = lens_data_class.zlens
         zsource = lens_data_class.zsource
@@ -159,8 +149,6 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
 
         # parse the input dictionaries into arrays with parameters drawn from their respective priors
         realization_samples, preset_model, kwargs_preset_model, param_names_realization = setup_realization(kwargs_sample_realization, kwargs_realization_other)
-        # setup the source model
-        source_size_pc, kwargs_source_model, source_samples, param_names_source = lens_data_class_sampling.generate_sourcemodel()
         # load the lens macromodel defined in the data class
         model, constrain_params_macro, optimization_routine, macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel()
         macromodel = MacroLensModel(model.component_list)
@@ -168,31 +156,36 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         # create the realization
         realization = preset_model(zlens, zsource, cone_opening_angle_arcsec=cone_opening_angle,
                           **kwargs_preset_model)
-
         if verbose:
             print('realization contains ' + str(len(realization.halos)) + ' halos.')
             print('realization parameter array: ', realization_samples)
 
+        # This sets up a baseline lens macromodel and aligns the dark matter halos to follow the path taken by the
+        # light rays. This is important if the source is significantly offset from the lens centroid
         lens_system = QuadLensSystem.shift_background_auto(lens_data_class, macromodel, zsource, realization)
 
-        params = np.append(np.append(realization_samples, source_samples), macromodel_samples)
-        param_names = param_names_realization + param_names_source + param_names_macro + ['summary_statistic']
-        mags = compute_flux_ratios(lens_system, lens_data_class_sampling, constrain_params_macro,
-                                                 optimization_routine, source_size_pc, kwargs_source_model, verbose)
+        # Now we set up the optimization routine, which will solve for a set of macromodel parameters that map the
+        # observed image coordinates to common source position in the presence of all the dark matter halos along the
+        # line of sight and in the main lens plane.
+        optimizer = HierarchicalOptimization(lens_system)
+        kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class,
+                                                                               constrain_params=constrain_params_macro,
+                                                                               param_class_name=optimization_routine,
+                                                                               verbose=verbose)
 
-        acceptance_rate_counter += 1
-        if acceptance_rate_counter == 5 or acceptance_rate_counter == 10:
-            time_elapsed = time() - t0
-            time_elapsed_minutes = time_elapsed / 60
-            sampling_rate = time_elapsed_minutes / acceptance_rate_counter
-            readout_sampling_rate = True
-        else:
-            readout_sampling_rate = False
+        # Now, setup the source model, and ray trace to compute the image magnifications
+        source_size_pc, kwargs_source_model, source_samples, param_names_source = \
+            lens_data_class_sampling.generate_sourcemodel()
+        mags = lens_system.quasar_magnification(lens_data_class.x,
+                                                lens_data_class.y, source_size_pc, lens_model=lens_model_full,
+                                                kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=0.5,
+                                                grid_resolution_rescale=2., **kwargs_source_model)
 
-        if uncertainty_in_magnifications:
-
+        # Now we account for uncertainties in the image magnifications. These uncertainties are sometimes quoted for
+        # individual image fluxes, or the flux ratios.
+        if lens_data_class.uncertainty_in_magnifications:
             mags_with_uncertainties = []
-
+            # If uncertainties are quoted for image fluxes, we can add them to the model-predicted image magnifications
             for j, mag in enumerate(mags):
                 if magnification_uncertainties[j] is None:
                     m = np.nan
@@ -202,22 +195,28 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
 
             mags_with_uncertainties = np.array(mags_with_uncertainties)
             _flux_ratios = mags_with_uncertainties[1:] / mags_with_uncertainties[0]
-            flux_ratios_data = []
-            flux_ratios = []
-            for idx in keep_flux_ratio_index:
-                flux_ratios.append(_flux_ratios[idx])
-                flux_ratios_data.append(_flux_ratios_data[idx])
 
         else:
+            # If uncertainties are quoted for image flux ratios, we first compute the flux ratios, and then add
+            # the uncertainties
             flux_ratios = mags[1:] / mags[0]
             fluxratios_with_uncertainties = []
             for j, fr in enumerate(flux_ratios):
-                fluxratios_with_uncertainties.append(abs(fr + np.random.normal(0, fr * magnification_uncertainties[j])))
-            flux_ratios = np.array(fluxratios_with_uncertainties)
+                df = np.random.normal(0, fr * magnification_uncertainties[j])
+                new_fr = fr + df
+                fluxratios_with_uncertainties.append(new_fr)
+            _flux_ratios = np.array(fluxratios_with_uncertainties)
 
+        # Next, we keep only the flux ratios for which we have good data (for most lenses with well-measured fluxes,
+        # this will be all the images, so keep_flux_ratio_index would be a list [0, 1, 2]
+        flux_ratios_data = []
+        flux_ratios = []
+        for idx in lens_data_class_sampling.keep_flux_ratio_index:
+            flux_ratios.append(_flux_ratios[idx])
+            flux_ratios_data.append(_flux_ratios_data[idx])
+
+        # Now we compute the summary statistic
         stat = 0
-        flux_ratios_data = np.array(flux_ratios_data)
-        flux_ratios = np.array(flux_ratios)
         for f_i_data, f_i_model in zip(flux_ratios_data, flux_ratios):
             stat += (f_i_data - f_i_model)**2
         stat = np.sqrt(stat)
@@ -227,12 +226,26 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             print('flux ratios model: ', flux_ratios)
             print('statistic: ', stat)
 
+        acceptance_rate_counter += 1
+        # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
+        if acceptance_rate_counter == 10 or acceptance_rate_counter == 50:
+            time_elapsed = time() - t0
+            time_elapsed_minutes = time_elapsed / 60
+            sampling_rate = time_elapsed_minutes / acceptance_rate_counter
+            readout_sampling_rate = True
+        else:
+            readout_sampling_rate = False
+
+        # this keeps track of how many realizations were analyzed, and resets after each readout (set by readout_steps)
+        # The purpose of this counter is to keep track of the acceptance rate
         iteration_counter += 1
 
         if stat < tolerance:
-
+            # If the statistic is less than the tolerance threshold, we keep the parameters
             accepted_realizations_counter += 1
             n_kept += 1
+            params = np.append(np.append(realization_samples, source_samples), macromodel_samples)
+            param_names = param_names_realization + param_names_source + param_names_macro + ['summary_statistic']
             saved_lens_systems.append(lens_system)
             lens_data_class_sampling_list.append(lens_data_class_sampling)
             acceptance_ratio = accepted_realizations_counter/iteration_counter
@@ -255,21 +268,22 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             print('accepeted realizations counter: ', acceptance_rate_counter)
             print('readout steps: ', readout_steps)
 
+        # readout if either of these conditions are met
         if accepted_realizations_counter == readout_steps:
             readout = True
             accepted_realizations_counter = 0
             iteration_counter = 0
+        # break loop if we have collected n_keep samples
         if n_kept == n_keep:
             readout = True
             break_loop = True
-
         if readout_sampling_rate:
             with open(filename_sampling_rate, 'a') as f:
                 f.write(str(np.round(sampling_rate, 2)) + ' ')
                 f.write('\n')
 
         if readout:
-
+            # Now write stuff to file
             readout = False
 
             with open(filename_acceptance_ratio, 'a') as f:
