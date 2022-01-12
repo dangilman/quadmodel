@@ -51,6 +51,14 @@ class Quad(object):
         self.keep_flux_ratio_index = keep_flux_ratio_index
 
     def generate_macromodel(self):
+        """
+        Used only if lens-specific data class has no satellite galaxies; for systems with satellites, add them in the
+        lens-specific data class and override this method
+        :return:
+        """
+        return self._generate_macromodel()
+
+    def _generate_macromodel(self):
 
         if self._macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE':
 
@@ -70,17 +78,16 @@ class Quad(object):
 
         elif self._macromodel_type == 'EPL_FREE_SHEAR_MULTIPOLE':
 
-            shear_min, shear_max = 0.001, 0.25
+            random_shear_init = np.random.uniform(0.05, 0.25)
             gamma_macro = default_priors('gamma_macro')
-            shear_amplitude = sample_from_prior(['UNIFORM', shear_min, shear_max])
             optimization_routine = 'free_shear_powerlaw_multipole'
             constrain_params = None
             multipole_amplitude = default_priors('multipole_amplitude')
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole
-            model = EPLShearMultipole(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude,
+            model = EPLShearMultipole(self.zlens, gamma_macro, random_shear_init, multipole_amplitude,
                                       self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
-            params_sampled = np.array([gamma_macro, shear_amplitude, multipole_amplitude])
+            params_sampled = np.array([gamma_macro, multipole_amplitude])
             param_names_macro = ['gamma', 'a4']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
@@ -116,12 +123,6 @@ class Quad(object):
 
         else:
             raise Exception('other macromodels not yet implemented.')
-
-    def satellite_galaxies(self):
-        """
-        If the deflector system has no satellites, return an empty list of lens components (see macromodel class)
-        """
-        return []
 
     def set_zlens(self):
 

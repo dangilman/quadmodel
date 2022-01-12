@@ -6,5 +6,8 @@ def load_preset_lens(lens_name):
     elif lens_name == 'WGD2038':
         from quadmodel.data.wgd2038 import WGD2038
         return WGD2038()
+    elif lens_name == 'RXJ0911':
+        from quadmodel.data.rxj0911 import RXJ0911
+        return RXJ0911()
     else:
         raise Exception('lens name '+str(lens_name)+' not recognized.')
