@@ -107,7 +107,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
 
     magnifications = np.array(magnifications)
 
-    flux_ratios_data = magnifications[1:] / magnifications[0]
+    _flux_ratios_data = magnifications[1:] / magnifications[0]
 
     if os.path.exists(filename_mags):
         _m = np.loadtxt(filename_mags)
@@ -201,20 +201,26 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                 mags_with_uncertainties.append(m)
 
             mags_with_uncertainties = np.array(mags_with_uncertainties)
-            flux_ratios = mags_with_uncertainties[1:] / mags_with_uncertainties[0]
-            df = 0
+            _flux_ratios = mags_with_uncertainties[1:] / mags_with_uncertainties[0]
+            flux_ratios_data = []
+            flux_ratios = []
             for idx in keep_flux_ratio_index:
-                df = flux_ratios[idx] - flux_ratios_data[idx]
+                flux_ratios.append(_flux_ratios[idx])
+                flux_ratios_data.append(_flux_ratios_data[idx])
 
         else:
             flux_ratios = mags[1:] / mags[0]
             fluxratios_with_uncertainties = []
             for j, fr in enumerate(flux_ratios):
                 fluxratios_with_uncertainties.append(abs(fr + np.random.normal(0, fr * magnification_uncertainties[j])))
-            fluxratios_with_uncertainties = np.array(fluxratios_with_uncertainties)
-            df = flux_ratios - fluxratios_with_uncertainties
+            flux_ratios = np.array(fluxratios_with_uncertainties)
 
-        stat = np.sqrt(np.sum(df ** 2))
+        stat = 0
+        flux_ratios_data = np.array(flux_ratios_data)
+        flux_ratios = np.array(flux_ratios)
+        for f_i_data, f_i_model in zip(flux_ratios_data, flux_ratios):
+            stat += (f_i_data - f_i_model)**2
+        stat = np.sqrt(stat)
 
         if verbose:
             print('flux ratios data: ', flux_ratios_data)

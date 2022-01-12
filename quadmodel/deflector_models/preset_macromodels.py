@@ -9,10 +9,8 @@ class MacroBase(object):
 
         self.component_list = components
 
-    def add_SIS_satellite(self, redshit, theta_E, center_x, center_y):
+    def add_satellite(self, satellite):
 
-        kwargs = [{'theta_E': theta_E, 'center_x': center_x, 'center_y': center_y}]
-        satellite = SIS(redshit, kwargs)
         self.component_list += satellite
 
 class EPLShear(MacroBase):
