@@ -6,23 +6,11 @@ from time import time
 from quadmodel.data.load_preset_lens import load_preset_lens
 from quadmodel.inference.realization_setup import *
 from quadmodel.macromodel import MacroLensModel
+from quadmodel.inference.util import filenames, SimulationOutputContainer
 import numpy as np
 import dill
 from copy import deepcopy
 
-class SimulationOutputContainer(object):
-
-    """
-    This class contains the output of a forward modeling simulation for a single accepted set of parameters.
-    It includes the lens data class, the accepted lens system, and the corresponding set of parameters
-    """
-
-    def __init__(self, lens_data, lens_system, magnifications, parameters):
-
-        self.data = lens_data
-        self.lens_system = lens_system
-        self.parameters = parameters
-        self.magnifications = magnifications
 
 def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_realization, tolerance=0.5,
                   verbose=False, readout_steps=2, kwargs_realization_other={}):
@@ -59,11 +47,8 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     """
 
     # set up the filenames and folders for writing output
-    filename_parameters = output_path + 'job_' + str(job_index) + '/parameters.txt'
-    filename_mags = output_path + 'job_' + str(job_index) + '/fluxes.txt'
-    filename_realizations = output_path + 'job_' + str(job_index) + '/'
-    filename_sampling_rate = output_path + 'job_' + str(job_index) + '/sampling_rate.txt'
-    filename_acceptance_ratio = output_path + 'job_' + str(job_index) + '/acceptance_ratio.txt'
+    filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio = \
+        filenames(output_path, job_index)
 
     # if the required directories do not exist, create them
     if os.path.exists(output_path) is False:
@@ -88,11 +73,6 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     magnifications, magnification_uncertainties, astrometric_uncertainty, R_ein_approx = \
         lens_data_class.m, lens_data_class.delta_m, \
         lens_data_class.delta_xy, lens_data_class.approx_einstein_radius
-
-    # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
-    cone_opening_angle = 6 * R_ein_approx
-    magnifications = np.array(magnifications)
-    _flux_ratios_data = magnifications[1:] / magnifications[0]
 
     # You can restart inferences from previous runs by simply running the function again. In the following lines, the
     # code looks for existing output files, and determines how many samples to add based on how much output already
@@ -133,6 +113,9 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         print('existing magnifications: ', _m)
         print('samples remaining: ', n_keep - n_kept)
 
+    magnifications = np.array(magnifications)
+    _flux_ratios_data = magnifications[1:] / magnifications[0]
+
     # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
     while True:
 
@@ -154,6 +137,8 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         macromodel = MacroLensModel(model.component_list)
 
         # create the realization
+        # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
+        cone_opening_angle = 6 * R_ein_approx
         realization = preset_model(zlens, zsource, cone_opening_angle_arcsec=cone_opening_angle,
                           **kwargs_preset_model)
         if verbose:

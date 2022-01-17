@@ -58,7 +58,7 @@ def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
     c_wdm = -3.
 
     a_mc = 0.64 - 0.35 * (x - 0.7)
-    b_mc = 0.49 + 1.2 * (x - 1.15) ** 2
+    b_mc = 0.49 + 1.20 * (x - 1.15) ** 2
 
     kwargs_suppresion_field = {'a_mc': a_mc, 'b_mc': b_mc}
     kwargs_rendering['a_wdm_los'] = a_wdm
