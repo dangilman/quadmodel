@@ -80,13 +80,17 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         except:
             print('could not find file '+filename_mags)
             continue
+
+        number = _fluxes.shape[0]
+
         if keep_realizations:
-            try:
-                f = open(filename_realizations + 'simulation_output_' + str(job_index), 'rb')
-                sim = pickle.load(f)
-            except:
-                print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(job_index))
-                continue
+            for n in range(0, number):
+                try:
+                    f = open(filename_realizations + 'simulation_output_' + str(n+1), 'rb')
+                    sim = pickle.load(f)
+                except:
+                    print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(n+1))
+                    continue
             realizations_and_lens_systems.append(sim)
 
         if params is None:
