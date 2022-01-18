@@ -296,12 +296,11 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                         f.write(str(np.round(mags_out[row, col], 6)) + ' ')
                     f.write('\n')
 
-            i = idx_init + 1
             for idx_system, system in enumerate(saved_lens_systems):
                 container = SimulationOutputContainer(lens_data_class_sampling_list[idx_system], system,
                                                       mags_out[idx_system,:],
                                                       parameter_array[idx_system,:])
-                f = open(filename_realizations + 'simulation_output_' + str(i + idx_system), 'wb')
+                f = open(filename_realizations + 'simulation_output_' + str(idx_system + idx_init + 1), 'wb')
                 dill.dump(container, f)
                 idx_init += 1
 
