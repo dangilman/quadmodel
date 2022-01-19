@@ -94,7 +94,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         return
 
     # Initialize stuff for the inference
-    idx_init = n_kept
+    idx_init = deepcopy(n_kept)
     parameter_array = None
     mags_out = None
     readout = False
