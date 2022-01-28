@@ -5,6 +5,7 @@ class B1422(Quad):
     def __init__(self, sourcemodel_type='NARROW_LINE_Gaussian'):
 
         zlens = 0.34
+        self.zlens = zlens
         zsource = 3.62
         x = [-0.347, -0.734, -1.096, 0.207]
         y = [0.964, 0.649, -0.079, -0.148]

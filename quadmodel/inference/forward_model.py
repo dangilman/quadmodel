@@ -1,5 +1,6 @@
 from quadmodel.quadmodel import QuadLensSystem
 from quadmodel.Solvers.hierachical import HierarchicalOptimization
+from quadmodel.Solvers.brute import BruteOptimization
 import os
 import subprocess
 from time import time
@@ -13,7 +14,8 @@ from copy import deepcopy
 
 
 def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_realization, tolerance=0.5,
-                  verbose=False, readout_steps=2, kwargs_realization_other={}):
+                  verbose=False, readout_steps=2, kwargs_realization_other={},
+                  ray_tracing_optimization='default', test_mode=False):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -131,7 +133,10 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         lens_data_class_sampling.y += delta_y
 
         # parse the input dictionaries into arrays with parameters drawn from their respective priors
-        realization_samples, preset_model, kwargs_preset_model, param_names_realization = setup_realization(kwargs_sample_realization, kwargs_realization_other)
+        realization_samples, preset_model, kwargs_preset_model, param_names_realization = setup_realization(kwargs_sample_realization,
+                                                                                                            kwargs_realization_other,
+                                                                                                            lens_data_class_sampling.x,
+                                                                                                            lens_data_class_sampling.y)
         # load the lens macromodel defined in the data class
         model, constrain_params_macro, optimization_routine, macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel()
         macromodel = MacroLensModel(model.component_list)
@@ -147,22 +152,37 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
 
         # This sets up a baseline lens macromodel and aligns the dark matter halos to follow the path taken by the
         # light rays. This is important if the source is significantly offset from the lens centroid
-        lens_system = QuadLensSystem.shift_background_auto(lens_data_class, macromodel, zsource, realization)
+        lens_system = QuadLensSystem.shift_background_auto(lens_data_class_sampling, macromodel, zsource, realization)
 
         # Now we set up the optimization routine, which will solve for a set of macromodel parameters that map the
         # observed image coordinates to common source position in the presence of all the dark matter halos along the
         # line of sight and in the main lens plane.
-        optimizer = HierarchicalOptimization(lens_system)
-        kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class,
+
+        if ray_tracing_optimization == 'brute':
+            optimizer = BruteOptimization(lens_system)
+            kwargs_lens_final, lens_model_full, return_kwargs = optimizer.fit(lens_data_class_sampling, optimization_routine,
+                                                                              constrain_params_macro, verbose)
+
+        else:
+            optimizer = HierarchicalOptimization(lens_system, settings_class=ray_tracing_optimization)
+
+            kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class_sampling,
                                                                                constrain_params=constrain_params_macro,
                                                                                param_class_name=optimization_routine,
                                                                                verbose=verbose)
 
+        if test_mode:
+            import matplotlib.pyplot as plt
+            lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, 40.0, lens_model_full,
+                                    kwargs_lens_final)
+            plt.show()
+            a=input('continue')
+
         # Now, setup the source model, and ray trace to compute the image magnifications
         source_size_pc, kwargs_source_model, source_samples, param_names_source = \
             lens_data_class_sampling.generate_sourcemodel()
-        mags = lens_system.quasar_magnification(lens_data_class.x,
-                                                lens_data_class.y, source_size_pc, lens_model=lens_model_full,
+        mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
+                                                lens_data_class_sampling.y, source_size_pc, lens_model=lens_model_full,
                                                 kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=0.5,
                                                 grid_resolution_rescale=2., **kwargs_source_model)
 

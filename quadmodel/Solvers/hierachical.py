@@ -10,6 +10,8 @@ class HierarchicalOptimization(BruteOptimization):
 
         if settings_class == 'default':
             settings_class = HierarchicalSettingsDefault()
+        elif settings_class == 'uldm':
+            settings_class = HierarchicalSettingsULDM()
         elif settings_class == 'custom':
             settings_class = SettingsClass(**kwargs_settings_class)
 

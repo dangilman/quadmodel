@@ -2,7 +2,7 @@ from pyHalo.preset_models import preset_model_from_name
 import numpy as np
 from copy import deepcopy
 
-def setup_realization(priors, kwargs_other={}):
+def setup_realization(priors, kwargs_other, x_image, y_image):
 
     realization_priors = deepcopy(priors)
     realization_params = None
@@ -11,6 +11,12 @@ def setup_realization(priors, kwargs_other={}):
 
     if preset_model_name == 'WDM_x':
         preset_model = CUSTOM_WDM
+    elif preset_model_name == 'ULDM':
+        kwargs_realization['flucs_args'] = {'x_images': x_image,
+                                            'y_images': y_image,
+                                            'aperture': 0.25}
+
+        preset_model = preset_model_from_name(preset_model_name)
     else:
         try:
             preset_model = preset_model_from_name(preset_model_name)

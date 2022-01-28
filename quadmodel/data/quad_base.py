@@ -33,6 +33,7 @@ class Quad(object):
                  sourcemodel_type, kwargs_source_model, macromodel_type, kwargs_macromodel, keep_flux_ratio_index):
 
         self._zlens = zlens
+        self.zlens = self.set_zlens()
         self.zsource = zsource
         self.x = np.array(x_image)
         self.y = np.array(y_image)
@@ -47,7 +48,6 @@ class Quad(object):
 
         self.uncertainty_in_magnifications = True
         self._sourcemodel_type = sourcemodel_type
-        self.zlens = self.set_zlens()
         self.keep_flux_ratio_index = keep_flux_ratio_index
 
     def generate_macromodel(self):
