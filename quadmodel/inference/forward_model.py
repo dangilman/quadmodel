@@ -132,11 +132,16 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         lens_data_class_sampling.x += delta_x
         lens_data_class_sampling.y += delta_y
 
+        # Now, setup the source model, and ray trace to compute the image magnifications
+        source_size_pc, kwargs_source_model, source_samples, param_names_source = \
+            lens_data_class_sampling.generate_sourcemodel()
+
         # parse the input dictionaries into arrays with parameters drawn from their respective priors
         realization_samples, preset_model, kwargs_preset_model, param_names_realization = setup_realization(kwargs_sample_realization,
                                                                                                             kwargs_realization_other,
                                                                                                             lens_data_class_sampling.x,
-                                                                                                            lens_data_class_sampling.y)
+                                                                                                            lens_data_class_sampling.y,
+                                                                                                            source_size_pc)
         # load the lens macromodel defined in the data class
         model, constrain_params_macro, optimization_routine, macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel()
         macromodel = MacroLensModel(model.component_list)
@@ -187,9 +192,6 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             plt.show()
             a=input('continue')
 
-        # Now, setup the source model, and ray trace to compute the image magnifications
-        source_size_pc, kwargs_source_model, source_samples, param_names_source = \
-            lens_data_class_sampling.generate_sourcemodel()
         mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
                                                 lens_data_class_sampling.y, source_size_pc, lens_model=lens_model_full,
                                                 kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=0.5,

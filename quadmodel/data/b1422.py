@@ -2,7 +2,8 @@ from quadmodel.data.quad_base import Quad
 
 class B1422(Quad):
 
-    def __init__(self, sourcemodel_type='NARROW_LINE_Gaussian'):
+    def __init__(self, sourcemodel_type='NARROW_LINE_Gaussian',
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
         zlens = 0.34
         self.zlens = zlens
@@ -14,7 +15,6 @@ class B1422(Quad):
         delta_xy = [0.005] * 4
         keep_flux_ratio_index = [0, 1]
 
-        macromodel_type = 'EPL_FIXED_SHEAR_MULTIPOLE'
         kwargs_macromodel = {'shear_amplitude_min': 0.12, 'shear_amplitude_max': 0.35}
 
         super(B1422, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,

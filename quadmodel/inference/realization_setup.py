@@ -1,8 +1,9 @@
 from pyHalo.preset_models import preset_model_from_name
 import numpy as np
 from copy import deepcopy
+from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_size
 
-def setup_realization(priors, kwargs_other, x_image, y_image):
+def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
     realization_priors = deepcopy(priors)
     realization_params = None
@@ -12,9 +13,10 @@ def setup_realization(priors, kwargs_other, x_image, y_image):
     if preset_model_name == 'WDM_x':
         preset_model = CUSTOM_WDM
     elif preset_model_name == 'ULDM':
+        aperture_radius = auto_raytracing_grid_size(source_size_pc) * 0.8
         kwargs_realization['flucs_args'] = {'x_images': x_image,
                                             'y_images': y_image,
-                                            'aperture': 0.25}
+                                            'aperture': aperture_radius}
 
         preset_model = preset_model_from_name(preset_model_name)
     else:

@@ -91,6 +91,21 @@ class Quad(object):
             param_names_macro = ['gamma', 'a4']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
+        elif self._macromodel_type == 'EPL_FREE_SHEAR':
+
+            random_shear_init = np.random.uniform(0.05, 0.25)
+            gamma_macro = default_priors('gamma_macro')
+            optimization_routine = 'free_shear_powerlaw'
+            constrain_params = None
+            from quadmodel.deflector_models.preset_macromodels import EPLShear
+            model = EPLShear(self.zlens, gamma_macro, random_shear_init,
+                                      self.approx_einstein_radius,
+                                      0.0, 0.0, 0.2, 0.1)
+            params_sampled = np.array([gamma_macro])
+            param_names_macro = ['gamma']
+            return model, constrain_params, optimization_routine, params_sampled, param_names_macro
+
+
         else:
             raise Exception('other macromodels not yet implemented.')
 
