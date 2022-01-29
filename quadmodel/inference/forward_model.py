@@ -140,12 +140,13 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         # load the lens macromodel defined in the data class
         model, constrain_params_macro, optimization_routine, macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel()
         macromodel = MacroLensModel(model.component_list)
-
+        import matplotlib.pyplot as plt
         # create the realization
         # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
         cone_opening_angle = 6 * R_ein_approx
         realization = preset_model(zlens, zsource, cone_opening_angle_arcsec=cone_opening_angle,
                           **kwargs_preset_model)
+
         if verbose:
             print('realization contains ' + str(len(realization.halos)) + ' halos.')
             print('realization parameter array: ', realization_samples)
@@ -175,6 +176,14 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             import matplotlib.pyplot as plt
             lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, 40.0, lens_model_full,
                                     kwargs_lens_final)
+            plt.show()
+            _r = np.linspace(-2.0 * R_ein_approx, 2.0 * R_ein_approx, 200)
+            xx, yy = np.meshgrid(_r, _r)
+            shape0 = xx.shape
+            kappa = lens_model_full.kappa(xx.ravel(), yy.ravel(), kwargs_lens_final).reshape(shape0)
+            lensmodel_macro, kwargs_macro = lens_system.get_lensmodel(include_substructure=False)
+            kappa_macro = lensmodel_macro.kappa(xx.ravel(), yy.ravel(), kwargs_macro).reshape(shape0)
+            plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.02, vmax=0.02, cmap='bwr')
             plt.show()
             a=input('continue')
 
