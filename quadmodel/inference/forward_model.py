@@ -255,7 +255,6 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         # this keeps track of how many realizations were analyzed, and resets after each readout (set by readout_steps)
         # The purpose of this counter is to keep track of the acceptance rate
         iteration_counter += 1
-
         if stat < tolerance:
             # If the statistic is less than the tolerance threshold, we keep the parameters
             accepted_realizations_counter += 1
@@ -328,12 +327,15 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                     f.write('\n')
 
             for idx_system, system in enumerate(saved_lens_systems):
+                print(idx_system, idx_init)
+                a=input('continue')
                 container = SimulationOutputContainer(lens_data_class_sampling_list[idx_system], system,
                                                       mags_out[idx_system,:],
                                                       parameter_array[idx_system,:])
                 f = open(filename_realizations + 'simulation_output_' + str(idx_system + idx_init + 1), 'wb')
                 dill.dump(container, f)
-                idx_init += 1
+
+            idx_init += len(saved_lens_systems)
 
             parameter_array = None
             mags_out = None

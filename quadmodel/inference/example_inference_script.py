@@ -1,7 +1,7 @@
 from quadmodel.inference.forward_model import forward_model
 import os
 
-lens_name = 'RXJ0911'
+lens_name = 'MOCK_1_MIDIR'
 output_path = os.getenv('HOME') + '/Code/quadmodel/notebooks/'+lens_name+'_inf/'
 job_index = 1
 n_keep = 6
