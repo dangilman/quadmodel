@@ -4,6 +4,7 @@ from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
 from quadmodel.util import interpolate_ray_paths_system
 from quadmodel.Solvers.brute import BruteOptimization
 from lenstronomy.LensModel.lens_model import LensModel
+from lenstronomy.LensModel.Solver.lens_equation_solver import LensEquationSolver
 import numpy as np
 from scipy.interpolate import interp1d
 
@@ -348,3 +349,18 @@ class QuadLensSystem(object):
                                                                      grid_resolution=grid_resolution,
                                                                      source_light_model=source_model,
                                                                      **kwargs_magnification_finite)
+
+    def solve_lens_equation(self, source_x, source_y):
+
+        """
+        Solves the lens equation given a source coordinate
+        :param source_x: source coordinate x [arcsec]
+        :param source_y: source coordinate y [arcsec]
+        :return: x and y image positions [arcsec]
+        """
+        lensmodel, kwargs = self.get_lensmodel()
+        ext = LensEquationSolver(lensmodel)
+        x_image, y_image = ext.findBrightImage(source_x, source_y, kwargs)
+        return x_image, y_image
+
+

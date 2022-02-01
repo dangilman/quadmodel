@@ -14,7 +14,7 @@ def default_priors(param):
         source_fwhm_pc = np.random.uniform(25, 60)
         return source_fwhm_pc
     elif param == 'midIR_Gaussian': # short for "MidIR Gaussian"
-        source_fwhm_pc = np.random.uniform(1, 20)
+        source_fwhm_pc = np.random.uniform(0.5, 10.0)
         return source_fwhm_pc
     elif param == 'DOUBLE_NL_Gaussian': # short for "MidIR Gaussian"
         source_fwhm_pc = np.random.uniform(25, 80)

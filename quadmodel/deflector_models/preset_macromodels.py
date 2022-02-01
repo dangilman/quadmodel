@@ -16,14 +16,14 @@ class MacroBase(object):
 class EPLShear(MacroBase):
 
     def __init__(self, zlens, gamma_macro, shear_amplitude,
-                 r_ein_approx=None, center_x=None, center_y=None, e1=None, e2=None):
+                 r_ein_approx=None, center_x=None, center_y=None, e1=None, e2=None, theta_shear=None):
 
         if shear_amplitude is None:
             shear_amplitude = np.random.uniform(0.02, 0.25)
 
         if e1 is None or e2 is None:
             theta_e = np.random.uniform(0, 2 * np.pi)
-            e = np.random.uniform(0.001, 0.8)
+            e = np.random.uniform(0.001, 0.5) / 1.41
             e1, e2 = e * np.cos(theta_e), e * np.sin(theta_e)
 
         if center_x is None or center_y is None:
@@ -32,9 +32,9 @@ class EPLShear(MacroBase):
 
         if r_ein_approx is None:
             r_ein_approx = np.random.uniform(0.8, 1.2)
-
-        theta = np.random.uniform(0, 2 * np.pi)
-        g1, g2 = shear_amplitude * np.cos(2 * theta), shear_amplitude * np.sin(2 * theta)
+        if theta_shear is None:
+            theta_shear = np.random.uniform(0, 2 * np.pi)
+        g1, g2 = shear_amplitude * np.cos(2 * theta_shear), shear_amplitude * np.sin(2 * theta_shear)
         kwargs_epl_shear = [{'theta_E': r_ein_approx, 'center_x': center_x, 'center_y': center_y, 'e1': e1, 'e2': e2,
                              'gamma': gamma_macro},
                             {'gamma1': g2, 'gamma2': g2}]
