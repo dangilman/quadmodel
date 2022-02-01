@@ -327,7 +327,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                     f.write('\n')
 
             for idx_system, system in enumerate(saved_lens_systems):
-                
+
                 container = SimulationOutputContainer(lens_data_class_sampling_list[idx_system], system,
                                                       mags_out[idx_system,:],
                                                       parameter_array[idx_system,:])
