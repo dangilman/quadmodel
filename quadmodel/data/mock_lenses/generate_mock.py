@@ -11,20 +11,20 @@ class DummyData(object):
     def __init__(self, x, y):
         self.x, self.y = x, y
 
-zlens = 0.5
-zsource = 1.6
-theta_ellip = -np.pi/3
-ellip = 0.22
+zlens = 0.42
+zsource = 2.2
+theta_ellip = np.pi/5
+ellip = 0.27
 e1, e2 = ellip * np.cos(theta_ellip), ellip * np.sin(theta_ellip)
-shear_amplitude = 0.19
-theta_shear = -np.pi/2
-gamma_macro = 2.0
-rein_approx = 1.2
+shear_amplitude = 0.06
+theta_shear = np.pi/4
+gamma_macro = 2.02
+rein_approx = 0.95
 macro_model = EPLShear(zlens, gamma_macro, shear_amplitude, rein_approx, 0.0, 0.0, e1, e2, theta_shear)
 macromodel = MacroLensModel(macro_model.component_list)
 lens_system = QuadLensSystem(macromodel, zsource)
 
-source_x, source_y = 0.25, -0.15
+source_x, source_y = 0.05, 0.05
 x_image, y_image = lens_system.solve_lens_equation(source_x, source_y)
 plt.scatter(x_image, y_image)
 plt.show()

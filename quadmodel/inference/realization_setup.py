@@ -2,6 +2,7 @@ from pyHalo.preset_models import preset_model_from_name
 import numpy as np
 from copy import deepcopy
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_size
+from pyHalo.realization_extensions import RealizationExtensions
 
 def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
@@ -12,6 +13,8 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
     if preset_model_name == 'WDM_x':
         preset_model = CUSTOM_WDM
+    elif preset_model_name == 'SIDM_CORE_COLLAPSE':
+        preset_model = SIDM_CORE_COLLAPSE
     elif preset_model_name == 'ULDM':
         aperture_radius = auto_raytracing_grid_size(source_size_pc) * 0.8
         kwargs_realization['flucs_args'] = {'x_images': x_image,
@@ -57,6 +60,22 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         kwargs_realization[arg] = kwargs_other[arg]
 
     return realization_params, preset_model, kwargs_realization, param_names_realization
+
+def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
+
+    CDM = preset_model_from_name('CDM')
+    realization_cdm = CDM(zlens, zsource, **kwargs_rendering)
+    ext = RealizationExtensions(realization_cdm)
+    mass_range = [[6.0, 8.0], [8.0, 10]]
+    probabilities_subhalos = [kwargs_rendering['f_68'], kwargs_rendering['f_810']]
+    probabilities_field_halos = [kwargs_rendering['f_68'], kwargs_rendering['f_810']]
+    indexes = ext.core_collapse_by_mass(mass_range, mass_range,
+                              probabilities_subhalos, probabilities_field_halos)
+    kwargs_core_collapse_profile = {'x_match': kwargs_rendering['x_match'],
+                                    'x_core_halo': kwargs_rendering['x_core_halo'],
+                                    'log_slope_halo': kwargs_rendering['log_slope_halo']}
+    realization_sidm = ext.add_core_collapsed_halos(indexes, **kwargs_core_collapse_profile)
+    return realization_sidm
 
 def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
 
