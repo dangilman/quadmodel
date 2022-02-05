@@ -1,6 +1,6 @@
 import numpy as np
 import pickle
-
+from copy import deepcopy
 
 class FullSimulationContainer(object):
 
@@ -72,7 +72,6 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         # np.loadtxt(filename_parameters, skiprows=1)
         try:
             _params = np.loadtxt(filename_parameters, skiprows=1)
-            n_kept += _params.shape[0]
         except:
             print('could not find file ' + filename_parameters)
             continue
@@ -95,14 +94,17 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             realizations_and_lens_systems.append(sim)
 
         if params is None:
-            params = _params
-            fluxes = _fluxes
+            params = deepcopy(_params)
+            fluxes = deepcopy(_fluxes)
         else:
             if params.shape[1] != _params.shape[1]:
                 print('shape mismatch on file '+str(job_index))
+                print(params)
+                print(_params)
                 continue
             params = np.vstack((params, _params))
             fluxes = np.vstack((fluxes, _fluxes))
+            n_kept += _params.shape[0]
     print('compiled ' + str(n_kept) + ' realizations')
     container = FullSimulationContainer(realizations_and_lens_systems, params, fluxes)
     return container
