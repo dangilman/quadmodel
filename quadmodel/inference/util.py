@@ -102,6 +102,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 print(params[-1,:])
                 print(_params)
                 print(_params.shape)
+                print(params.shape)
                 continue
             params = np.vstack((params, _params))
             fluxes = np.vstack((fluxes, _fluxes))
