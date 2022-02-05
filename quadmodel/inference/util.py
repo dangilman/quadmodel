@@ -98,6 +98,9 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             params = _params
             fluxes = _fluxes
         else:
+            if params.shape[1] != _params.shape[1]:
+                print('shape mismatch on file '+str(job_index))
+                continue
             params = np.vstack((params, _params))
             fluxes = np.vstack((fluxes, _fluxes))
     print('compiled ' + str(n_kept) + ' realizations')
