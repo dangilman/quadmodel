@@ -64,21 +64,22 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         realizations_and_lens_systems = None
 
     params, fluxes = None, None
-
+    n_kept = 0
     for job_index in range(job_index_min, job_index_max + 1):
 
         filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio = \
             filenames(output_path, job_index)
-
+        # np.loadtxt(filename_parameters, skiprows=1)
         try:
             _params = np.loadtxt(filename_parameters, skiprows=1)
+            n_kept += _params.shape[0]
         except:
-            print('could not find file '+filename_parameters)
+            print('could not find file ' + filename_parameters)
             continue
         try:
             _fluxes = np.loadtxt(filename_mags)
         except:
-            print('could not find file '+filename_mags)
+            print('could not find file ' + filename_mags)
             continue
 
         number = _fluxes.shape[0]
@@ -86,10 +87,10 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         if keep_realizations:
             for n in range(0, number):
                 try:
-                    f = open(filename_realizations + 'simulation_output_' + str(n+1), 'rb')
+                    f = open(filename_realizations + 'simulation_output_' + str(n + 1), 'rb')
                     sim = pickle.load(f)
                 except:
-                    print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(n+1))
+                    print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(n + 1))
                     continue
             realizations_and_lens_systems.append(sim)
 
@@ -99,7 +100,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         else:
             params = np.vstack((params, _params))
             fluxes = np.vstack((fluxes, _fluxes))
-
+    print('compiled ' + str(n_kept) + ' realizations')
     container = FullSimulationContainer(realizations_and_lens_systems, params, fluxes)
     return container
 

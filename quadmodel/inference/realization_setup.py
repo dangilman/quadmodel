@@ -3,6 +3,8 @@ import numpy as np
 from copy import deepcopy
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_size
 from pyHalo.realization_extensions import RealizationExtensions
+from quadmodel.util import approx_theta_E
+from pyHalo.Cosmology.cosmology import Cosmology
 
 def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
@@ -20,8 +22,8 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         kwargs_realization['flucs_args'] = {'x_images': x_image,
                                             'y_images': y_image,
                                             'aperture': aperture_radius}
-
         preset_model = preset_model_from_name(preset_model_name)
+
     else:
         try:
             preset_model = preset_model_from_name(preset_model_name)
@@ -67,8 +69,13 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
     realization_cdm = CDM(zlens, zsource, **kwargs_rendering)
     ext = RealizationExtensions(realization_cdm)
     mass_range = [[6.0, 8.0], [8.0, 10]]
-    probabilities_subhalos = [kwargs_rendering['f_68'], kwargs_rendering['f_810']]
-    probabilities_field_halos = [kwargs_rendering['f_68'], kwargs_rendering['f_810']]
+    relative_collapse_probability = kwargs_rendering['lambda']
+    p68_sub = kwargs_rendering['f_68']
+    p810_sub = kwargs_rendering['f_810']
+    p68_field = p68_sub * relative_collapse_probability
+    p810_field = p810_sub * relative_collapse_probability
+    probabilities_subhalos = [p68_sub, p810_sub]
+    probabilities_field_halos = [p68_field, p810_field]
     indexes = ext.core_collapse_by_mass(mass_range, mass_range,
                               probabilities_subhalos, probabilities_field_halos)
     kwargs_core_collapse_profile = {'x_match': kwargs_rendering['x_match'],
