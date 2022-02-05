@@ -11,7 +11,7 @@ def sample_from_prior(prior):
     elif prior_type == 'GAUSSIAN':
         value = np.random.normal(prior[1], prior[2])
     elif prior_type == 'CUSTOM_PDF':
-        x, pdf = prior_type[0], prior_type[1]
+        x, pdf = prior[1], prior[2]
         pdf *= np.max(pdf) ** -1
         pdf_interp = interp1d(x, pdf)
         while True:

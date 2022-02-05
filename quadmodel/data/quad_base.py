@@ -141,8 +141,13 @@ class Quad(object):
 
     def set_zlens(self):
 
-        if isinstance(self._zlens, float) or isinstance(self._zlens, int):
-            self.zlens = self._zlens
+        if not hasattr(self, '_zlens_sampled'):
+            if isinstance(self._zlens, float) or isinstance(self._zlens, int):
+                self._zlens_sampled = self._zlens
+            else:
+                args = ['CUSTOM_PDF', self._zlens[0], self._zlens[1]]
+                self._zlens_sampled = sample_from_prior(args)
+            return np.round(self._zlens_sampled, 2)
+
         else:
-            args = ['CUSTOM_PDF', self._zlens[0], self._zlens[1]]
-            self.zlens = sample_from_prior(args)
+            return np.round(self._zlens_sampled, 2)
