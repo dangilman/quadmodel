@@ -30,7 +30,8 @@ def default_priors(param):
 class Quad(object):
 
     def __init__(self, zlens, zsource, x_image, y_image, magnifications, magnification_uncertainties, astrometric_uncertainties,
-                 sourcemodel_type, kwargs_source_model, macromodel_type, kwargs_macromodel, keep_flux_ratio_index):
+                 sourcemodel_type, kwargs_source_model, macromodel_type, kwargs_macromodel, keep_flux_ratio_index,
+                 uncertainty_in_magnifications=True):
 
         self._zlens = zlens
         self.zlens = self.set_zlens()
@@ -46,7 +47,7 @@ class Quad(object):
         self._kwargs_macromodel = kwargs_macromodel
         self._kwargs_source_model = kwargs_source_model
 
-        self.uncertainty_in_magnifications = True
+        self.uncertainty_in_magnifications = uncertainty_in_magnifications
         self._sourcemodel_type = sourcemodel_type
         self.keep_flux_ratio_index = keep_flux_ratio_index
 
