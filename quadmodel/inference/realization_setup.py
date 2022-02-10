@@ -13,23 +13,6 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
     kwargs_realization = {}
     preset_model_name = realization_priors['PRESET_MODEL']
 
-    if preset_model_name == 'WDM_x':
-        preset_model = CUSTOM_WDM
-    elif preset_model_name == 'SIDM_CORE_COLLAPSE':
-        preset_model = SIDM_CORE_COLLAPSE
-    elif preset_model_name == 'ULDM':
-        aperture_radius = auto_raytracing_grid_size(source_size_pc) * 0.8
-        kwargs_realization['flucs_args'] = {'x_images': x_image,
-                                            'y_images': y_image,
-                                            'aperture': aperture_radius}
-        preset_model = preset_model_from_name(preset_model_name)
-
-    else:
-        try:
-            preset_model = preset_model_from_name(preset_model_name)
-        except:
-            raise Exception('preset model '+str(preset_model_name)+' not recognized.')
-
     del realization_priors['PRESET_MODEL']
     param_names_realization = []
     for parameter_name in realization_priors.keys():
@@ -58,8 +41,36 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         else:
             realization_params = np.append(realization_params, value)
 
+
     for arg in kwargs_other.keys():
         kwargs_realization[arg] = kwargs_other[arg]
+
+    if preset_model_name == 'WDM_x':
+        preset_model = CUSTOM_WDM
+    elif preset_model_name == 'SIDM_CORE_COLLAPSE':
+        preset_model = SIDM_CORE_COLLAPSE
+    elif preset_model_name == 'ULDM':
+
+        if kwargs_realization['log10_m_uldm'] > 10**-20 and source_size_pc > 20:
+            flucs = False
+        elif kwargs_realization['log10_m_uldm'] > 10**-19.5 and source_size_pc > 1.:
+            flucs = False
+        else:
+            flucs = True
+
+        aperture_radius = auto_raytracing_grid_size(source_size_pc) * 1.25
+        kwargs_realization['flucs_args'] = {'x_images': x_image,
+                                            'y_images': y_image,
+                                            'aperture': aperture_radius}
+        kwargs_realization['flucs'] = flucs
+        preset_model = preset_model_from_name(preset_model_name)
+
+    else:
+        try:
+            preset_model = preset_model_from_name(preset_model_name)
+        except:
+            raise Exception('preset model '+str(preset_model_name)+' not recognized.')
+
 
     return realization_params, preset_model, kwargs_realization, param_names_realization
 
