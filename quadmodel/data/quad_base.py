@@ -77,6 +77,22 @@ class Quad(object):
             param_names_macro = ['gamma', 'gamma_ext', 'a4']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
+        elif self._macromodel_type == 'EPL_FIXED_SHEAR':
+
+            shear_min, shear_max = self._kwargs_macromodel['shear_amplitude_min'], \
+                                   self._kwargs_macromodel['shear_amplitude_max']
+            gamma_macro = default_priors('gamma_macro')
+            shear_amplitude = sample_from_prior(['UNIFORM', shear_min, shear_max])
+            optimization_routine = 'fixed_shear_powerlaw'
+            constrain_params = {'shear': shear_amplitude}
+            from quadmodel.deflector_models.preset_macromodels import EPLShear
+            model = EPLShear(self.zlens, gamma_macro, shear_amplitude, self.approx_einstein_radius,
+                                      0.0, 0.0, 0.2, 0.1)
+            params_sampled = np.array([gamma_macro])
+            param_names_macro = ['gamma', 'gamma_ext']
+            return model, constrain_params, optimization_routine, params_sampled, param_names_macro
+
+
         elif self._macromodel_type == 'EPL_FREE_SHEAR_MULTIPOLE':
 
             random_shear_init = np.random.uniform(0.05, 0.25)
