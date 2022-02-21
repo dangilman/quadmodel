@@ -10,13 +10,16 @@ def default_priors(param):
     elif param == 'multipole_amplitude':
         am_mean, am_sigma = 0.0, 0.01
         return np.random.normal(am_mean, am_sigma)
-    elif param == 'NARROW_LINE_Gaussian': # short for "Narrow-line Gaussian"
+    elif param == 'NARROW_LINE_Gaussian':
         source_fwhm_pc = np.random.uniform(25, 60)
         return source_fwhm_pc
-    elif param == 'midIR_Gaussian': # short for "MidIR Gaussian"
+    elif param == 'midIR_Gaussian':
         source_fwhm_pc = np.random.uniform(0.5, 10.0)
         return source_fwhm_pc
-    elif param == 'DOUBLE_NL_Gaussian': # short for "MidIR Gaussian"
+    elif param == 'CO11-10_Gaussian':
+        source_fwhm_pc = np.random.uniform(5.0, 20.0)
+        return source_fwhm_pc
+    elif param == 'DOUBLE_NL_Gaussian':
         source_fwhm_pc = np.random.uniform(25, 80)
         dx = np.random.uniform(1e-5, 1e5)
         dy = np.random.uniform(0, 0.12)

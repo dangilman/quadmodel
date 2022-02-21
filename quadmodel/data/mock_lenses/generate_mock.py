@@ -1,4 +1,4 @@
-from quadmodel.quadmodel import QuadLensSystem
+from quadmodel.quad_model import QuadLensSystem
 from quadmodel.deflector_models.preset_macromodels import EPLShear
 from quadmodel.macromodel import MacroLensModel
 from pyHalo.preset_models import CDM
