@@ -40,6 +40,20 @@ class WFI2033(Quad):
         """
         If the deflector system has no satellites, return an empty list of lens components (see macromodel class)
         """
+
+        theta_E = 0.03
+        center_x = 0.245
+        center_y = 2.037
+        if sample:
+            theta_E = abs(np.random.normal(theta_E, 0.03))
+            center_x = np.random.normal(center_x, 0.05)
+            center_y = np.random.normal(center_y, 0.05)
+
+        kwargs_init_1 = [{'theta_E': theta_E, 'center_x': center_x, 'center_y': center_y}]
+        satellite_1 = SIS(0.66, kwargs_init_1)
+        params_1 = np.array([theta_E, center_x, center_y])
+        param_names_1 = ['theta_E_1', 'center_x_1', 'center_y_1']
+
         theta_E = 0.93
         center_x = -3.36
         center_y = -0.08
@@ -48,8 +62,8 @@ class WFI2033(Quad):
             center_x = np.random.normal(center_x, 0.05)
             center_y = np.random.normal(center_y, 0.05)
 
-        kwargs_init = [{'theta_E': theta_E, 'center_x': center_x, 'center_y': center_y}]
-        satellite = SIS(0.745, kwargs_init)
-        params = np.array([theta_E, center_x, center_y])
-        param_names = ['theta_E', 'center_x', 'center_y']
-        return [satellite], params, param_names
+        kwargs_init_2 = [{'theta_E': theta_E, 'center_x': center_x, 'center_y': center_y}]
+        satellite_2 = SIS(0.745, kwargs_init_2)
+        params_2 = np.array([theta_E, center_x, center_y])
+        param_names_2 = ['theta_E_2', 'center_x_2', 'center_y_2']
+        return [satellite_1, satellite_2], np.append(params_1, params_2), param_names_1 + param_names_2

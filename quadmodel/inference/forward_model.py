@@ -1,4 +1,4 @@
-from quadmodel.quadmodel import QuadLensSystem
+from quadmodel.quad_model import QuadLensSystem
 from quadmodel.Solvers.hierachical import HierarchicalOptimization
 from quadmodel.Solvers.brute import BruteOptimization
 import os

@@ -6,7 +6,7 @@
 import unittest
 from click.testing import CliRunner
 
-from quadmodel import quadmodel
+from quadmodel import quad_model
 from quadmodel import cli
 
 

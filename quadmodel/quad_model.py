@@ -1,12 +1,12 @@
 from pyHalo.Cosmology.cosmology import Cosmology
 from lenstronomy.Plots.plot_quasar_images import plot_quasar_images
 from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
-from quadmodel.util import interpolate_ray_paths_system
 from quadmodel.Solvers.brute import BruteOptimization
 from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.LensModel.Solver.lens_equation_solver import LensEquationSolver
 import numpy as np
 from scipy.interpolate import interp1d
+from quadmodel.util import interpolate_ray_paths_system
 
 class QuadLensSystem(object):
 
@@ -362,5 +362,6 @@ class QuadLensSystem(object):
         ext = LensEquationSolver(lensmodel)
         x_image, y_image = ext.findBrightImage(source_x, source_y, kwargs)
         return x_image, y_image
+
 
 
