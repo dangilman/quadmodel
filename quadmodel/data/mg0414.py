@@ -5,8 +5,8 @@ from quadmodel.deflector_models.sis import SIS
 
 class MG0414(Quad):
 
-    def __init__(self, sourcemodel_type='midIR_Gaussian',
-                 macromodel_type='CO11-10_Gaussian'):
+    def __init__(self, sourcemodel_type='CO11-10_Gaussian',
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
         zlens = 0.96
         self.zlens = zlens
