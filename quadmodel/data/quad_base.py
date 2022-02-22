@@ -131,15 +131,7 @@ class Quad(object):
 
     def generate_sourcemodel(self):
 
-        if self._sourcemodel_type == 'NARROW_LINE_Gaussian':
-
-            source_size_pc = default_priors(self._sourcemodel_type)
-            kwargs_source_model = {'source_model': 'GAUSSIAN'}
-            source_samples = np.array(source_size_pc)
-            param_names_source = ['source_size_pc']
-            return source_size_pc, kwargs_source_model, source_samples, param_names_source
-
-        elif self._sourcemodel_type == 'midIR_Gaussian':
+        if self._sourcemodel_type in ['NARROW_LINE_Gaussian', 'midIR_Gaussian', 'CO11-10_Gaussian']:
 
             source_size_pc = default_priors(self._sourcemodel_type)
             kwargs_source_model = {'source_model': 'GAUSSIAN'}
