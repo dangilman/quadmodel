@@ -6,6 +6,12 @@ def load_preset_lens(lens_name):
     if lens_name == 'B1422':
         from quadmodel.data.b1422 import B1422
         return B1422()
+    if lens_name == 'B1422_fakeNoPBH':
+        from quadmodel.data.b1422_fakeNoPBH import B1422_fakeNoPBH
+        return B1422_fakeNoPBH()
+    if lens_name == 'B1422_fakeYesPBH':
+        from quadmodel.data.b1422_fakeYesPBH import B1422_fakeYesPBH
+        return B1422_fakeYesPBH()
     elif lens_name == 'WGD2038':
         from quadmodel.data.wgd2038 import WGD2038
         return WGD2038()

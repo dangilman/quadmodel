@@ -1,0 +1,24 @@
+UGE job for pbhFM_noPBH_fixedFrac.py built Fri Feb 18 00:46:39 PST 2022
+
+  pbhFM_noPBH_fixedFrac.py directory:
+    /u/home/v/vdike/code/quadmodel/quadmodel/inference
+  Submitted to UGE:
+    Job 1753216, queue: ttreu_pod_xgold.q, sub: 02/18/2022 00:49:49.057
+  SCRATCH directory:
+    /work/1753216.50.ttreu_pod_xgold.q
+  pbhFM_noPBH_fixedFrac.py 8-way threaded job configuration:
+
+Task 50 for pbhFM_noPBH_fixedFrac.py started on:   n6029
+Task 50 for pbhFM_noPBH_fixedFrac.py started at:   Sat Feb 19 08:42:26 PST 2022
+
+if: Expression Syntax.
+then: Command not found.
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: colossus in /u/home/v/vdike/.local/lib/python3.8/site-packages (1.2.19)
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: multiprocess in /u/home/v/vdike/.local/lib/python3.8/site-packages (0.70.12.2)
+Requirement already satisfied: dill>=0.3.4 in /u/home/v/vdike/.local/lib/python3.8/site-packages (from multiprocess) (0.3.4)
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: schwimmbad in /u/home/v/vdike/.local/lib/python3.8/site-packages (0.3.2)
+pbhFM_noPBH_fixedFrac.py  >& pbhFM_noPBH_fixedFrac.py.output.1753216.50
+

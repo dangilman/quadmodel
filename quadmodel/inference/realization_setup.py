@@ -1,17 +1,21 @@
 from pyHalo.preset_models import preset_model_from_name
 import numpy as np
 from copy import deepcopy
-from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_size
-from pyHalo.realization_extensions import RealizationExtensions
-from quadmodel.util import approx_theta_E
-from pyHalo.Cosmology.cosmology import Cosmology
 
-def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
+def setup_realization(priors, kwargs_other={}):
 
     realization_priors = deepcopy(priors)
     realization_params = None
     kwargs_realization = {}
     preset_model_name = realization_priors['PRESET_MODEL']
+
+    if preset_model_name == 'WDM_x':
+        preset_model = CUSTOM_WDM
+    else:
+        try:
+            preset_model = preset_model_from_name(preset_model_name)
+        except:
+            raise Exception('preset model '+str(preset_model_name)+' not recognized.')
 
     del realization_priors['PRESET_MODEL']
     param_names_realization = []
@@ -41,59 +45,10 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         else:
             realization_params = np.append(realization_params, value)
 
-
     for arg in kwargs_other.keys():
         kwargs_realization[arg] = kwargs_other[arg]
 
-    if preset_model_name == 'WDM_x':
-        preset_model = CUSTOM_WDM
-    elif preset_model_name == 'SIDM_CORE_COLLAPSE':
-        preset_model = SIDM_CORE_COLLAPSE
-    elif preset_model_name == 'ULDM':
-
-        if kwargs_realization['log10_m_uldm'] > 10**-20 and source_size_pc > 20:
-            flucs = False
-        elif kwargs_realization['log10_m_uldm'] > 10**-19.5 and source_size_pc > 1.:
-            flucs = False
-        else:
-            flucs = True
-
-        aperture_radius = auto_raytracing_grid_size(source_size_pc) * 1.25
-        kwargs_realization['flucs_args'] = {'x_images': x_image,
-                                            'y_images': y_image,
-                                            'aperture': aperture_radius}
-        kwargs_realization['flucs'] = flucs
-        preset_model = preset_model_from_name(preset_model_name)
-
-    else:
-        try:
-            preset_model = preset_model_from_name(preset_model_name)
-        except:
-            raise Exception('preset model '+str(preset_model_name)+' not recognized.')
-
-
     return realization_params, preset_model, kwargs_realization, param_names_realization
-
-def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
-
-    CDM = preset_model_from_name('CDM')
-    realization_cdm = CDM(zlens, zsource, **kwargs_rendering)
-    ext = RealizationExtensions(realization_cdm)
-    mass_range = [[6.0, 8.0], [8.0, 10]]
-    relative_collapse_probability = kwargs_rendering['lambda']
-    p68_sub = kwargs_rendering['f_68']
-    p810_sub = kwargs_rendering['f_810']
-    p68_field = p68_sub * relative_collapse_probability
-    p810_field = p810_sub * relative_collapse_probability
-    probabilities_subhalos = [p68_sub, p810_sub]
-    probabilities_field_halos = [p68_field, p810_field]
-    indexes = ext.core_collapse_by_mass(mass_range, mass_range,
-                              probabilities_subhalos, probabilities_field_halos)
-    kwargs_core_collapse_profile = {'x_match': kwargs_rendering['x_match'],
-                                    'x_core_halo': kwargs_rendering['x_core_halo'],
-                                    'log_slope_halo': kwargs_rendering['log_slope_halo']}
-    realization_sidm = ext.add_core_collapsed_halos(indexes, **kwargs_core_collapse_profile)
-    return realization_sidm
 
 def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
 
