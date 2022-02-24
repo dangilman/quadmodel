@@ -11,8 +11,15 @@ class MG0414(Quad):
         zlens = 0.96
         self.zlens = zlens
         zsource = 2.64
-        x = [1.078, 1.191, 0.482, -0.863]
-        y = [-0.584, -0.341, 1.279, -0.369]
+
+        gx, gy = 0.482, -1.279
+        self.x_red = np.array([-0.576, -0.739, 0.0, 1.345]) - gx
+        self.y_red = np.array([-1.993, -1.520, 0.0, -1.648]) - gy
+        self.x_blue = np.array([-0.596, -0.709, 0.0, 1.345]) - gx
+        self.y_blue = np.array([-1.863, -1.620, 0.0, -1.648]) - gy
+
+        x = self.x_blue
+        y = self.y_blue
         m = [1.0, 0.86, 0.36, 0.16]
         delta_m = [0.05/0.83, 0.04/0.36, 0.04/0.34]
         delta_xy = [0.01] * 4 # increase the uncertainties due to the difference between redsshifted a
@@ -42,9 +49,11 @@ class MG0414(Quad):
         """
         If the deflector system has no satellites, return an empty list of lens components (see macromodel class)
         """
+
         theta_E = 0.2
-        center_x = -0.403
-        center_y = 1.471
+        center_x = 0.431 # 0.913 - 0.482
+        center_y = 1.419
+
         if sample:
             theta_E = abs(np.random.normal(theta_E, 0.05))
             center_x = np.random.normal(center_x, 0.05)

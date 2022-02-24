@@ -17,7 +17,7 @@ def default_priors(param):
         source_fwhm_pc = np.random.uniform(0.5, 10.0)
         return source_fwhm_pc
     elif param == 'CO11-10_Gaussian':
-        source_fwhm_pc = np.random.uniform(5.0, 20.0)
+        source_fwhm_pc = np.random.uniform(5.0, 15.0)
         return source_fwhm_pc
     elif param == 'DOUBLE_NL_Gaussian':
         source_fwhm_pc = np.random.uniform(25, 80)

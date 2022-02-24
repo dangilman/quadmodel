@@ -15,7 +15,7 @@ from copy import deepcopy
 
 def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_realization, tolerance=0.5,
                   verbose=False, readout_steps=2, kwargs_realization_other={},
-                  ray_tracing_optimization='default', test_mode=False):
+                  ray_tracing_optimization='default', test_mode=False, scale_flux_uncertainties=1.0):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -45,6 +45,10 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     :param verbose: determines how much output to print while running the inference
     :param readout_steps: determines how often output is printed to a file
     :param kwargs_realization_other: additional keyword arguments to be passed into a pyHalo preset model
+    :param ray_tracing_optimization: sets the method used to perform ray tracing
+    :param test_mode: prints output and generates plots of image positions and convergence maps
+    :param scale_flux_uncertainties: rescales the uncertainties applied to the magnifications
+    (i.e. 0 means perfect measurements)
     :return:
     """
 
