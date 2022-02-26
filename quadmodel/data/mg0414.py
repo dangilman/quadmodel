@@ -18,6 +18,8 @@ class MG0414(Quad):
         self.x_blue = np.array([-0.596, -0.709, 0.0, 1.345]) - gx
         self.y_blue = np.array([-1.863, -1.620, 0.0, -1.648]) - gy
 
+        self.log10_host_halo_mass = 13.5
+
         x = self.x_blue
         y = self.y_blue
         m = [1.0, 0.86, 0.36, 0.16]
