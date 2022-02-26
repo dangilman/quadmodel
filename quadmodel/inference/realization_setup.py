@@ -92,7 +92,7 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
 
     indexes = ext.core_collapse_by_mass(mass_range, mass_range,
                               probabilities_subhalos, probabilities_field_halos)
-    
+
     kwargs_core_collapse_profile = {'x_match': kwargs_rendering['x_match'],
                                     'x_core_halo': kwargs_rendering['x_core_halo'],
                                     'log_slope_halo': kwargs_rendering['log_slope_halo']}
