@@ -15,7 +15,7 @@ class B1422(Quad):
         delta_xy = [0.005] * 4
         keep_flux_ratio_index = [0, 1]
 
-        kwargs_macromodel = {'shear_amplitude_min': 0.12, 'shear_amplitude_max': 0.35}
+        kwargs_macromodel = {'shear_amplitude_min': 0.08, 'shear_amplitude_max': 0.4}
 
         super(B1422, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                     kwargs_macromodel, keep_flux_ratio_index)

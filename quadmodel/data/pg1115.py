@@ -18,7 +18,7 @@ class PG1115(Quad):
         delta_xy = [0.003] * 4
         keep_flux_ratio_index = [0, 1, 2]
 
-        kwargs_macromodel = {'shear_amplitude_min': 0.0025, 'shear_amplitude_max': 0.1}
+        kwargs_macromodel = {'shear_amplitude_min': 0.002, 'shear_amplitude_max': 0.12}
 
         super(PG1115, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                     kwargs_macromodel, keep_flux_ratio_index, uncertainty_in_magnifications=False)

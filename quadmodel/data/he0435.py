@@ -17,7 +17,7 @@ class HE0435(Quad):
         keep_flux_ratio_index = [0, 1, 2]
 
         macromodel_type = 'EPL_FIXED_SHEAR_MULTIPOLE'
-        kwargs_macromodel = {'shear_amplitude_min': 0.015, 'shear_amplitude_max': 0.17}
+        kwargs_macromodel = {'shear_amplitude_min': 0.015, 'shear_amplitude_max': 0.15}
 
         super(HE0435, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                     kwargs_macromodel, keep_flux_ratio_index)

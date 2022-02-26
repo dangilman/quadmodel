@@ -42,7 +42,7 @@ class WFI2026(Quad):
         delta_xy = [0.005] * 4
         keep_flux_ratio_index = [0, 1, 2]
 
-        kwargs_macromodel = {'shear_amplitude_min': 0.03, 'shear_amplitude_max': 0.16}
+        kwargs_macromodel = {'shear_amplitude_min': 0.015, 'shear_amplitude_max': 0.16}
 
         super(WFI2026, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                     kwargs_macromodel, keep_flux_ratio_index)
