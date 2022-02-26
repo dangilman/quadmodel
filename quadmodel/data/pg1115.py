@@ -17,6 +17,7 @@ class PG1115(Quad):
         delta_m = [0.06/0.93, 0.07/0.16, 0.04/0.21]
         delta_xy = [0.003] * 4
         keep_flux_ratio_index = [0, 1, 2]
+        self.log10_host_halo_mass = 13.0
 
         kwargs_macromodel = {'shear_amplitude_min': 0.002, 'shear_amplitude_max': 0.12}
 

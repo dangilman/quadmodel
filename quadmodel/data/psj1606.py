@@ -18,6 +18,7 @@ class PSJ1606(Quad):
         delta_m = [0.03, 0.03, 0.02/0.6, 0.02/0.78]
         delta_xy = [0.005] * 4
         keep_flux_ratio_index = [0, 1, 2]
+        self.log10_host_halo_mass = 13.3
 
         kwargs_macromodel = {'shear_amplitude_min': 0.1, 'shear_amplitude_max': 0.28}
 

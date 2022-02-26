@@ -41,7 +41,6 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         else:
             realization_params = np.append(realization_params, value)
 
-
     for arg in kwargs_other.keys():
         kwargs_realization[arg] = kwargs_other[arg]
 

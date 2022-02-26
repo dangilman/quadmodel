@@ -16,6 +16,7 @@ class WGDJ0405(Quad):
         delta_m = [0.04, 0.04/0.65, 0.03/1.25, 0.04/1.17]
         delta_xy = [0.005] * 4
         keep_flux_ratio_index = [0, 1, 2]
+        self.log10_host_halo_mass = 13.3
 
         kwargs_macromodel = {'shear_amplitude_min': 0.005, 'shear_amplitude_max': 0.12}
 
