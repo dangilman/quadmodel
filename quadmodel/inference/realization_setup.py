@@ -79,16 +79,20 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
     CDM = preset_model_from_name('CDM')
     realization_cdm = CDM(zlens, zsource, **kwargs_rendering)
     ext = RealizationExtensions(realization_cdm)
-    mass_range = [[6.0, 8.0], [8.0, 10]]
+    mass_range = [[6.0, 8.0], [8.0, 9.0], [9.0, 10.0]]
     relative_collapse_probability = kwargs_rendering['lambda']
     p68_sub = kwargs_rendering['f_68']
-    p810_sub = kwargs_rendering['f_810']
+    p89_sub = kwargs_rendering['f_89']
+    p910_sub = kwargs_rendering['f_910']
     p68_field = p68_sub * relative_collapse_probability
-    p810_field = p810_sub * relative_collapse_probability
-    probabilities_subhalos = [p68_sub, p810_sub]
-    probabilities_field_halos = [p68_field, p810_field]
+    p89_field = p89_sub * relative_collapse_probability
+    p910_field = p910_sub * relative_collapse_probability
+    probabilities_subhalos = [p68_sub, p89_sub, p910_sub]
+    probabilities_field_halos = [p68_field, p89_field, p910_field]
+
     indexes = ext.core_collapse_by_mass(mass_range, mass_range,
                               probabilities_subhalos, probabilities_field_halos)
+    
     kwargs_core_collapse_profile = {'x_match': kwargs_rendering['x_match'],
                                     'x_core_halo': kwargs_rendering['x_core_halo'],
                                     'log_slope_halo': kwargs_rendering['log_slope_halo']}
