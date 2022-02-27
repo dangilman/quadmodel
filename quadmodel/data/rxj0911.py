@@ -16,6 +16,7 @@ class RXJ0911(Quad):
         delta_xy = [0.003] * 4
         keep_flux_ratio_index = [0, 1, 2]
         self.log10_host_halo_mass = 13.1
+        self.log10_host_halo_mass_sigma = 0.3
 
         macromodel_type = 'EPL_FREE_SHEAR_MULTIPOLE'
         kwargs_macromodel = {}

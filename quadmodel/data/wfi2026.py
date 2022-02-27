@@ -34,6 +34,7 @@ class WFI2026(Quad):
                            0.2122257053291536, 0.121943573667]
 
         self.log10_host_halo_mass = 13.3
+        self.log10_host_halo_mass_sigma = 0.3
         zlens = [np.array(_zvalues), np.array(_zpdf)]
         zsource = 2.23
         x = [0.187, 0.44, 0.023, -0.548]

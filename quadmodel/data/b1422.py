@@ -16,6 +16,7 @@ class B1422(Quad):
         keep_flux_ratio_index = [0, 1]
 
         self.log10_host_halo_mass = 13.3
+        self.log10_host_halo_mass_sigma = 0.3
 
         kwargs_macromodel = {'shear_amplitude_min': 0.08, 'shear_amplitude_max': 0.4}
 

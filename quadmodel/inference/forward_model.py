@@ -146,8 +146,9 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                                                                                                             lens_data_class_sampling.x,
                                                                                                             lens_data_class_sampling.y,
                                                                                                             source_size_pc)
-        
-        kwargs_preset_model['log_m_host'] = np.random.normal(lens_data_class.log10_host_halo_mass, 0.3)
+
+        kwargs_preset_model['log_m_host'] = np.random.normal(lens_data_class.log10_host_halo_mass,
+                                                             lens_data_class.log10_host_halo_mass_sigma)
         # load the lens macromodel defined in the data class
         model, constrain_params_macro, optimization_routine, macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel()
         macromodel = MacroLensModel(model.component_list)
