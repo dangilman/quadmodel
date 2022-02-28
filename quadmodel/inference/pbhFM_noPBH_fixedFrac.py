@@ -57,7 +57,6 @@ or the metric distance between the model-predicted flux ratios and the measured 
 """
 
 
-
 #%% REMOVE AFTER TESTING
 # output_path = os.getcwd() + '/example_inference_output/'
 
@@ -68,7 +67,7 @@ or the metric distance between the model-predicted flux ratios and the measured 
 #%% INPUTS FROM EXAMPLE INFERENCE SCRIPT
 lens_data = 'B1422_fakeNoPBH'
 # the path where we generate output samples
-output_path = os.getcwd() + '/output_NoPBH_fixedFrac'
+output_path = os.getcwd() + '/output_noPBH_fixedFrac/'
 # a unique integer that is appended to the filenames
 job_index = 1
 # the number of realizations to accept in the posterior; the function will run until this many samples are generated
@@ -92,7 +91,7 @@ realization_priors['mass_fraction'] = ['FIXED', .5]
 tolerance=summary_statistic_tolerance
 verbose=False
 kwargs_sample_realization = realization_priors
-readout_steps=2
+readout_steps=10
 kwargs_realization_other={}
 
 
@@ -131,8 +130,6 @@ magnifications, magnification_uncertainties, astrometric_uncertainty, R_ein_appr
 # You can restart inferences from previous runs by simply running the function again. In the following lines, the
 # code looks for existing output files, and determines how many samples to add based on how much output already
 # exists.
-# Why this functionality?
-# This needs to be changed for testing
 if os.path.exists(filename_mags):
     _m = np.loadtxt(filename_mags)
     try:
@@ -147,7 +144,6 @@ else:
 
 if n_kept >= n_keep:
     print('\nSIMULATION ALREADY FINISHED.')
-#     return
 
 # Initialize stuff for the inference
 idx_init = n_kept
@@ -170,14 +166,30 @@ if verbose:
     print('samples remaining: ', n_keep - n_kept)
 
 magnifications = np.array(magnifications) # magnifications loaded in lens_data
-_flux_ratios_data = magnifications[1:] / magnifications[0] # why internalize this?
+_flux_ratios_data = magnifications[1:] / magnifications[0] 
 
 log_ref_mass=6. # if you change the mass range, change the aperture scaling below
 
 
 # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
 while True:
+    
+    if os.path.exists(filename_mags):
+        _m = np.loadtxt(filename_mags)
+        try:
+            n_kept = _m.shape[0]
+        except:
+            n_kept = 1
+        write_param_names = False
+    else:
+        n_kept = 0
+        _m = None
+        write_param_names = True
 
+    if n_kept >= n_keep:
+        print('\nSIMULATION FINISHED.')
+        break
+    
     # get the lens redshift, for some deflectors with photometrically-estimated redshifts, we have to sample a PDF
     lens_data_class.set_zlens()
     zlens = lens_data_class.zlens
@@ -294,7 +306,6 @@ while True:
 
     # Next, we keep only the flux ratios for which we have good data (for most lenses with well-measured fluxes,
     # this will be all the images, so keep_flux_ratio_index would be a list [0, 1, 2]
-    # are these just pre-flagged?
     flux_ratios_data = []
     flux_ratios = []
     for idx in lens_data_class_sampling.keep_flux_ratio_index:
@@ -311,7 +322,6 @@ while True:
         print('flux ratios data: ', flux_ratios_data)
         print('flux ratios model: ', flux_ratios)
         print('statistic: ', stat)
-
     acceptance_rate_counter += 1
     # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
     if acceptance_rate_counter == 10 or acceptance_rate_counter == 50:
@@ -415,4 +425,3 @@ while True:
     if break_loop:
         print('\nSIMULATION FINISHED')
         break
-
