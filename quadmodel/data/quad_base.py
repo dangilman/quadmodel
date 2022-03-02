@@ -22,7 +22,7 @@ def default_priors(param):
     elif param == 'DOUBLE_NL_Gaussian':
         source_fwhm_pc = np.random.uniform(25, 80)
         dx = np.random.uniform(1e-5, 1e-5)
-        dy = np.random.uniform(0, 0.016)
+        dy = np.random.uniform(0, 0.01)
         amp_scale = np.random.uniform(0.25, 1.0)
         size_scale = np.random.uniform(0.25, 1.0)
         return source_fwhm_pc, dx, dy, amp_scale, size_scale
