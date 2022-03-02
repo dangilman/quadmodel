@@ -21,8 +21,8 @@ def default_priors(param):
         return source_fwhm_pc
     elif param == 'DOUBLE_NL_Gaussian':
         source_fwhm_pc = np.random.uniform(25, 80)
-        dx = np.random.uniform(1e-5, 1e5)
-        dy = np.random.uniform(0, 0.12)
+        dx = np.random.uniform(1e-5, 1e-5)
+        dy = np.random.uniform(0, 0.016)
         amp_scale = np.random.uniform(0.25, 1.0)
         size_scale = np.random.uniform(0.25, 1.0)
         return source_fwhm_pc, dx, dy, amp_scale, size_scale
@@ -143,7 +143,7 @@ class Quad(object):
 
             source_size_pc, dx, dy, amp_scale, size_scale = default_priors(self._sourcemodel_type)
             kwargs_source_model = {'source_model': 'DOUBLE_GAUSSIAN', 'dx': dx, 'dy': dy, 'amp_scale': amp_scale, 'size_scale': size_scale}
-            kwargs_source_model = kwargs_source_model.update(self._kwargs_source_model)
+            kwargs_source_model.update(self._kwargs_source_model)
             source_samples = np.array([source_size_pc, dx, dy, amp_scale, size_scale])
             param_names_source = ['source_size_pc', 'dx', 'dy', 'amp_scale', 'size_scale']
             return source_size_pc, kwargs_source_model, source_samples, param_names_source

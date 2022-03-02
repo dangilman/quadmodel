@@ -307,7 +307,12 @@ class QuadLensSystem(object):
                                                                          grid_resolution=grid_resolution,
                                                                          axis_ratio=grid_axis_ratio,
                                                                          source_light_model=source_model,
-                                                                         **kwargs_magnification_finite)
+                                                                         dx=kwargs_magnification_finite['dx'],
+                                                                         dy=kwargs_magnification_finite['dy'],
+                                                                         size_scale=kwargs_magnification_finite[
+                                                                             'size_scale'],
+                                                                         amp_scale=kwargs_magnification_finite[
+                                                                             'amp_scale'])
             else:
                 raise Exception('source model '+str(source_model)+ ' not recognized')
 
@@ -348,7 +353,8 @@ class QuadLensSystem(object):
                                                                      grid_radius_arcsec=grid_rmax,
                                                                      grid_resolution=grid_resolution,
                                                                      source_light_model=source_model,
-                                                                     **kwargs_magnification_finite)
+                               dx=kwargs_magnification_finite['dx'], dy=kwargs_magnification_finite['dy'],
+                               size_scale=kwargs_magnification_finite['size_scale'], amp_scale=kwargs_magnification_finite['amp_scale'])
 
     def solve_lens_equation(self, source_x, source_y):
 

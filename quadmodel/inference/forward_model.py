@@ -186,8 +186,9 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
 
         if test_mode:
             import matplotlib.pyplot as plt
-            lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, 40.0, lens_model_full,
-                                    kwargs_lens_final)
+            lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, source_size_pc,
+                                    lens_model_full,
+                                    kwargs_lens_final, **kwargs_source_model)
             plt.show()
             _r = np.linspace(-2.0 * R_ein_approx, 2.0 * R_ein_approx, 200)
             xx, yy = np.meshgrid(_r, _r)
@@ -227,8 +228,11 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             flux_ratios = mags[1:] / mags[0]
             fluxratios_with_uncertainties = []
             for j, fr in enumerate(flux_ratios):
-                df = np.random.normal(0, fr * magnification_uncertainties[j])
-                new_fr = fr + df
+                if magnification_uncertainties[j] is None:
+                    new_fr = np.nan
+                else:
+                    df = np.random.normal(0, fr * magnification_uncertainties[j])
+                    new_fr = fr + df
                 fluxratios_with_uncertainties.append(new_fr)
             _flux_ratios = np.array(fluxratios_with_uncertainties)
 
