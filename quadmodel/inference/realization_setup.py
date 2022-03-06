@@ -83,9 +83,10 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
     p68_sub = kwargs_rendering['f_68']
     p89_sub = kwargs_rendering['f_89']
     p910_sub = kwargs_rendering['f_910']
-    p68_field = p68_sub * relative_collapse_probability
-    p89_field = p89_sub * relative_collapse_probability
-    p910_field = p910_sub * relative_collapse_probability
+    p68_field = max(1.0, p68_sub * relative_collapse_probability)
+    p89_field = max(1.0, p89_sub * relative_collapse_probability)
+    p910_field = max(1.0, p910_sub * relative_collapse_probability)
+
     probabilities_subhalos = [p68_sub, p89_sub, p910_sub]
     probabilities_field_halos = [p68_field, p89_field, p910_field]
 

@@ -181,7 +181,6 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
 
         else:
             optimizer = HierarchicalOptimization(lens_system, settings_class=ray_tracing_optimization)
-
             kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class_sampling,
                                                                                constrain_params=constrain_params_macro,
                                                                                param_class_name=optimization_routine,
@@ -230,7 +229,7 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
 
         mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
                                                 lens_data_class_sampling.y, source_size_pc, lens_model=lens_model_full,
-                                                kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=0.5,
+                                                kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=1,
                                                 grid_resolution_rescale=2., **kwargs_source_model)
 
         # Now we account for uncertainties in the image magnifications. These uncertainties are sometimes quoted for
