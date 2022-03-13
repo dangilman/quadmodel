@@ -50,9 +50,9 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         preset_model = SIDM_CORE_COLLAPSE
     elif preset_model_name == 'ULDM':
 
-        if kwargs_realization['log10_m_uldm'] > 10**-20 and source_size_pc > 20:
+        if kwargs_realization['log10_m_uldm'] > -19.5 and source_size_pc > 20:
             flucs = False
-        elif kwargs_realization['log10_m_uldm'] > 10**-19.5 and source_size_pc > 1.:
+        elif kwargs_realization['log10_m_uldm'] > -19. and source_size_pc > 1.:
             flucs = False
         else:
             flucs = True
@@ -78,17 +78,19 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
     CDM = preset_model_from_name('CDM')
     realization_cdm = CDM(zlens, zsource, **kwargs_rendering)
     ext = RealizationExtensions(realization_cdm)
-    mass_range = [[6.0, 8.0], [8.0, 9.0], [9.0, 10.0]]
+    mass_range = [[6.0, 7.0], [7.0, 8.0], [8.0, 9.0], [9.0, 10.0]]
     relative_collapse_probability = kwargs_rendering['lambda']
-    p68_sub = kwargs_rendering['f_68']
+    p67_sub = kwargs_rendering['f_67']
+    p78_sub = kwargs_rendering['f_78']
     p89_sub = kwargs_rendering['f_89']
     p910_sub = kwargs_rendering['f_910']
-    p68_field = max(1.0, p68_sub * relative_collapse_probability)
+    p67_field = max(1.0, p67_sub * relative_collapse_probability)
+    p78_field = max(1.0, p78_sub * relative_collapse_probability)
     p89_field = max(1.0, p89_sub * relative_collapse_probability)
     p910_field = max(1.0, p910_sub * relative_collapse_probability)
 
-    probabilities_subhalos = [p68_sub, p89_sub, p910_sub]
-    probabilities_field_halos = [p68_field, p89_field, p910_field]
+    probabilities_subhalos = [p67_sub, p78_sub, p89_sub, p910_sub]
+    probabilities_field_halos = [p67_field, p78_field, p89_field, p910_field]
 
     indexes = ext.core_collapse_by_mass(mass_range, mass_range,
                               probabilities_subhalos, probabilities_field_halos)
