@@ -190,6 +190,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                     print(name, realization_samples[i])
                 continue
 
+
         if test_mode:
             import matplotlib.pyplot as plt
             lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, source_size_pc,
@@ -208,10 +209,18 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             plt.show()
             a=input('continue')
 
-        mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
+        try:
+            mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
                                                 lens_data_class_sampling.y, source_size_pc, lens_model=lens_model_full,
                                                 kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=0.5,
                                                 grid_resolution_rescale=2., **kwargs_source_model)
+        except:
+            print('SINGULAR HESSIAN MATRIX; RETRY WITH CIRCULAR APERTURE')
+            mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
+                                                    lens_data_class_sampling.y, source_size_pc,
+                                                    lens_model=lens_model_full,
+                                                    kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=1,
+                                                    grid_resolution_rescale=2., **kwargs_source_model)
 
         # Now we account for uncertainties in the image magnifications. These uncertainties are sometimes quoted for
         # individual image fluxes, or the flux ratios.

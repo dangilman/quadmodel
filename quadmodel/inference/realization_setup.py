@@ -50,12 +50,14 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         preset_model = SIDM_CORE_COLLAPSE
     elif preset_model_name == 'ULDM':
 
-        if kwargs_realization['log10_m_uldm'] > -19.5 and source_size_pc > 20:
-            flucs = False
-        elif kwargs_realization['log10_m_uldm'] > -19. and source_size_pc > 1.:
-            flucs = False
-        else:
-            flucs = True
+        # if kwargs_realization['log10_m_uldm'] > -19.5 and source_size_pc > 20:
+        #     flucs = False
+        # elif kwargs_realization['log10_m_uldm'] > -19. and source_size_pc > 1.:
+        #     flucs = False
+        # else:
+        #     flucs = True
+
+        flucs = True
 
         aperture_radius = auto_raytracing_grid_size(source_size_pc) * 1.25
         kwargs_realization['flucs_args'] = {'x_images': x_image,
