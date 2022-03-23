@@ -23,7 +23,7 @@ class RXJ1131(Quad):
         self.log10_host_halo_mass_sigma = 0.3
         kwargs_source_model = {}
 
-        kwargs_macromodel = {'shear_amplitude_min': 0.01, 'shear_amplitude_max': 0.22}
+        kwargs_macromodel = {'shear_amplitude_min': 0.06, 'shear_amplitude_max': 0.28}
 
         super(RXJ1131, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, kwargs_source_model,
                                       macromodel_type, kwargs_macromodel, keep_flux_ratio_index,

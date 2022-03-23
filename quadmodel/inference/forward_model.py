@@ -177,12 +177,19 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                                                                               constrain_params_macro, verbose)
 
         else:
-            optimizer = HierarchicalOptimization(lens_system, settings_class=ray_tracing_optimization)
+            try:
+                optimizer = HierarchicalOptimization(lens_system, settings_class=ray_tracing_optimization)
 
-            kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class_sampling,
-                                                                               constrain_params=constrain_params_macro,
-                                                                               param_class_name=optimization_routine,
-                                                                               verbose=verbose)
+                kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class_sampling,
+                                                                                   constrain_params=constrain_params_macro,
+                                                                                   param_class_name=optimization_routine,
+                                                                                   verbose=verbose)
+            except:
+                print('ERROR! parameter array: ')
+                for i, name in enumerate(param_names_realization):
+                    print(name, realization_samples[i])
+                continue
+
 
         if test_mode:
             import matplotlib.pyplot as plt
@@ -197,15 +204,23 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             lensmodel_macro, kwargs_macro = lens_system.get_lensmodel(include_substructure=False)
             kappa_macro = lensmodel_macro.kappa(xx.ravel(), yy.ravel(), kwargs_macro).reshape(shape0)
             extent = [-1.8 * R_ein_approx, 1.8 * R_ein_approx, -1.8 * R_ein_approx, 1.8 * R_ein_approx]
-            plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.1, vmax=0.1, cmap='bwr', extent=extent)
+            plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.05, vmax=0.05, cmap='bwr', extent=extent)
             plt.scatter(lens_data_class_sampling.x, lens_data_class_sampling.y, color='k')
             plt.show()
             a=input('continue')
 
-        mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
+        try:
+            mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
                                                 lens_data_class_sampling.y, source_size_pc, lens_model=lens_model_full,
                                                 kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=0.5,
                                                 grid_resolution_rescale=2., **kwargs_source_model)
+        except:
+            print('SINGULAR HESSIAN MATRIX; RETRY WITH CIRCULAR APERTURE')
+            mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
+                                                    lens_data_class_sampling.y, source_size_pc,
+                                                    lens_model=lens_model_full,
+                                                    kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=1,
+                                                    grid_resolution_rescale=2., **kwargs_source_model)
 
         # Now we account for uncertainties in the image magnifications. These uncertainties are sometimes quoted for
         # individual image fluxes, or the flux ratios.
