@@ -290,7 +290,6 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
         # this keeps track of how many realizations were analyzed, and resets after each readout (set by readout_steps)
         # The purpose of this counter is to keep track of the acceptance rate
         iteration_counter += 1
-        print(stat) #EDITME
         if stat < tolerance:
             # If the statistic is less than the tolerance threshold, we keep the parameters
             accepted_realizations_counter += 1
