@@ -347,7 +347,8 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
                         param_name_string += name + ' '
                     f.write(param_name_string+'\n')
                     write_param_names = False
-
+                parameter_array = np.atleast_2d(parameter_array)
+                mags_out = np.atleast_2d(mags_out)
                 nrows, ncols = int(parameter_array.shape[0]), int(parameter_array.shape[1])
                 for row in range(0, nrows):
                     for col in range(0, ncols):
