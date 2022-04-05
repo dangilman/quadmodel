@@ -5,7 +5,9 @@ class HierarchicalSettingsDefault(object):
     with small source sizes <10 pc
     """
 
-    def __init__(self):
+    def __init__(self, log_mass_cut_global=7.0):
+
+        self.log_mass_cut_global = log_mass_cut_global
         self.set_aperture_units('ANGLES')
 
     def set_aperture_units(self, units):
@@ -14,10 +16,6 @@ class HierarchicalSettingsDefault(object):
     @property
     def aperture_units(self):
         return self._aperture_units
-
-    @property
-    def log_mass_cut_global(self):
-        return 7.
 
     @property
     def n_particles(self):

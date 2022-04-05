@@ -3,8 +3,6 @@ import numpy as np
 from copy import deepcopy
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_size
 from pyHalo.realization_extensions import RealizationExtensions
-from quadmodel.util import approx_theta_E
-from pyHalo.Cosmology.cosmology import Cosmology
 
 def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
@@ -69,7 +67,6 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
             preset_model = preset_model_from_name(preset_model_name)
         except:
             raise Exception('preset model '+str(preset_model_name)+' not recognized.')
-
 
     return realization_params, preset_model, kwargs_realization, param_names_realization
 

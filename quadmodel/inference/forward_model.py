@@ -72,6 +72,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     # Now load the lens data, this can either be specified as a string, which is used to load a lens system with image
     # positions and magnifications specified in a lens-specific class (see quadmodel.data), or you can pass in a lens
     # data class directly. For the required structure of the lens data class, see quad_base and the preset data classes
+
     if isinstance(lens_data, str):
         lens_data_class = load_preset_lens(lens_data)
     else:
@@ -162,6 +163,9 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         if verbose:
             print('realization contains ' + str(len(realization.halos)) + ' halos.')
             print('realization parameter array: ', realization_samples)
+            print('source/lens parameters: ', source_samples)
+            print(param_names_macro)
+            print('macromodel samples: ', macromodel_samples)
 
         # This sets up a baseline lens macromodel and aligns the dark matter halos to follow the path taken by the
         # light rays. This is important if the source is significantly offset from the lens centroid
@@ -195,7 +199,9 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             import matplotlib.pyplot as plt
             lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, source_size_pc,
                                     lens_model_full,
-                                    kwargs_lens_final, **kwargs_source_model)
+                                    kwargs_lens_final,
+                                    grid_resolution_rescale=2.,
+                                    **kwargs_source_model)
             plt.show()
             _r = np.linspace(-2.0 * R_ein_approx, 2.0 * R_ein_approx, 200)
             xx, yy = np.meshgrid(_r, _r)
@@ -203,8 +209,8 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             kappa = lens_model_full.kappa(xx.ravel(), yy.ravel(), kwargs_lens_final).reshape(shape0)
             lensmodel_macro, kwargs_macro = lens_system.get_lensmodel(include_substructure=False)
             kappa_macro = lensmodel_macro.kappa(xx.ravel(), yy.ravel(), kwargs_macro).reshape(shape0)
-            extent = [-1.8 * R_ein_approx, 1.8 * R_ein_approx, -1.8 * R_ein_approx, 1.8 * R_ein_approx]
-            plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.05, vmax=0.05, cmap='bwr', extent=extent)
+            extent = [-2 * R_ein_approx, 2 * R_ein_approx, -2 * R_ein_approx, 2 * R_ein_approx]
+            plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.005, vmax=0.005, cmap='bwr', extent=extent)
             plt.scatter(lens_data_class_sampling.x, lens_data_class_sampling.y, color='k')
             plt.show()
             a=input('continue')
