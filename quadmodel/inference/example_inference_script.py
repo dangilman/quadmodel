@@ -1,22 +1,25 @@
 from quadmodel.inference.forward_model import forward_model
 import os
+import sys
+import numpy as np
 
-lens_name = 'MG0414'
-output_path = os.getenv('HOME') + '/Code/quadmodel/notebooks/'+lens_name+'_SIDMinf/'
+import matplotlib.pyplot as plt
+
+lens_name = 'RXJ0911'
+output_path = os.getenv('HOME') + '/Code/quadmodel/notebooks/'+lens_name+'ULDMtest/'
 job_index = 1
-n_keep = 6
+n_keep = 20
 realization_priors = {}
-realization_priors['PRESET_MODEL'] = 'SIDM_CORE_COLLAPSE'
-realization_priors['f_68'] = ['UNIFORM', 0., 1.0]
-realization_priors['f_810'] = ['UNIFORM', 0., 1.0]
-realization_priors['lambda'] = ['UNIFORM', 0.0, 1.0]
-realization_priors['sigma_sub'] = ['FIXED', 0.05]
-realization_priors['x_match'] = ['UNIFORM', 2.0, 3.0]
-realization_priors['x_core_halo'] = ['FIXED', 0.05]
-realization_priors['log_slope_halo'] = ['UNIFORM', 2.8, 3.2]
-realization_priors['LOS_normalization'] = ['UNIFORM', 0.8, 1.2]
-realization_priors['log_m_host'] = ['GAUSSIAN', 13.3, 0.3]
-tolerance = 10
+realization_priors['PRESET_MODEL'] = 'ULDM'
+#ULDM specific parameters
+realization_priors['log10_m_uldm'] = ['UNIFORM', -22., -19.5]
+realization_priors['uldm_plaw'] = ['UNIFORM', 0.2, 0.5]
+realization_priors['log10_fluc_amplitude'] = ['UNIFORM', -1.5, -0.5]
+# general parameters
+realization_priors['sigma_sub'] = ['FIXED', 0.0]
+realization_priors['LOS_normalization'] = ['FIXED', 0.0]
+realization_priors['power_law_index'] = ['FIXED', -1.9]
+tolerance = 1e10
 
 forward_model(output_path, job_index, lens_name, n_keep, realization_priors, tolerance=tolerance,
-                  verbose=True, readout_steps=3, test_mode=True, scale_flux_uncertainties=1e-1)
+                  verbose=True, readout_steps=4, test_mode=True)
