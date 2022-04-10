@@ -76,7 +76,7 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
     realization_cdm = CDM(zlens, zsource, **kwargs_rendering)
     ext = RealizationExtensions(realization_cdm)
     mass_range = [[6.0, 7.0], [7.0, 8.0], [8.0, 9.0], [9.0, 10.0]]
-    relative_collapse_probability = kwargs_rendering['lambda']
+    relative_collapse_probability = 10**kwargs_rendering['log10lambda']
     p67_sub = kwargs_rendering['f_67']
     p78_sub = kwargs_rendering['f_78']
     p89_sub = kwargs_rendering['f_89']
