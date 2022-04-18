@@ -1,6 +1,7 @@
 import numpy as np
 from quadmodel.util import approx_theta_E
 from quadmodel.inference.sample_prior import sample_from_prior
+from scipy.optimize import minimize
 
 def default_priors(param):
 
@@ -53,6 +54,37 @@ class Quad(object):
         self.uncertainty_in_magnifications = uncertainty_in_magnifications
         self._sourcemodel_type = sourcemodel_type
         self.keep_flux_ratio_index = keep_flux_ratio_index
+
+
+    @staticmethod
+    def _flux_chi_square(scale, fluxes_measured, fluxes_modeled, measurement_uncertainties, dof_increment=0):
+
+        df = 0
+        dof = 0
+
+        for i in range(0, len(fluxes_measured)):
+            if measurement_uncertainties[i] is None or fluxes_measured[i] is None:
+                continue
+            else:
+                dof += 1
+                df += (fluxes_measured[i] - scale * fluxes_modeled[i])**2/measurement_uncertainties[i]**2
+        dof += dof_increment
+        return df/dof
+
+    def flux_chi_square(self, fluxes_modeled):
+
+        solution = float(minimize(self._flux_chi_square, x0=1.0, args=(self.m, fluxes_modeled, self.delta_m))['x'])
+
+        return self._flux_chi_square(solution, self.m, fluxes_modeled, self.delta_m, dof_increment=1)
+
+    def flux_ratio_chi_square(self, flux_ratios_modeled):
+
+        flux_ratios_measured = self.m[1:]/self.m[0]
+        df = 0
+        dof = len(self.keep_flux_ratio_index)
+        for i in self.keep_flux_ratio_index:
+            df += (flux_ratios_measured[i] - flux_ratios_modeled[i])**2/self.delta_m[i]**2
+        return df/dof
 
     def generate_macromodel(self):
         """

@@ -233,75 +233,65 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         # individual image fluxes, or the flux ratios.
 
         if statistic_type == 'METRIC_DISTANCE':
-            scale_flux_uncertainties = 1.0
-        elif statistic_type == 'CHI_SQUARE':
-            scale_flux_uncertainties = 1e-6
-        else:
-            raise Exception('summary statistic must be either METRIC_DISTANCE or CHI_SQUARE')
 
-        if lens_data_class.uncertainty_in_magnifications:
-            mags_with_uncertainties = []
-            sigma = []
+            if lens_data_class.uncertainty_in_magnifications:
+                mags_with_uncertainties = []
 
-            # If uncertainties are quoted for image fluxes, we can add them to the model-predicted image magnifications
-            for j, mag in enumerate(mags):
-                if magnification_uncertainties[j] is None:
-                    m = np.nan
-                    sigma.append(1000)
-                else:
+                for j, mag in enumerate(mags):
+                    if magnification_uncertainties[j] is None:
+                        m = np.nan
+                    else:
+                        m = abs(mag + np.random.normal(0, magnification_uncertainties[j] * mag))
 
-                    m = abs(mag + np.random.normal(0, scale_flux_uncertainties * magnification_uncertainties[j] * mag))
-                    if j!=0:
-                        if magnification_uncertainties[j] is None:
-                            sigma.append(1000)
-                        else:
-                            sigma.append(np.sqrt(magnification_uncertainties[0]**2 + magnification_uncertainties[j]**2))
+                    mags_with_uncertainties.append(m)
+                mags_with_uncertainties = np.array(mags_with_uncertainties)
+                _flux_ratios = mags_with_uncertainties[1:] / mags_with_uncertainties[0]
 
-                mags_with_uncertainties.append(m)
+            else:
+                # If uncertainties are quoted for image flux ratios, we first compute the flux ratios, and then add
+                # the uncertainties
+                flux_ratios = mags[1:] / mags[0]
+                fluxratios_with_uncertainties = []
 
-            mags_with_uncertainties = np.array(mags_with_uncertainties)
-            _flux_ratios = mags_with_uncertainties[1:] / mags_with_uncertainties[0]
-        else:
-            # If uncertainties are quoted for image flux ratios, we first compute the flux ratios, and then add
-            # the uncertainties
-            flux_ratios = mags[1:] / mags[0]
-            fluxratios_with_uncertainties = []
-            sigma = []
+                for k, fr in enumerate(flux_ratios):
+                    if magnification_uncertainties[k] is None:
+                        new_fr = np.nan
+                    else:
 
-            for k, fr in enumerate(flux_ratios):
-                if magnification_uncertainties[k] is None:
-                    new_fr = np.nan
-                    sigma.append(1000)
-                else:
+                        df = np.random.normal(0, fr * magnification_uncertainties[k])
+                        new_fr = fr + df
 
-                    df = np.random.normal(0, fr * scale_flux_uncertainties * magnification_uncertainties[k])
-                    new_fr = fr + df
-                    sigma.append(magnification_uncertainties[k])
+                    fluxratios_with_uncertainties.append(new_fr)
+                _flux_ratios = np.array(fluxratios_with_uncertainties)
 
-                fluxratios_with_uncertainties.append(new_fr)
-            _flux_ratios = np.array(fluxratios_with_uncertainties)
+            flux_ratios_data = []
+            flux_ratios = []
+            for idx in lens_data_class_sampling.keep_flux_ratio_index:
+                flux_ratios.append(_flux_ratios[idx])
+                flux_ratios_data.append(_flux_ratios_data[idx])
 
-        # Next, we keep only the flux ratios for which we have good data (for most lenses with well-measured fluxes,
-        # this will be all the images, so keep_flux_ratio_index would be a list [0, 1, 2]
-        flux_ratios_data = []
-        flux_ratios = []
-        for idx in lens_data_class_sampling.keep_flux_ratio_index:
-            flux_ratios.append(_flux_ratios[idx])
-            flux_ratios_data.append(_flux_ratios_data[idx])
-
-        dof = len(flux_ratios)
-        # Now we compute the summary statistic
-        stat = 0
-        if statistic_type == 'METRIC_DISTANCE':
+            # Now we compute the summary statistic
+            stat = 0
             for f_i_data, f_i_model in zip(flux_ratios_data, flux_ratios):
                 stat += (f_i_data - f_i_model) ** 2
             stat = np.sqrt(stat)
+
+        elif statistic_type == 'CHI_SQUARE':
+
+            _flux_ratios = mags[1:]/mags[0]
+            flux_ratios_data = []
+            flux_ratios = []
+            for idx in lens_data_class_sampling.keep_flux_ratio_index:
+                flux_ratios.append(_flux_ratios[idx])
+                flux_ratios_data.append(_flux_ratios_data[idx])
+
+            if lens_data_class_sampling.uncertainty_in_magnifications:
+                stat = lens_data_class_sampling.flux_chi_square(mags)
+            else:
+                stat = lens_data_class_sampling.flux_ratio_chi_square(flux_ratios)
+
         else:
-
-            for f_i_data, f_i_model, sigma_i in zip(flux_ratios_data, flux_ratios, sigma):
-                stat += (f_i_data - f_i_model) ** 2 / sigma_i ** 2
-
-            stat *= 1 / dof
+            raise Exception('statistic_type must be either CHI_SQUARE or METRIC_DISTANCE')
 
         if verbose:
             print('flux ratios data: ', flux_ratios_data)

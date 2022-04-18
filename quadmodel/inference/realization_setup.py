@@ -76,7 +76,7 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
 def SIDM_exact_Yukawa(zlens, zsource, **kwargs_rendering):
 
-    from sidmpy.core_collapse_timescale import collapse_probability_linear, evolution_timescale_scattering_rate
+    from sidmpy.core_collapse_timescale import collapse_probability
     from sidmpy.CrossSections.exact_yukawa import ExactYukawa
 
     CDM = preset_model_from_name('CDM')
@@ -87,12 +87,12 @@ def SIDM_exact_Yukawa(zlens, zsource, **kwargs_rendering):
     mass_ratio = kwargs_rendering['log10_mratio']
     alpha_chi = kwargs_rendering['alpha_chi']
     cross_section = ExactYukawa(m_chi, mass_ratio, alpha_chi)
-    t_sub = kwargs_rendering['collapse_time_sub']
-    t_field = t_sub * 10**kwargs_rendering['log10lambda']
+    t_sub = kwargs_rendering['collapse_time_field'] * 10 ** kwargs_rendering['log10_tscale']
+    t_field = kwargs_rendering['collapse_time_field']
     collapse_window_scale = kwargs_rendering['collapse_window']
 
-    indexes = ext.find_core_collapsed_halos(evolution_timescale_scattering_rate, collapse_probability_linear,
-                                  cross_section, t_sub, t_field, collapse_window_scale)
+    indexes = ext.find_core_collapsed_halos(collapse_probability, cross_section,
+                                  t_sub, t_field, collapse_window_scale)
     kwargs_core_collapse_profile = {'x_match': kwargs_rendering['x_match'],
                                     'x_core_halo': kwargs_rendering['x_core_halo'],
                                     'log_slope_halo': kwargs_rendering['log_slope_halo']}
