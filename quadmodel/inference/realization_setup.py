@@ -52,18 +52,11 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         preset_model = SIDM_exact_Yukawa
     elif preset_model_name == 'ULDM':
 
-        if kwargs_realization['log10_m_uldm'] > -19.5 and source_size_pc > 20:
-            flucs = False
-        elif kwargs_realization['log10_m_uldm'] > -19. and source_size_pc > 1.:
-            flucs = False
-        else:
-            flucs = True
-
         aperture_radius = auto_raytracing_grid_size(source_size_pc) * 1.25
         kwargs_realization['flucs_args'] = {'x_images': x_image,
                                             'y_images': y_image,
                                             'aperture': aperture_radius}
-        kwargs_realization['flucs'] = flucs
+        kwargs_realization['flucs'] = True
         preset_model = preset_model_from_name(preset_model_name)
 
     else:
