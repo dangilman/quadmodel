@@ -18,7 +18,8 @@ from pyHalo.Cosmology.lensing_mass_function import LensingMassFunction
 
 def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_realization, tolerance=0.5,
                   verbose=False, readout_steps=2, kwargs_realization_other={},
-                  ray_tracing_optimization='default', test_mode=False, scale_flux_uncertainties=1.0):
+                  ray_tracing_optimization='default', test_mode=False,
+                      save_realizations=False):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -50,8 +51,7 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
     :param kwargs_realization_other: additional keyword arguments to be passed into a pyHalo preset model
     :param ray_tracing_optimization: sets the method used to perform ray tracing
     :param test_mode: prints output and generates plots of image positions and convergence maps
-    :param scale_flux_uncertainties: rescales the uncertainties applied to the magnifications
-    (i.e. 0 means perfect measurements)
+    :param save_realizations: toggles on or off saving entire accepted realizations
     :return:
     """
 
@@ -362,13 +362,13 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
                         f.write(str(np.round(mags_out[row, col], 6)) + ' ')
                     f.write('\n')
 
-            for idx_system, system in enumerate(saved_lens_systems):
-
-                container = SimulationOutputContainer(lens_data_class_sampling_list[idx_system], system,
-                                                      mags_out[idx_system,:],
-                                                      parameter_array[idx_system,:])
-                f = open(filename_realizations + 'simulation_output_' + str(idx_system + idx_init + 1), 'wb')
-                dill.dump(container, f)
+            if save_realizations:
+                for idx_system, system in enumerate(saved_lens_systems):
+                    container = SimulationOutputContainer(lens_data_class_sampling_list[idx_system], system,
+                                                          mags_out[idx_system, :],
+                                                          parameter_array[idx_system, :])
+                    f = open(filename_realizations + 'simulation_output_' + str(idx_system + idx_init + 1), 'wb')
+                    dill.dump(container, f)
 
             idx_init += len(saved_lens_systems)
 

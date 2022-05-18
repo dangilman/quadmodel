@@ -36,7 +36,7 @@ class HierarchicalSettingsDefault(object):
     @property
     def foreground_settings(self):
         # add this only within the window
-        aperture_masses = [self.log_mass_cut_global, -0.]
+        aperture_masses = [self.log_mass_cut_global, -10.]
         # add this everywhere
         globalmin_masses = [self.log_mass_cut_global] * 2
         # window size
@@ -112,7 +112,7 @@ class HierarchicalSettingsULDM(object):
     @property
     def foreground_settings(self):
         # add this only within the window
-        aperture_masses = [self.log_mass_cut_global, 1.0]
+        aperture_masses = [self.log_mass_cut_global, -10.0]
         # add this everywhere
         globalmin_masses = [self.log_mass_cut_global] * 2
         # window size
