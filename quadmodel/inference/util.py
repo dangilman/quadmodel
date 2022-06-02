@@ -16,6 +16,14 @@ class FullSimulationContainer(object):
         self.parameters = parameters
         self.magnifications = magnifications
 
+    @classmethod
+    def join(cls, sim1, sim2):
+        mags = np.vstack((sim1.magnifications, sim2.magnifications))
+        params = np.vstack((sim1.parameters, sim2.parameters))
+        simulations = [sim1, sim2]
+        combined = FullSimulationContainer(simulations, params, mags)
+        return combined
+
 class SimulationOutputContainer(object):
 
     """

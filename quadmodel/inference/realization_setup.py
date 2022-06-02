@@ -48,15 +48,16 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         preset_model = CUSTOM_WDM
     elif preset_model_name == 'SIDM_CORE_COLLAPSE':
         preset_model = SIDM_CORE_COLLAPSE
-    elif preset_model_name == 'SIDM_EXACT_YUKAWA':
-        preset_model = SIDM_exact_Yukawa
     elif preset_model_name == 'ULDM':
 
-        aperture_radius = auto_raytracing_grid_size(source_size_pc) * 1.25
-        kwargs_realization['flucs_args'] = {'x_images': x_image,
-                                            'y_images': y_image,
-                                            'aperture': aperture_radius}
-        kwargs_realization['flucs'] = True
+        if kwargs_realization['flucs'] is True:
+            aperture_radius = auto_raytracing_grid_size(source_size_pc) * 1.25
+            kwargs_realization['flucs_args'] = {'x_images': x_image,
+                                                'y_images': y_image,
+                                                'aperture': aperture_radius}
+        else:
+            pass
+
         preset_model = preset_model_from_name(preset_model_name)
 
     else:
@@ -67,48 +68,21 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
     return realization_params, preset_model, kwargs_realization, param_names_realization
 
-def SIDM_exact_Yukawa(zlens, zsource, **kwargs_rendering):
-
-    from sidmpy.core_collapse_timescale import collapse_probability
-    from sidmpy.CrossSections.exact_yukawa import ExactYukawa
-
-    CDM = preset_model_from_name('CDM')
-    realization_cdm = CDM(zlens, zsource, **kwargs_rendering)
-    ext = RealizationExtensions(realization_cdm)
-
-    m_chi = kwargs_rendering['m_chi']
-    mass_ratio = kwargs_rendering['log10_mratio']
-    alpha_chi = kwargs_rendering['alpha_chi']
-    cross_section = ExactYukawa(m_chi, mass_ratio, alpha_chi)
-    t_sub = kwargs_rendering['collapse_time_field'] * 10 ** kwargs_rendering['log10_tscale']
-    t_field = kwargs_rendering['collapse_time_field']
-    collapse_window_scale = kwargs_rendering['collapse_window']
-
-    indexes = ext.find_core_collapsed_halos(collapse_probability, cross_section,
-                                  t_sub, t_field, collapse_window_scale)
-    kwargs_core_collapse_profile = {'x_match': kwargs_rendering['x_match'],
-                                    'x_core_halo': kwargs_rendering['x_core_halo'],
-                                    'log_slope_halo': kwargs_rendering['log_slope_halo']}
-    realization_sidm = ext.add_core_collapsed_halos(indexes, **kwargs_core_collapse_profile)
-    return realization_sidm
-
 def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
 
     CDM = preset_model_from_name('CDM')
     realization_cdm = CDM(zlens, zsource, **kwargs_rendering)
     ext = RealizationExtensions(realization_cdm)
-    mass_range = [[6.0, 7.0], [7.0, 8.0], [8.0, 9.0], [9.0, 10.0]]
-    p67_sub = kwargs_rendering['f_67']
-    p78_sub = kwargs_rendering['f_78']
-    p89_sub = kwargs_rendering['f_89']
-    p910_sub = kwargs_rendering['f_910']
-    p67_field = kwargs_rendering['f_67_field']
-    p78_field = kwargs_rendering['f_78_field']
-    p89_field = kwargs_rendering['f_89_field']
-    p910_field = kwargs_rendering['f_910_field']
+    mass_range = [[6.0, 7.5], [7.5, 8.5], [8.5, 10.0]]
+    p675_sub = kwargs_rendering['f_675_sub']
+    p759_sub = kwargs_rendering['f_7585_sub']
+    p910_sub = kwargs_rendering['f_8510_sub']
+    p675_field = kwargs_rendering['r_1_field'] * p675_sub
+    p759_field = kwargs_rendering['r_2_field'] * p759_sub
+    p910_field = kwargs_rendering['r_3_field'] * p910_sub
 
-    probabilities_subhalos = [p67_sub, p78_sub, p89_sub, p910_sub]
-    probabilities_field_halos = [p67_field, p78_field, p89_field, p910_field]
+    probabilities_subhalos = [p675_sub, p759_sub, p910_sub]
+    probabilities_field_halos = [p675_field, p759_field, p910_field]
 
     indexes = ext.core_collapse_by_mass(mass_range, mass_range,
                               probabilities_subhalos, probabilities_field_halos)
