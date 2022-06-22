@@ -202,7 +202,6 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
                                                                          lens_model_full,
                                                                          kwargs_lens_final, zsource)
         mass_fraction_in_halos = halo_mass_function.mass_fraction_in_halos(zlens, 10 ** 6.0, 10 ** 10.0)
-        mass_fraction_in_halos *= kwargs_preset_model['LOS_normalization']
         pbh_realization = ext.add_primordial_black_holes(pbh_mass_fraction, kwargs_pbh_mass_function,
                                                          mass_fraction_in_halos,
                                                          x_image_interp_list, y_image_interp_list, r_max)
