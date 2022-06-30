@@ -76,22 +76,26 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
     ext = RealizationExtensions(realization_cdm)
     mass_range = [[6.0, 7.5], [7.5, 8.5], [8.5, 10.0]]
     p675_sub = kwargs_rendering['f_675_sub']
-    p759_sub = kwargs_rendering['f_7585_sub']
+    p7585_sub = kwargs_rendering['f_7585_sub']
     p910_sub = kwargs_rendering['f_8510_sub']
 
     def _collape_probability_field(z, prob, zlens, lens_cosmo):
         rescale = lens_cosmo.cosmo.halo_age(zlens)/lens_cosmo.cosmo.halo_age(z)
         return prob * rescale
 
-    kwargs_field_1 = {'prob': kwargs_rendering['f_675_field'], 'zlens': zlens, 'lens_cosmo': lens_cosmo}
-    kwargs_field_2 = {'prob': kwargs_rendering['f_7585_field'], 'zlens': zlens, 'lens_cosmo': lens_cosmo}
-    kwargs_field_3 = {'prob': kwargs_rendering['f_8510_field'], 'zlens': zlens, 'lens_cosmo': lens_cosmo}
+    p1 = min(1.0, kwargs_rendering['r_1_field'] * p675_sub)
+    p2 = min(1.0, kwargs_rendering['r_2_field'] * p7585_sub)
+    p3 = min(1.0, kwargs_rendering['r_3_field'] * p910_sub)
+
+    kwargs_field_1 = {'prob': p1, 'zlens': zlens, 'lens_cosmo': lens_cosmo}
+    kwargs_field_2 = {'prob': p2, 'zlens': zlens, 'lens_cosmo': lens_cosmo}
+    kwargs_field_3 = {'prob': p3, 'zlens': zlens, 'lens_cosmo': lens_cosmo}
     p675_field = _collape_probability_field
     p759_field = _collape_probability_field
     p910_field = _collape_probability_field
     kwargs_field = [kwargs_field_1, kwargs_field_2, kwargs_field_3]
 
-    probabilities_subhalos = [p675_sub, p759_sub, p910_sub]
+    probabilities_subhalos = [p675_sub, p7585_sub, p910_sub]
     probabilities_field_halos = [p675_field, p759_field, p910_field]
 
     indexes = ext.core_collapse_by_mass(mass_range, mass_range,
