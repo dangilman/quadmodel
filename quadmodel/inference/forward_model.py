@@ -206,7 +206,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             lensmodel_macro, kwargs_macro = lens_system.get_lensmodel(include_substructure=False)
             kappa_macro = lensmodel_macro.kappa(xx.ravel(), yy.ravel(), kwargs_macro).reshape(shape0)
             extent = [-2 * R_ein_approx, 2 * R_ein_approx, -2 * R_ein_approx, 2 * R_ein_approx]
-            plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.001, vmax=0.001, cmap='bwr', extent=extent)
+            plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.05, vmax=0.05, cmap='bwr', extent=extent)
             plt.scatter(lens_data_class_sampling.x, lens_data_class_sampling.y, color='k')
             plt.show()
             a=input('continue')
