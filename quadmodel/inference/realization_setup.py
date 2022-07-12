@@ -112,7 +112,8 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
     else:
         raise Exception('halo profile must be specified')
     
-    realization_sidm = ext.add_core_collapsed_halos(indexes, **kwargs_core_collapse_profile)
+    realization_sidm = ext.add_core_collapsed_halos(indexes, kwargs_rendering['halo_profile'],
+                                                    **kwargs_core_collapse_profile)
     return realization_sidm
 
 def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
