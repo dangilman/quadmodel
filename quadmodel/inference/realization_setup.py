@@ -101,9 +101,17 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
     indexes = ext.core_collapse_by_mass(mass_range, mass_range,
                               probabilities_subhalos, probabilities_field_halos, kwargs_field=kwargs_field)
 
-    kwargs_core_collapse_profile = {'x_match': kwargs_rendering['x_match'],
-                                    'x_core_halo': kwargs_rendering['x_core_halo'],
-                                    'log_slope_halo': kwargs_rendering['log_slope_halo']}
+    if kwargs_rendering['halo_profile'] == 'SPL_CORE':
+        kwargs_core_collapse_profile = {'x_match': kwargs_rendering['x_match'],
+                                        'x_core_halo': kwargs_rendering['x_core_halo'],
+                                        'log_slope_halo': kwargs_rendering['log_slope_halo']}
+    elif kwargs_rendering['halo_profile'] == 'GNFW':
+        kwargs_core_collapse_profile = {'x_match': kwargs_rendering['x_match'],
+                                        'gamma_inner': kwargs_rendering['gamma_inner'],
+                                        'gamma_outer': kwargs_rendering['gamma_outer']}
+    else:
+        raise Exception('halo profile must be specified')
+    
     realization_sidm = ext.add_core_collapsed_halos(indexes, **kwargs_core_collapse_profile)
     return realization_sidm
 
