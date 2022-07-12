@@ -111,7 +111,7 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
                                         'gamma_outer': kwargs_rendering['gamma_outer']}
     else:
         raise Exception('halo profile must be specified')
-    
+
     realization_sidm = ext.add_core_collapsed_halos(indexes, kwargs_rendering['halo_profile'],
                                                     **kwargs_core_collapse_profile)
     return realization_sidm
