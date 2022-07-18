@@ -251,9 +251,12 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
             # the uncertainties
             flux_ratios = mags[1:] / mags[0]
             fluxratios_with_uncertainties = []
-            for j, fr in enumerate(flux_ratios):
-                df = np.random.normal(0, fr * magnification_uncertainties[j])
-                new_fr = fr + df
+            for k, fr in enumerate(flux_ratios):
+                if magnification_uncertainties[k] is None:
+                    new_fr = np.nan
+                else:
+                    df = np.random.normal(0, fr * magnification_uncertainties[k])
+                    new_fr = fr + df
                 fluxratios_with_uncertainties.append(new_fr)
             _flux_ratios = np.array(fluxratios_with_uncertainties)
 
