@@ -74,7 +74,7 @@ class BruteOptimization(OptimizationBase):
         run_kwargs = {'x_image': data_to_fit.x, 'y_image': data_to_fit.y, 'z_lens': self.lens_system.zlens,
                       'z_source': self.lens_system.zsource, 'astropy_instance': self.lens_system.astropy,
                  'particle_swarm': particle_swarm, 're_optimize':re_optimize, 're_optimize_scale': re_optimize_scale,
-                      'pso_convergence_mean': pso_convergence_mean,
+                      'pso_convergence_mean': pso_convergence_mean,'tol_source':1e-6,
                       'foreground_rays': None, 'simplex_n_iterations': self.n_iterations}
 
         kwargs_lens_final, ray_shooting_class, source = self._fit(run_kwargs, param_class, args_param_class,

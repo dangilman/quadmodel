@@ -128,16 +128,15 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
     # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
     while True:
 
-        # get the lens redshift, for some deflectors with photometrically-estimated redshifts, we have to sample a PDF
-        lens_data_class.set_zlens()
-        zlens = lens_data_class.zlens
-        zsource = lens_data_class.zsource
-
         # add astrometric uncertainties to image positions
         delta_x, delta_y = np.random.normal(0, astrometric_uncertainty), np.random.normal(0, astrometric_uncertainty)
         lens_data_class_sampling = deepcopy(lens_data_class)
         lens_data_class_sampling.x += delta_x
         lens_data_class_sampling.y += delta_y
+
+        # get the lens redshift, for some deflectors with photometrically-estimated redshifts, we have to sample a PDF
+        zlens = lens_data_class_sampling.set_zlens()
+        zsource = lens_data_class_sampling.zsource
 
         # Now, setup the source model, and ray trace to compute the image magnifications
         source_size_pc, kwargs_source_model, source_samples, param_names_source = \
@@ -189,7 +188,8 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
         log_black_hole_mass = kwargs_preset_model['log_black_hole_mass']  # log10 pbh mass
         pbh_mass_fraction = kwargs_preset_model['mass_fraction']
         kwargs_pbh_mass_function = {'mass_function_type': 'DELTA', 'logM': log_black_hole_mass}
-        r_max = max(0.5, 0.35 * np.sqrt(10 ** (log_black_hole_mass - 6.0)))  # aperture = k*sqrt(mass)
+        r_max = min(0.2, 0.2 * np.sqrt(10 ** (log_black_hole_mass - 6.0)))  # aperture = k*sqrt(mass)
+        r_max = max(0.05, r_max)
         ext = RealizationExtensions(lens_system.realization)
         n_cdm_halos = len(lens_system.realization.halos)
         cosmology_class = realization.lens_cosmo.cosmo
@@ -201,6 +201,10 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
                                                                          lens_data_class_sampling.y,
                                                                          lens_model_full,
                                                                          kwargs_lens_final, zsource)
+
+        x_image_interp_list = [x_image_interp_list[0]]
+        y_image_interp_list = [y_image_interp_list[0]]
+
         mass_fraction_in_halos = halo_mass_function.mass_fraction_in_halos(zlens, 10 ** 6.0, 10 ** 10.0)
         pbh_realization = ext.add_primordial_black_holes(pbh_mass_fraction, kwargs_pbh_mass_function,
                                                          mass_fraction_in_halos,
@@ -220,8 +224,8 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
             kappa = lens_model_full.kappa(xx.ravel(), yy.ravel(), kwargs_lens_final).reshape(shape0)
             lensmodel_macro, kwargs_macro = lens_system.get_lensmodel(include_substructure=False)
             kappa_macro = lensmodel_macro.kappa(xx.ravel(), yy.ravel(), kwargs_macro).reshape(shape0)
-            extent = [-1.8 * R_ein_approx, 1.8 * R_ein_approx, -1.8 * R_ein_approx, 1.8 * R_ein_approx]
-            plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.1, vmax=0.1, cmap='bwr', extent=extent)
+            extent = [-2 * R_ein_approx, 2 * R_ein_approx, -2 * R_ein_approx, 2 * R_ein_approx]
+            plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.05, vmax=0.05, cmap='seismic', extent=extent)
             plt.scatter(lens_data_class_sampling.x, lens_data_class_sampling.y, color='k')
             plt.show()
             a=input('continue')

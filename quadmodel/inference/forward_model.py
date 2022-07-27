@@ -126,16 +126,15 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
     while True:
 
-        # get the lens redshift, for some deflectors with photometrically-estimated redshifts, we have to sample a PDF
-        lens_data_class.set_zlens()
-        zlens = lens_data_class.zlens
-        zsource = lens_data_class.zsource
-
         # add astrometric uncertainties to image positions
         delta_x, delta_y = np.random.normal(0, astrometric_uncertainty), np.random.normal(0, astrometric_uncertainty)
         lens_data_class_sampling = deepcopy(lens_data_class)
         lens_data_class_sampling.x += delta_x
         lens_data_class_sampling.y += delta_y
+
+        # get the lens redshift, for some deflectors with photometrically-estimated redshifts, we have to sample a PDF
+        zlens = lens_data_class_sampling.set_zlens()
+        zsource = lens_data_class_sampling.zsource
 
         # Now, setup the source model, and ray trace to compute the image magnifications
         source_size_pc, kwargs_source_model, source_samples, param_names_source = \
@@ -159,6 +158,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         cone_opening_angle = 6 * R_ein_approx
         realization = preset_model(zlens, zsource, cone_opening_angle_arcsec=cone_opening_angle,
                           **kwargs_preset_model)
+        lens_model_list, _, kw, _ = realization.lensing_quantities()
 
         if verbose:
             print('realization contains ' + str(len(realization.halos)) + ' halos.')

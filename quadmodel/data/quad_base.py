@@ -55,7 +55,6 @@ class Quad(object):
         self._sourcemodel_type = sourcemodel_type
         self.keep_flux_ratio_index = keep_flux_ratio_index
 
-
     @staticmethod
     def _flux_chi_square(scale, fluxes_measured, fluxes_modeled, measurement_uncertainties, dof_increment=0):
 
@@ -185,13 +184,9 @@ class Quad(object):
 
     def set_zlens(self):
 
-        if not hasattr(self, '_zlens_sampled'):
-            if isinstance(self._zlens, float) or isinstance(self._zlens, int):
-                self._zlens_sampled = self._zlens
-            else:
-                args = ['CUSTOM_PDF', self._zlens[0], self._zlens[1]]
-                self._zlens_sampled = sample_from_prior(args)
-            return np.round(self._zlens_sampled, 2)
-
+        if isinstance(self._zlens, float) or isinstance(self._zlens, int):
+            return self._zlens
         else:
-            return np.round(self._zlens_sampled, 2)
+            args = ['CUSTOM_PDF', self._zlens[0], self._zlens[1]]
+            zlens_sampled = sample_from_prior(args)
+            return np.round(zlens_sampled, 2)
