@@ -126,7 +126,6 @@ class Quad(object):
             param_names_macro = ['gamma', 'gamma_ext']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
-
         elif self._macromodel_type == 'EPL_FREE_SHEAR_MULTIPOLE':
 
             random_shear_init = np.random.uniform(0.05, 0.25)
@@ -155,7 +154,6 @@ class Quad(object):
             params_sampled = np.array([gamma_macro])
             param_names_macro = ['gamma']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
-
 
         else:
             raise Exception('other macromodels not yet implemented.')
