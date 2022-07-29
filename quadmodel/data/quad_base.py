@@ -122,7 +122,7 @@ class Quad(object):
             from quadmodel.deflector_models.preset_macromodels import EPLShear
             model = EPLShear(self.zlens, gamma_macro, shear_amplitude, self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
-            params_sampled = np.array([gamma_macro])
+            params_sampled = np.array([gamma_macro, shear_amplitude])
             param_names_macro = ['gamma', 'gamma_ext']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
