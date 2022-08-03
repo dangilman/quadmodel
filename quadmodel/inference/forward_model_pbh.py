@@ -124,7 +124,7 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
 
     magnifications = np.array(magnifications)
     _flux_ratios_data = magnifications[1:] / magnifications[0]
-
+    zsource = lens_data_class.zsource
     # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
     while True:
 
@@ -135,8 +135,8 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
         lens_data_class_sampling.y += delta_y
 
         # get the lens redshift, for some deflectors with photometrically-estimated redshifts, we have to sample a PDF
-        zlens = lens_data_class_sampling.set_zlens()
-        zsource = lens_data_class_sampling.zsource
+        lens_data_class_sampling.set_zlens(reset=True)
+        zlens = lens_data_class_sampling.zlens
 
         # Now, setup the source model, and ray trace to compute the image magnifications
         source_size_pc, kwargs_source_model, source_samples, param_names_source = \

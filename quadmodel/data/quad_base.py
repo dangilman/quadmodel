@@ -37,8 +37,9 @@ class Quad(object):
                  sourcemodel_type, kwargs_source_model, macromodel_type, kwargs_macromodel, keep_flux_ratio_index,
                  uncertainty_in_magnifications=True):
 
-        self._zlens = zlens
-        self.zlens = self.set_zlens()
+        self._zlens_init = zlens
+        self.set_zlens(reset=True)
+        self.zlens = self._zlens
         self.zsource = zsource
         self.x = np.array(x_image)
         self.y = np.array(y_image)
@@ -180,11 +181,17 @@ class Quad(object):
         else:
             raise Exception('other macromodels not yet implemented.')
 
-    def set_zlens(self):
+    def set_zlens(self, reset=False):
 
-        if isinstance(self._zlens, float) or isinstance(self._zlens, int):
-            return self._zlens
-        else:
-            args = ['CUSTOM_PDF', self._zlens[0], self._zlens[1]]
-            zlens_sampled = sample_from_prior(args)
-            return np.round(zlens_sampled, 2)
+        if reset:
+            self._zlens = None
+
+        if self._zlens is None:
+
+            if isinstance(self._zlens_init, float) or isinstance(self._zlens_init, int):
+                self._zlens = self._zlens_init
+
+            else:
+                args = ['CUSTOM_PDF', self._zlens_init[0], self._zlens_init[1]]
+                zlens_sampled = sample_from_prior(args)
+                self._zlens = zlens_sampled
