@@ -19,7 +19,7 @@ from pyHalo.Cosmology.lensing_mass_function import LensingMassFunction
 def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_realization, tolerance=0.5,
                   verbose=False, readout_steps=2, kwargs_realization_other={},
                   ray_tracing_optimization='default', test_mode=False,
-                      save_realizations=False):
+                      save_realizations=False, rescale_normalizations=True):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -208,7 +208,9 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
         mass_fraction_in_halos = halo_mass_function.mass_fraction_in_halos(zlens, 10 ** 6.0, 10 ** 10.0)
         pbh_realization = ext.add_primordial_black_holes(pbh_mass_fraction, kwargs_pbh_mass_function,
                                                          mass_fraction_in_halos,
-                                                         x_image_interp_list, y_image_interp_list, r_max)
+                                                         x_image_interp_list, y_image_interp_list, r_max,
+                                                         rescale_normalizations=rescale_normalizations)
+
         print('Added '+str(len(pbh_realization.halos) - n_cdm_halos)+' primordial black holes... ')
         lens_system_pbh = QuadLensSystem.addRealization(lens_system, pbh_realization)
         lens_model_full, kwargs_lens_final = lens_system_pbh.get_lensmodel()
