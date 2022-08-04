@@ -5,7 +5,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-lens_name = 'B1422'
+lens_name = 'PSJ1606'
 output_path = os.getenv('HOME') + '/Code/quadmodel/notebooks/'+lens_name+'ULDMtest/'
 job_index = 1
 n_keep = 2

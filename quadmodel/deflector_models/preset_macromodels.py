@@ -45,7 +45,7 @@ class EPLShear(MacroBase):
 class EPLShearMultipole(MacroBase):
 
     def __init__(self, zlens, gamma_macro, shear_amplitude, multipole_amplitude,
-                 r_ein_approx=None, center_x=None, center_y=None, e1=None, e2=None):
+                 r_ein_approx, center_x, center_y, e1, e2):
 
         _epl_shear = EPLShear(zlens, gamma_macro, shear_amplitude,
                  r_ein_approx, center_x, center_y, e1, e2)
