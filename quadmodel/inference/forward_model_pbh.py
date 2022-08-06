@@ -188,7 +188,7 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
         log_black_hole_mass = kwargs_preset_model['log_black_hole_mass']  # log10 pbh mass
         pbh_mass_fraction = kwargs_preset_model['mass_fraction']
         kwargs_pbh_mass_function = {'mass_function_type': 'DELTA', 'logM': log_black_hole_mass}
-        r_max = min(0.2, 0.2 * np.sqrt(10 ** (log_black_hole_mass - 6.0)))  # aperture = k*sqrt(mass)
+        r_max = min(0.25, 0.25 * np.sqrt(10 ** (log_black_hole_mass - 6.0)))  # aperture = k*sqrt(mass)
         r_max = max(0.05, r_max)
         ext = RealizationExtensions(lens_system.realization)
         n_cdm_halos = len(lens_system.realization.halos)
