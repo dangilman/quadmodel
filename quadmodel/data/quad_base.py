@@ -194,4 +194,4 @@ class Quad(object):
             else:
                 args = ['CUSTOM_PDF', self._zlens_init[0], self._zlens_init[1]]
                 zlens_sampled = sample_from_prior(args)
-                self._zlens = zlens_sampled
+                self._zlens = np.round(zlens_sampled, 2)
