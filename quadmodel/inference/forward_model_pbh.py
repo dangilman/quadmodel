@@ -199,7 +199,7 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
                                                  cone_opening_angle=cone_opening_angle)
         # the mass fraction in halos is technically a function of redshift, but the redshift evolution is negligible so we can ignore it
         
-        if mindist != None:
+        if mindist != False:
             image_ind_A = combine_inds[0]
             image_ind_B = combine_inds[1]
             midx = (lens_data_class_sampling.x[image_ind_A]+lens_data_class_sampling.x[image_ind_B])/2
