@@ -139,7 +139,6 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
         # get the lens redshift, for some deflectors with photometrically-estimated redshifts, we have to sample a PDF
         lens_data_class_sampling.set_zlens(reset=True)
         zlens = lens_data_class_sampling.zlens
-
         # Now, setup the source model, and ray trace to compute the image magnifications
         source_size_pc, kwargs_source_model, source_samples, param_names_source = \
             lens_data_class_sampling.generate_sourcemodel()
@@ -200,7 +199,7 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
                                                  cone_opening_angle=cone_opening_angle)
         # the mass fraction in halos is technically a function of redshift, but the redshift evolution is negligible so we can ignore it
         
-        if mindist != None:
+        if mindist != False:
             image_ind_A = combine_inds[0]
             image_ind_B = combine_inds[1]
             midx = (lens_data_class_sampling.x[image_ind_A]+lens_data_class_sampling.x[image_ind_B])/2
@@ -210,9 +209,15 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
             xpoints = np.append(xpoints, midx)
             ypoints = np.delete(lens_data_class_sampling.y, [image_ind_A, image_ind_B])
             ypoints = np.append(ypoints, midy)
+            r_new = r_max + .5*mindist
+            r_array = np.zeros(len(xpoints))
+            r_array[0:2] = r_max
+            r_array[2] = r_new
         else:
             xpoints = lens_data_class_sampling.x
             ypoints = lens_data_class_sampling.y
+            r_array = np.zeros(len(xpoints))
+            r_array[0:] = r_max
 
         x_image_interp_list, y_image_interp_list = interpolate_ray_paths(xpoints, 
                                                                          ypoints,
@@ -225,8 +230,8 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
         mass_fraction_in_halos = halo_mass_function.mass_fraction_in_halos(zlens, 10 ** 6.0, 10 ** 10.0)
         pbh_realization = ext.add_primordial_black_holes(pbh_mass_fraction, kwargs_pbh_mass_function,
                                                          mass_fraction_in_halos,
-                                                         x_image_interp_list, y_image_interp_list, r_max,
-                                                         rescale_normalizations=rescale_normalizations, combine_inds=combine_inds, mindist=mindist)
+                                                         x_image_interp_list, y_image_interp_list, r_array,
+                                                         rescale_normalizations=rescale_normalizations)
 
         print('Added '+str(len(pbh_realization.halos) - n_cdm_halos)+' primordial black holes... ')
         lens_system_pbh = QuadLensSystem.addRealization(lens_system, pbh_realization)
