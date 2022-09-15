@@ -19,7 +19,8 @@ from pyHalo.Cosmology.lensing_mass_function import LensingMassFunction
 def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_realization, tolerance=0.5,
                   verbose=False, readout_steps=2, kwargs_realization_other={},
                   ray_tracing_optimization='default', test_mode=False,
-                      save_realizations=False, rescale_normalizations=True, combine_inds=False, mindist=False):
+                      save_realizations=False, rescale_normalizations=True,
+                      combine_inds=False, mindist=False, re_fit_lens=True):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -198,7 +199,7 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
                                                  mlow=10 ** 6.0, mhigh=10 ** 10.0,
                                                  cone_opening_angle=cone_opening_angle)
         # the mass fraction in halos is technically a function of redshift, but the redshift evolution is negligible so we can ignore it
-        
+
         if mindist != False:
             image_ind_A = combine_inds[0]
             image_ind_B = combine_inds[1]
@@ -219,10 +220,10 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
             r_array = np.zeros(len(xpoints))
             r_array[0:] = r_max
 
-        x_image_interp_list, y_image_interp_list = interpolate_ray_paths(xpoints, 
+        x_image_interp_list, y_image_interp_list = interpolate_ray_paths(xpoints,
                                                                          ypoints,
                                                                          lens_model_full,
-                                                                         kwargs_lens_final, zsource) 
+                                                                         kwargs_lens_final, zsource)
 
         #x_image_interp_list = [x_image_interp_list[0]]
         #y_image_interp_list = [y_image_interp_list[0]]
@@ -235,11 +236,17 @@ def forward_model_pbh(output_path, job_index, lens_data, n_keep, kwargs_sample_r
 
         print('Added '+str(len(pbh_realization.halos) - n_cdm_halos)+' primordial black holes... ')
         lens_system_pbh = QuadLensSystem.addRealization(lens_system, pbh_realization)
+        if re_fit_lens:
+            print('re-fitting lens model... ')
+            lens_system_pbh.initialize(lens_data_class_sampling, opt_routine=optimization_routine,
+                                       constrain_params=constrain_params_macro,
+                                       verbose=verbose, include_substructure=True,
+                                       kwargs_optimizer={"re_optimize": True, "particle_swarm": False})
         lens_model_full, kwargs_lens_final = lens_system_pbh.get_lensmodel()
 
         if test_mode:
             import matplotlib.pyplot as plt
-            lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, 40.0, lens_model_full,
+            lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, 10.0, lens_model_full,
                                     kwargs_lens_final, grid_resolution_rescale=2.0)
             plt.show()
             _r = np.linspace(-2.0 * R_ein_approx, 2.0 * R_ein_approx, 200)

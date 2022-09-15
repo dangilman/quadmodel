@@ -150,9 +150,7 @@ class QuadLensSystem(object):
             data_to_fit, opt_routine, constrain_params, verbose,
             include_substructure, kwargs_optimizer
         )
-
         self.clear_static_lensmodel()
-
         return
 
     def get_smooth_lens_system(self):
