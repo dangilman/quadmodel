@@ -118,24 +118,40 @@ def SIDM_CORE_COLLAPSE(zlens, zsource, **kwargs_rendering):
 
 def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
 
+    def a_func_mfunc(x, norm=0.33, slope=-0.072):
+        y = norm + slope * (x - 0.5)
+        return y
+
+    def b_func_mfunc(x, norm=0.28, slope=0.6):
+        y = norm + slope * (x - 0.5)
+        return y
+
+    def a_func_mcrel(x, norm=0.75, slope=0.4):
+        y = norm * (0.7 / (x)) ** slope
+        return y
+
+    def b_func_mcrel(x, norm=0.94, slope=0.7, shift=0.6):
+        y = norm * abs(np.log(1.76 + shift) / np.log(x + shift)) ** slope
+        return y
+
     x = kwargs_rendering['x_wdm']
-    a_wdm = 0.27 - 0.05 * (x - 0.85)
-    b_wdm = 0.5 + 0.95 * (x - 0.6)
+    a_wdm = a_func_mfunc(x)
+    b_wdm = b_func_mfunc(x)
     c_wdm = -3.
-
-    a_mc = 0.64 - 0.35 * (x - 0.7)
-    b_mc = 0.49 + 1.20 * (x - 1.15) ** 2
-
-    kwargs_suppresion_field = {'a_mc': a_mc, 'b_mc': b_mc}
+    a_mc = a_func_mcrel(x)
+    b_mc = b_func_mcrel(x)
+    
     kwargs_rendering['a_wdm_los'] = a_wdm
     kwargs_rendering['b_wdm_los'] = b_wdm
     kwargs_rendering['c_wdm_los'] = c_wdm
     kwargs_rendering['a_wdm_sub'] = a_wdm
     kwargs_rendering['b_wdm_sub'] = b_wdm
     kwargs_rendering['c_wdm_sub'] = c_wdm
-    kwargs_rendering['kwargs_suppression_field'] = kwargs_suppresion_field
-    kwargs_rendering['kwargs_suppression_sub'] = kwargs_suppresion_field
-    kwargs_rendering['suppression_model_field'], kwargs_rendering['suppression_model_sub'] = \
-        'hyperbolic', 'hyperbolic'
+    kwargs_rendering['kwargs_suppression_mc_relation_field'] = {'a_mc': a_mc, 'b_mc': b_mc}
+    kwargs_rendering['kwargs_suppression_mc_relation_sub'] = {'a_mc': a_mc, 'b_mc': b_mc}
+    kwargs_rendering['suppression_model_field'] = 'hyperbolic'
+    kwargs_rendering['suppression_model_sub'] = 'hyperbolic'
+
     WDM = preset_model_from_name('WDM')
+
     return WDM(zlens, zsource, **kwargs_rendering)
