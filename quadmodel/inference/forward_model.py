@@ -13,10 +13,10 @@ import dill
 from copy import deepcopy
 
 
-def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample_realization, tolerance=0.5,
+def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_realization, tolerance=0.5,
                   verbose=False, readout_steps=2, kwargs_realization_other={},
                   ray_tracing_optimization='default', test_mode=False,
-                  statistic_type='METRIC_DISTANCE', save_realizations=False):
+                  statistic_type='METRIC_DISTANCE', save_realizations=False, kwargs_preset_lens={}):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -24,7 +24,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
 
     :param output_path: a string specifying the directory where output will be generated
     :param job_index: a unique integer added to output file names
-    :param lens_data_class: an instance of a lens data class (see quadmodel.data)
+    :param lens_data: either a string specifying the name of the lens data class, see class in quadmodel.data, or an
+    instance of a lens data class
     :param n_keep: the number of samples to generate from the posterior; the function will run until n_keep samples are
     generated
     :param kwargs_sample_realization: a dictionary of parameters that will be sampled in the forward model
@@ -71,6 +72,11 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     # Now load the lens data, this can either be specified as a string, which is used to load a lens system with image
     # positions and magnifications specified in a lens-specific class (see quadmodel.data), or you can pass in a lens
     # data class directly. For the required structure of the lens data class, see quad_base and the preset data classes
+
+    if isinstance(lens_data, str):
+        lens_data_class = load_preset_lens(lens_data, **kwargs_preset_lens)
+    else:
+        lens_data_class = lens_data
 
     magnifications, magnification_uncertainties, astrometric_uncertainty, R_ein_approx = \
         lens_data_class.m, lens_data_class.delta_m, \
