@@ -74,7 +74,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     # data class directly. For the required structure of the lens data class, see quad_base and the preset data classes
 
     if isinstance(lens_data, str):
-        lens_data_class = load_preset_lens(lens_data, **kwargs_preset_lens)
+        lens_data_class = load_preset_lens(lens_data, kwargs_preset_lens)
     else:
         lens_data_class = lens_data
 
