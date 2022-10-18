@@ -4,6 +4,44 @@ from copy import deepcopy
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_size
 from pyHalo.realization_extensions import RealizationExtensions
 
+def _draw(prior, prior_type):
+    if prior_type == 'UNIFORM':
+        value = np.random.uniform(prior[1], prior[2])
+    elif prior_type == 'GAUSSIAN':
+        value = np.random.normal(prior[1], prior[2])
+    elif prior_type == 'FIXED':
+        value = prior[1]
+    elif prior_type == 'DISCRETE':
+        value = np.random.choice(prior[1])
+    else:
+        raise Exception('prior type ' + str(prior_type) + ' not recognized.')
+    return value
+
+def setup_macromodel(priors):
+
+    macromodel_priors = deepcopy(priors)
+    macro_params = None
+    kwargs_hyper_macro = {}
+    param_names_macro = []
+    for parameter_name in macromodel_priors.keys():
+
+        prior_type = macromodel_priors[parameter_name][0]
+        prior = macromodel_priors[parameter_name]
+        value = _draw(prior, prior_type)
+
+        kwargs_hyper_macro[parameter_name] = value
+
+        if prior_type == 'FIXED':
+            continue
+        else:
+            param_names_macro.append(parameter_name)
+        if macro_params is None:
+            macro_params = value
+        else:
+            macro_params = np.append(macro_params, value)
+
+    return macro_params, kwargs_hyper_macro, param_names_macro
+
 def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
     realization_priors = deepcopy(priors)
@@ -17,17 +55,7 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
         prior_type = realization_priors[parameter_name][0]
         prior = realization_priors[parameter_name]
-
-        if prior_type == 'UNIFORM':
-            value = np.random.uniform(prior[1], prior[2])
-        elif prior_type == 'GAUSSIAN':
-            value = np.random.normal(prior[1], prior[2])
-        elif prior_type == 'FIXED':
-            value = prior[1]
-        elif prior_type == 'DISCRETE':
-            value = np.random.choice(prior[1])
-        else:
-            raise Exception('prior type '+str(prior_type)+' not recognized.')
+        value = _draw(prior, prior_type)
 
         kwargs_realization[parameter_name] = value
 
@@ -140,7 +168,7 @@ def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
     c_wdm = -3.
     a_mc = a_func_mcrel(x)
     b_mc = b_func_mcrel(x)
-    
+
     kwargs_rendering['a_wdm_los'] = a_wdm
     kwargs_rendering['b_wdm_los'] = b_wdm
     kwargs_rendering['c_wdm_los'] = c_wdm

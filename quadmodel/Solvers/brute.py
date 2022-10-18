@@ -1,5 +1,6 @@
 from lenstronomy.LensModel.QuadOptimizer.param_manager import PowerLawFixedShear, \
     PowerLawFixedShearMultipole, PowerLawFreeShear, PowerLawFreeShearMultipole
+from quadmodel.Solvers.optimization_param_managers import PowerLawFixedShearMultipole_34, PowerLawFreeShearMultipole_34
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
 from quadmodel.Solvers.base import OptimizationBase
 
@@ -57,6 +58,10 @@ class BruteOptimization(OptimizationBase):
             return PowerLawFreeShearMultipole, None
         elif param_class_name == 'fixed_shear_powerlaw_multipole':
             return PowerLawFixedShearMultipole, [constrain_params['shear']]
+        elif param_class_name == 'fixed_shear_powerlaw_multipole_34':
+            return PowerLawFixedShearMultipole_34, [constrain_params['shear'], constrain_params['delta_phi_m3']]
+        elif param_class_name == 'free_shear_powerlaw_multipole_34':
+            return PowerLawFreeShearMultipole_34, [constrain_params['delta_phi_m3']]
 
         else:
             raise Exception('did not recognize param_class_name = '+param_class_name)

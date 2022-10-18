@@ -13,10 +13,12 @@ import dill
 from copy import deepcopy
 
 
-def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_realization, tolerance=0.5,
+def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_realization,
+                  kwargs_sample_macromodel={}, tolerance=0.5,
                   verbose=False, readout_steps=2, kwargs_realization_other={},
                   ray_tracing_optimization='default', test_mode=False,
-                  statistic_type='METRIC_DISTANCE', save_realizations=False, kwargs_preset_lens={}):
+                  statistic_type='METRIC_DISTANCE', save_realizations=False, kwargs_preset_lens={},
+                  crit_curves_in_test_mode=False):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -42,7 +44,8 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     S = sqrt( sum(df_model - df_data)^2 )
 
     or the metric distance between the model-predicted flux ratios and the measured flux ratios
-
+    :param kwargs_sample_macromodel: keyword arguments for sampling macromodel parameters;
+    currently only multipole amplitudes implemented
     :param verbose: determines how much output to print while running the inference
     :param readout_steps: determines how often output is printed to a file
     :param kwargs_realization_other: additional keyword arguments to be passed into a pyHalo preset model
@@ -150,8 +153,13 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
 
         kwargs_preset_model['log_m_host'] = np.random.normal(lens_data_class.log10_host_halo_mass,
                                                              lens_data_class.log10_host_halo_mass_sigma)
+        # check for priors on the mutlipole amplitudes; this only has effect when using macromodel classes with multipoles
+
+        macromodel_hyperparam_samples, kwargs_hyperparam_macro, param_names_macro_hyper = setup_macromodel(kwargs_sample_macromodel)
+
         # load the lens macromodel defined in the data class
-        model, constrain_params_macro, optimization_routine, macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel()
+        model, constrain_params_macro, optimization_routine, \
+        macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel(**kwargs_hyperparam_macro)
         macromodel = MacroLensModel(model.component_list)
         import matplotlib.pyplot as plt
         # create the realization
@@ -163,8 +171,12 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
 
         if verbose:
             print('realization contains ' + str(len(realization.halos)) + ' halos.')
-            print('realization parameter array: ', realization_samples)
+            print(param_names_realization)
+            print('realization hyper-parameters: ', realization_samples)
+            print(param_names_source)
             print('source/lens parameters: ', source_samples)
+            print(param_names_macro_hyper)
+            print('macromodel hyper-parameters: ', macromodel_hyperparam_samples)
             print(param_names_macro)
             print('macromodel samples: ', macromodel_samples)
 
@@ -209,6 +221,14 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             extent = [-2 * R_ein_approx, 2 * R_ein_approx, -2 * R_ein_approx, 2 * R_ein_approx]
             plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.1, vmax=0.1, cmap='bwr', extent=extent)
             plt.scatter(lens_data_class_sampling.x, lens_data_class_sampling.y, color='k')
+            if crit_curves_in_test_mode:
+                from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
+                ext = LensModelExtensions(lens_model_full)
+                ra_crit_list, dec_crit_list, _, _ = ext.critical_curve_caustics(kwargs_lens_final, compute_window=4*R_ein_approx,
+                                                                          grid_scale=0.05)
+                for i in range(0, len(ra_crit_list)):
+                    plt.plot(ra_crit_list[i], dec_crit_list[i], color='k', lw=2)
+
             plt.show()
             a=input('continue')
 
@@ -311,8 +331,8 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             # If the statistic is less than the tolerance threshold, we keep the parameters
             accepted_realizations_counter += 1
             n_kept += 1
-            params = np.append(np.append(realization_samples, source_samples), macromodel_samples)
-            param_names = param_names_realization + param_names_source + param_names_macro + ['summary_statistic']
+            params = np.append(np.append(np.append(realization_samples, source_samples), macromodel_hyperparam_samples), macromodel_samples)
+            param_names = param_names_realization + param_names_source + param_names_macro_hyper + param_names_macro + ['summary_statistic']
             saved_lens_systems.append(lens_system)
             lens_data_class_sampling_list.append(lens_data_class_sampling)
             acceptance_ratio = accepted_realizations_counter/iteration_counter

@@ -59,3 +59,27 @@ class EPLShearMultipole(MacroBase):
         component_list += [component_2]
 
         super(EPLShearMultipole, self).__init__(component_list)
+
+class EPLShearMultipole_34(MacroBase):
+
+    def __init__(self, zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4, multipole_amplitude_m3,
+                  r_ein_approx, center_x, center_y, e1, e2):
+
+        _epl_shear = EPLShear(zlens, gamma_macro, shear_amplitude,
+                 r_ein_approx, center_x, center_y, e1, e2)
+
+        # orientation initially random but will be fixed to that of EPL during fitting
+        phi = np.random.uniform(0, 2*np.pi)
+        kwargs_multipole = [
+            {'m': 4, 'a_m': multipole_amplitude_m4, 'center_x': center_x, 'center_y': center_y, 'phi_m': phi}]
+        component_2 = Multipole(zlens, kwargs_multipole)
+        component_list = _epl_shear.component_list
+        component_list += [component_2]
+
+        # orientation initially random but will be fixed to that of EPL during fitting
+        kwargs_multipole = [
+            {'m': 3, 'a_m': multipole_amplitude_m3, 'center_x': center_x, 'center_y': center_y, 'phi_m': phi}]
+        component_3 = Multipole(zlens, kwargs_multipole)
+        component_list += [component_3]
+
+        super(EPLShearMultipole_34, self).__init__(component_list)
