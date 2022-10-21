@@ -58,9 +58,9 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         value = _draw(prior, prior_type)
         if parameter_name == 'log10_sigma_sub':
             value = 10 ** value
-            kwargs_realization[parameter_name] = value
-        else:
             kwargs_realization['sigma_sub'] = value
+        else:
+            kwargs_realization[parameter_name] = value
 
         if prior_type == 'FIXED':
             continue
