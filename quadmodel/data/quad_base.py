@@ -112,12 +112,12 @@ class Quad(object):
             if m4_amplitude is None:
                 multipole_amplitude = default_priors('multipole_amplitude')
             else:
-                multipole_amplitude = m4_amplitude
+                multipole_amplitude = np.random.normal(0, m4_amplitude)
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole
             model = EPLShearMultipole(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude, self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
-            params_sampled = np.array([gamma_macro, shear_amplitude, multipole_amplitude])
-            param_names_macro = ['gamma', 'gamma_ext', 'a4']
+            params_sampled = np.array([multipole_amplitude, gamma_macro, shear_amplitude])
+            param_names_macro = ['a4', 'gamma', 'gamma_ext']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
         elif self._macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE_34':
@@ -133,19 +133,20 @@ class Quad(object):
             if m4_amplitude is None:
                 multipole_amplitude_m4 = default_priors('multipole_amplitude')
             else:
-                multipole_amplitude_m4 = m4_amplitude
+                multipole_amplitude_m4 = np.random.normal(0, m4_amplitude)
             if m3_amplitude is None:
                 multipole_amplitude_m3 = default_priors('multipole_amplitude_m3')
             else:
-                multipole_amplitude_m3 = m3_amplitude
+                multipole_amplitude_m3 = np.random.normal(0, m3_amplitude)
 
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole_34
             model = EPLShearMultipole_34(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4,
                                       multipole_amplitude_m3,
                                       self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
-            params_sampled = np.array([gamma_macro, shear_amplitude, multipole_amplitude_m4, multipole_amplitude_m3, m3_orientation])
-            param_names_macro = ['gamma', 'gamma_ext', 'a4', 'a3', 'd_phi_a3']
+
+            params_sampled = np.array([multipole_amplitude_m3, multipole_amplitude_m4, m3_orientation, gamma_macro, shear_amplitude])
+            param_names_macro = ['a3', 'a4', 'd_phi_a3', 'gamma', 'gamma_ext']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
         elif self._macromodel_type == 'EPL_FIXED_SHEAR':
@@ -174,8 +175,8 @@ class Quad(object):
             model = EPLShearMultipole(self.zlens, gamma_macro, random_shear_init, multipole_amplitude,
                                       self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
-            params_sampled = np.array([gamma_macro, multipole_amplitude])
-            param_names_macro = ['gamma', 'a4']
+            params_sampled = np.array([multipole_amplitude, gamma_macro])
+            param_names_macro = ['a4', 'gamma']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
         elif self._macromodel_type == 'EPL_FREE_SHEAR_MULTIPOLE_34':
@@ -186,15 +187,21 @@ class Quad(object):
             optimization_routine = 'free_shear_powerlaw_multipole_34'
             m3_orientation = np.random.uniform(0, 2*np.pi)
             constrain_params = {'delta_phi_m3': m3_orientation}
-            multipole_amplitude_m4 = default_priors('multipole_amplitude')
-            multipole_amplitude_m3 = default_priors('multipole_amplitude_m3')
+            if m4_amplitude is None:
+                multipole_amplitude_m4 = default_priors('multipole_amplitude')
+            else:
+                multipole_amplitude_m4 = np.random.normal(0, m4_amplitude)
+            if m3_amplitude is None:
+                multipole_amplitude_m3 = default_priors('multipole_amplitude_m3')
+            else:
+                multipole_amplitude_m3 = np.random.normal(0, m3_amplitude)
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole_34
             model = EPLShearMultipole_34(self.zlens, gamma_macro, random_shear_init, multipole_amplitude_m4,
                                       multipole_amplitude_m3,
                                       self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
-            params_sampled = np.array([gamma_macro, multipole_amplitude_m4, multipole_amplitude_m3, m3_orientation])
-            param_names_macro = ['gamma', 'a4', 'a3', 'd_phi_a3']
+            params_sampled = np.array([multipole_amplitude_m3, multipole_amplitude_m4, m3_orientation, gamma_macro])
+            param_names_macro = ['a3', 'a4', 'd_phi_a3', 'gamma']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
         elif self._macromodel_type == 'EPL_FREE_SHEAR':
