@@ -28,7 +28,6 @@ def setup_macromodel(priors):
         prior_type = macromodel_priors[parameter_name][0]
         prior = macromodel_priors[parameter_name]
         value = _draw(prior, prior_type)
-
         kwargs_hyper_macro[parameter_name] = value
 
         if prior_type == 'FIXED':
@@ -51,13 +50,17 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
     del realization_priors['PRESET_MODEL']
     param_names_realization = []
+
     for parameter_name in realization_priors.keys():
 
         prior_type = realization_priors[parameter_name][0]
         prior = realization_priors[parameter_name]
         value = _draw(prior, prior_type)
-
-        kwargs_realization[parameter_name] = value
+        if parameter_name == 'log10_sigma_sub':
+            value = 10 ** value
+            kwargs_realization[parameter_name] = value
+        else:
+            kwargs_realization['sigma_sub'] = value
 
         if prior_type == 'FIXED':
             continue
