@@ -59,6 +59,44 @@ class Quad(object):
         self._sourcemodel_type = sourcemodel_type
         self.keep_flux_ratio_index = keep_flux_ratio_index
 
+    @classmethod
+    def from_hst_data(cls, hst_data_class,
+                      sourcemodel_type='midIR_Gaussian',
+                      macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE',
+                      keep_flux_ratio_index=[0, 1, 2],
+                      uncertainty_in_magnifications=True,
+                      kwargs_source_model={},
+                      kwargs_macromodel={}):
+
+        """
+
+        :param hst_data_class: an instance of the HSTData class
+        :param sourcemodel_type: possibilities include
+        1) midIR_Gaussian (0.5-10 pc fwhm)
+        2) NARROW_LINE_Gaussian (25-60 pc fwhm)
+        3) CO11-10_Gaussian (5-15 pc fwhm)
+        4) DOUBLE_NL_Gaussian
+        two components, one with 25-80 pc fwhm and the other
+        rescaled by a random factor 0.25 - 1 and shifted vertically by 0-0.01 arcsec (source plane)
+        this is implemented specifically for RXJ-1131
+        :param macromodel_type: the type of macromodel profile, possibilities include
+        1)
+        :param keep_flux_ratio_index:
+        :param uncertainty_in_magnifications:
+        :return:
+        """
+        zlens = hst_data_class.zlens
+        zsource = hst_data_class.zsource
+        x_image = hst_data_class.x
+        y_image = hst_data_class.y
+        magnifications = hst_data_class.m
+        magnification_uncertainties = hst_data_class.delta_m
+        astrometric_uncertainties = hst_data_class.delta_xy
+        return Quad(zlens, zsource, x_image, y_image, magnifications, magnification_uncertainties, astrometric_uncertainties,
+                 sourcemodel_type, kwargs_source_model, macromodel_type, kwargs_macromodel, keep_flux_ratio_index,
+                 uncertainty_in_magnifications)
+
+
     @staticmethod
     def _flux_chi_square(scale, fluxes_measured, fluxes_modeled, measurement_uncertainties, dof_increment=0):
 
@@ -97,10 +135,6 @@ class Quad(object):
         a default optimization routine to fit the lens (can be changed), random parameters sampled to
         create the macromodel class, the names of sampled parameters
         """
-        return self._generate_macromodel(m3_amplitude, m4_amplitude)
-
-    def _generate_macromodel(self, m3_amplitude, m4_amplitude):
-
         if self._macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE':
 
             shear_min, shear_max = self._kwargs_macromodel['shear_amplitude_min'], \

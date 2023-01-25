@@ -20,9 +20,10 @@ def _draw(prior, prior_type):
 def setup_macromodel(priors):
 
     macromodel_priors = deepcopy(priors)
-    macro_params = None
+    macro_params = np.array([])
     kwargs_hyper_macro = {}
     param_names_macro = []
+    init = True
     for parameter_name in macromodel_priors.keys():
 
         prior_type = macromodel_priors[parameter_name][0]
@@ -34,8 +35,9 @@ def setup_macromodel(priors):
             continue
         else:
             param_names_macro.append(parameter_name)
-        if macro_params is None:
+        if init:
             macro_params = value
+            init = False
         else:
             macro_params = np.append(macro_params, value)
 

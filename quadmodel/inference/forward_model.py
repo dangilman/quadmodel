@@ -150,13 +150,15 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                                                                                                             lens_data_class_sampling.x,
                                                                                                             lens_data_class_sampling.y,
                                                                                                             source_size_pc)
-
-        kwargs_preset_model['log_m_host'] = np.random.normal(lens_data_class.log10_host_halo_mass,
+        if 'log_m_host' not in kwargs_preset_model.keys():
+            try:
+                kwargs_preset_model['log_m_host'] = np.random.normal(lens_data_class.log10_host_halo_mass,
                                                              lens_data_class.log10_host_halo_mass_sigma)
+            except:
+                raise Exception('must specify the host halo mass either in the list of priors, or inside the lens data class')
+
         # check for priors on the mutlipole amplitudes; this only has effect when using macromodel classes with multipoles
-
         macromodel_hyperparam_samples, kwargs_hyperparam_macro, param_names_macro_hyper = setup_macromodel(kwargs_sample_macromodel)
-
         # load the lens macromodel defined in the data class
         model, constrain_params_macro, optimization_routine, \
         macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel(**kwargs_hyperparam_macro)
@@ -331,6 +333,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             # If the statistic is less than the tolerance threshold, we keep the parameters
             accepted_realizations_counter += 1
             n_kept += 1
+
             params = np.append(np.append(np.append(realization_samples, source_samples), macromodel_hyperparam_samples), macromodel_samples)
             param_names = param_names_realization + param_names_source + param_names_macro_hyper + param_names_macro + ['summary_statistic']
             saved_lens_systems.append(lens_system)
@@ -386,6 +389,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                     write_param_names = False
 
                 nrows, ncols = int(parameter_array.shape[0]), int(parameter_array.shape[1])
+
                 for row in range(0, nrows):
                     for col in range(0, ncols):
                         f.write(str(np.round(parameter_array[row, col], 6)) + ' ')
@@ -406,7 +410,6 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                                                           parameter_array[idx_system,:])
                     f = open(filename_realizations + 'simulation_output_' + str(idx_system + idx_init + 1), 'wb')
                     dill.dump(container, f)
-
 
             idx_init += len(saved_lens_systems)
 
