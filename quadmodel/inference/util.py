@@ -1,5 +1,5 @@
 import numpy as np
-import pickle
+import dill as pickle
 from copy import deepcopy
 
 class FullSimulationContainer(object):
@@ -96,6 +96,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 try:
                     f = open(filename_realizations + 'simulation_output_' + str(n + 1), 'rb')
                     sim = pickle.load(f)
+                    f.close()
                 except:
                     print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(n + 1))
                     continue
