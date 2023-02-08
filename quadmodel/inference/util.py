@@ -104,7 +104,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             continue
         if record_chi2:
             _chi2 = []
-            for n in range(0, int(_params.shape[0])):
+            for n in range(1, 1+int(_params.shape[0])):
                 filename_chi2 = output_path + 'job_' + str(job_index) + \
                                 '/chi2_'+ str(n) + filename_suffix_chi2 +'.txt'
                 try:
