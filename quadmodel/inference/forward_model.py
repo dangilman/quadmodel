@@ -410,7 +410,8 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                                                           parameter_array[idx_system,:])
                     f = open(filename_realizations + 'simulation_output_' + str(idx_system + idx_init + 1), 'wb')
                     dill.dump(container, f)
-
+                    f.close()
+                    
             idx_init += len(saved_lens_systems)
 
             parameter_array = None
