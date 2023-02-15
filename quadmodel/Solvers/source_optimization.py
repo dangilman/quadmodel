@@ -217,10 +217,9 @@ for idx in range(1, N_jobs+1):
     modelPlot = ModelPlot(multi_band_list, kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat")
     log_l = modelPlot._imageModel.likelihood_data_given_model(source_marg=False, linear_prior=None,
                                                               **kwargs_result)
-    n_data = modelPlot._imageModel.num_data_evaluate
-    chi2 = 2 * log_l / n_data
-    print('n_data: ', n_data)
-    print('log_l: ', log_l)
+    # n_data = modelPlot._imageModel.num_data_evaluate
+    # chi2 = 2 * log_l
+    chi2= log_l/2
     f = open(path_to_simulation_output + 'chi2_' + str(idx) + filename_suffix + '.txt', 'w')
     f.write(str(np.round(chi2, 6)))
     f.close()

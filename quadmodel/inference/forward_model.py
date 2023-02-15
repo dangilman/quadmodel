@@ -18,7 +18,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                   verbose=False, readout_steps=2, kwargs_realization_other={},
                   ray_tracing_optimization='default', test_mode=False,
                   statistic_type='METRIC_DISTANCE', save_realizations=False, kwargs_preset_lens={},
-                  crit_curves_in_test_mode=False):
+                  crit_curves_in_test_mode=False, write_sampling_rate=False):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -52,6 +52,11 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
     :param ray_tracing_optimization: sets the method used to perform ray tracing
     :param test_mode: prints output and generates plots of image positions and convergence maps
     :param save_realizations: toggles on or off saving entire accepted realizations
+    :param statistic_type: the type of summary statistic selection to make
+    :param crit_curves_in_test_mode: bool; whether or not to plot the critical curves over convergence maps
+    when test_mode=True
+    :param write_sampling_rate: bool; whether or not to create text files that contain the minutes per realization
+    (useful in some cases to determine how long it will take to run a full simulation)
     :return:
     """
 
@@ -254,13 +259,12 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
 
             if lens_data_class.uncertainty_in_magnifications:
                 mags_with_uncertainties = []
-
                 for j, mag in enumerate(mags):
                     if magnification_uncertainties[j] is None:
                         m = np.nan
                     else:
-                        m = abs(mag + np.random.normal(0, magnification_uncertainties[j] * mag))
-
+                        delta_m = np.random.normal(0.0, magnification_uncertainties[j] * mag)
+                        m = mag + delta_m
                     mags_with_uncertainties.append(m)
                 mags_with_uncertainties = np.array(mags_with_uncertainties)
                 _flux_ratios = mags_with_uncertainties[1:] / mags_with_uncertainties[0]
@@ -367,7 +371,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         if n_kept == n_keep:
             readout = True
             break_loop = True
-        if readout_sampling_rate:
+        if readout_sampling_rate and write_sampling_rate:
             with open(filename_sampling_rate, 'a') as f:
                 f.write(str(np.round(sampling_rate, 2)) + ' ')
                 f.write('\n')
@@ -411,7 +415,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                     f = open(filename_realizations + 'simulation_output_' + str(idx_system + idx_init + 1), 'wb')
                     dill.dump(container, f)
                     f.close()
-                    
+
             idx_init += len(saved_lens_systems)
 
             parameter_array = None

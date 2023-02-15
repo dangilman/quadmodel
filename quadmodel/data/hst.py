@@ -22,7 +22,8 @@ class HSTData(object):
         self.deltaPix = deltaPix
 
         # fluxes and uncertainties
-        self.m = fluxes
+        normalized_fluxes = fluxes/np.max(fluxes)
+        self.m = normalized_fluxes
         self.delta_m = flux_uncertainties
 
         #### data info #####
