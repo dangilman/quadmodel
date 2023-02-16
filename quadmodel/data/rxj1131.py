@@ -6,7 +6,7 @@ import numpy as np
 class RXJ1131(Quad):
 
     def __init__(self, sourcemodel_type='DOUBLE_NL_Gaussian',
-                 macromodel_type = 'EPL_FIXED_SHEAR_MULTIPOLE'):
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
         zlens = 0.3
         zsource = 0.66

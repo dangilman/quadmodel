@@ -5,7 +5,8 @@ import numpy as np
 
 class HE0435(Quad):
 
-    def __init__(self, sourcemodel_type='NARROW_LINE_Gaussian'):
+    def __init__(self, sourcemodel_type='NARROW_LINE_Gaussian',
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
         zlens = 0.45
         zsource = 1.69
@@ -19,7 +20,6 @@ class HE0435(Quad):
         self.log10_host_halo_mass = 13.2
         self.log10_host_halo_mass_sigma = 0.3
 
-        macromodel_type = 'EPL_FIXED_SHEAR_MULTIPOLE'
         kwargs_macromodel = {'shear_amplitude_min': 0.015, 'shear_amplitude_max': 0.15}
 
         super(HE0435, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
