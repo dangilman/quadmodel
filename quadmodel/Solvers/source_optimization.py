@@ -127,7 +127,8 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
         npix_image_mask = 2
         coordinate_system = Coordinates(hst_data.transform_pix2angle, hst_data.ra_at_xy_0, hst_data.dec_at_xy_0)
         likelihood_mask = mask_images(x_image, y_image, npix_image_mask, hst_data.likelihood_mask, coordinate_system)
-
+        # plt.imshow(likelihood_mask, origin='lower')
+        # plt.show()
         kwargs_likelihood = {'check_bounds': True,
                              'force_no_add_image': True,
                              'source_marg': False,
@@ -161,7 +162,7 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
 
         fitting_kwargs_list = [
             ['PSO', {'sigma_scale': 1., 'n_particles': n_pso_particles, 'n_iterations': n_pso_iterations, 'threadCount': n_threads}],
-            ['MCMC', {'n_burn': 10, 'n_run': n_run_mcmc, 'walkerRatio': 4, 'sigma_scale': 0.2, 'threadCount': n_threads}]
+            #['MCMC', {'n_burn': 10, 'n_run': n_run_mcmc, 'walkerRatio': 4, 'sigma_scale': 0.2, 'threadCount': n_threads}]
             ]
         _ = fitting_seq.fit_sequence(fitting_kwargs_list)
         kwargs_result = fitting_seq.best_fit()
