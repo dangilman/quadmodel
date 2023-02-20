@@ -4,7 +4,7 @@ from copy import deepcopy
 
 class FullSimulationContainer(object):
 
-    def __init__(self, individual_simulations, parameters, magnifications, chi2_imaging_data=None):
+    def __init__(self, individual_simulations, parameters, magnifications, chi2_imaging_data=None, modelplots=None):
 
         """
         A storage class for individual simulation containers
@@ -18,6 +18,7 @@ class FullSimulationContainer(object):
         self.parameters = parameters
         self.magnifications = magnifications
         self.chi2_imaging_data = chi2_imaging_data
+        self.modelplots=modelplots
 
     @classmethod
     def join(cls, sim1, sim2):
@@ -62,7 +63,7 @@ def filenames(output_path, job_index):
     return filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio
 
 def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, record_chi2=False,
-                   filename_suffix_chi2=None):
+                   filename_suffix_chi2=None, keep_modelplot=False):
 
     """
     This function complies the result from a simulation into a single pickled python class
@@ -77,6 +78,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     will not be saved
     :param filename_suffix_chi2: an optional string to append on a filename; format is
     'output_foler/job_$job_index$/chi2_$index$_$filename_suffix$.txt'
+    :param keep_modelplot: bool; whether or not to save pickled classes of the ModelPlot in lenstronomy
     :return: an instance of FullSimulationContainer
     """
 
@@ -84,6 +86,11 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         realizations_and_lens_systems = []
     else:
         realizations_and_lens_systems = None
+
+    if keep_modelplot:
+        modelplots = []
+    else:
+        modelplots = None
 
     params, fluxes, chi2_imaging_data = None, None, None
     n_kept = 0
@@ -128,6 +135,20 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     continue
             realizations_and_lens_systems.append(sim)
 
+        if keep_modelplot:
+            for n in range(0, number):
+                filename_modelplot = output_path + 'job_' + str(job_index) + \
+                            '/modelplot_'+ str(n+1) + filename_suffix_chi2 + '.txt'
+
+                try:
+                    f = open(filename_modelplot, 'rb')
+                    _modelplot = pickle.load(f)
+                    f.close()
+                    modelplots.append(_modelplot)
+                except:
+                    print('could not find pickled class ' + filename_modelplot)
+                    continue
+
         if params is None:
             params = deepcopy(_params)
             fluxes = deepcopy(_fluxes)
@@ -146,7 +167,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             chi2_imaging_data = np.append(chi2_imaging_data, _chi2)
             n_kept += _params.shape[0]
     print('compiled ' + str(n_kept) + ' realizations')
-    container = FullSimulationContainer(realizations_and_lens_systems, params, fluxes, chi2_imaging_data)
+    container = FullSimulationContainer(realizations_and_lens_systems, params, fluxes, chi2_imaging_data, modelplots)
     return container
 
 

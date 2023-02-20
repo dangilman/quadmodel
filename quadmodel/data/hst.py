@@ -2,6 +2,21 @@ import numpy as np
 from lenstronomy.Data.psf import PSF
 from quadmodel.data.quad_base import Quad
 
+
+class HSTDataModel(object):
+
+    def __init__(self, hst_data, param_class, param_names, mcmc_samples, kwargs_result, source_model_list,
+                 lens_light_model_list):
+        self.hst_data = hst_data
+        self.param_class = param_class
+        self.param_names = param_names
+        self.mcmc_samples = mcmc_samples
+        self.kwargs_best_fit = kwargs_result
+        self.source_model_list = source_model_list
+        self.lens_light_model_list = lens_light_model_list
+        self.kwargs_source_init = kwargs_result['kwargs_source']
+        self.kwargs_lens_light_init = kwargs_result['kwargs_lens_light']
+
 class HSTData(object):
 
     def __init__(self, zlens, zsource, image_data, x_image, y_image, astrometric_uncertainties,
