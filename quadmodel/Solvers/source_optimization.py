@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import sys
+import dill
 import pickle
 from quadmodel.Solvers.light_fit_util import *
 from lenstronomy.Data.imaging_data import ImageData
@@ -23,7 +24,7 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
 
         try:
             f = open(path_to_simulation_output + 'simulation_output_'+str(idx), 'rb')
-            simulation_output = pickle.load(f)
+            simulation_output = dill.load(f)
             f.close()
         except:
             print('could not find simulation output file '+path_to_simulation_output + 'simulation_output_'+str(idx))
@@ -176,7 +177,7 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
 
         if save_model_plot:
             f = open(path_to_simulation_output + 'modelplot_'+ str(idx) + filename_suffix, 'wb')
-            pickle.dump(modelPlot, f)
+            dill.dump(modelPlot, f)
             f.close()
 
         if chi2_array is None:
