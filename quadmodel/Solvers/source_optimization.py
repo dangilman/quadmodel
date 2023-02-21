@@ -13,11 +13,12 @@ from lenstronomy.Data.coord_transforms import Coordinates
 from quadmodel.data.hst import HSTData, HSTDataModel
 
 
-def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation_output, path_to_data,
-                     initialize_from_fit=False, path_to_smooth_lens_fit=None, add_shapelets_source=False, n_max_source=None,
-                     n_pso_particles=100, n_pso_iterations=100, n_run_mcmc=500, plot_results=False, save_model_plot=True, n_threads=1):
+def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation_output, path_to_data, fitting_kwargs_list,
+                     initialize_from_fit=False, path_to_smooth_lens_fit=None, add_shapelets_source=False,
+                     n_max_source=None,plot_results=False, save_model_plot=True, overwrite=False):
 
     chi2_array = None
+    fname_chi2 = path_to_simulation_output + 'chi2_image_data' + filename_suffix + '.txt'
     for idx in range(1, N_jobs+1):
 
         try:
@@ -28,8 +29,11 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
             print('could not find simulation output file '+path_to_simulation_output + 'simulation_output_'+str(idx))
             continue
 
-    #    if os.path.exists(path_to_simulation_output+'chi2_'+str(idx)+'.txt'):
-    #        print('chi2 computation already performed for file '+str(job_index))
+        if os.path.exists(fname_chi2):
+            if overwrite is False:
+                print('chi2 computation already performed for file '+str(idx))
+                continue
+
         f = open(path_to_data+lens_data_name, 'rb')
         hst_data = pickle.load(f)
         f.close()
@@ -160,56 +164,32 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
         fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model,
                                       kwargs_constraints, kwargs_likelihood, kwargs_params)
 
-        fitting_kwargs_list = [
-            ['PSO', {'sigma_scale': 1., 'n_particles': n_pso_particles, 'n_iterations': n_pso_iterations, 'threadCount': n_threads}],
-            #['MCMC', {'n_burn': 10, 'n_run': n_run_mcmc, 'walkerRatio': 4, 'sigma_scale': 0.2, 'threadCount': n_threads}]
-            ]
         _ = fitting_seq.fit_sequence(fitting_kwargs_list)
         kwargs_result = fitting_seq.best_fit()
 
         modelPlot = ModelPlot(multi_band_list, kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat")
 
-        if plot_results:
-            f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
-            modelPlot.data_plot(ax=axes[0, 0])
-            modelPlot.model_plot(ax=axes[0, 1])
-            modelPlot.normalized_residual_plot(ax=axes[0, 2], v_min=-6, v_max=6)
-            modelPlot.source_plot(ax=axes[1, 0], deltaPix_source=0.01, numPix=100)
-            modelPlot.convergence_plot(ax=axes[1, 1], v_max=1)
-            modelPlot.magnification_plot(ax=axes[1, 2])
-            f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
-            modelPlot.decomposition_plot(ax=axes[0, 0], text='Lens light', lens_light_add=True, unconvolved=True)
-            modelPlot.decomposition_plot(ax=axes[1, 0], text='Lens light convolved', lens_light_add=True)
-            modelPlot.decomposition_plot(ax=axes[0, 1], text='Source light', source_add=True, unconvolved=True)
-            modelPlot.decomposition_plot(ax=axes[1, 1], text='Source light convolved', source_add=True)
-            modelPlot.decomposition_plot(ax=axes[0, 2], text='All components', source_add=True, lens_light_add=True,
-                                         unconvolved=True)
-            modelPlot.decomposition_plot(ax=axes[1, 2], text='All components convolved', source_add=True, lens_light_add=True,
-                                         point_source_add=True)
-            f.tight_layout()
-            f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
-            plt.show()
-            print(kwargs_result)
-            a=input('continue')
-
         log_l = modelPlot._imageModel.likelihood_data_given_model(source_marg=False, linear_prior=None,
                                                                   **kwargs_result)
         n_data = modelPlot._imageModel.num_data_evaluate
         out = np.array([2*log_l/n_data, n_data])
-        if chi2_array is None:
-            chi2_array = out
-        else:
-            chi2_array = np.vstack((chi2_array, out))
 
         if save_model_plot:
             f = open(path_to_simulation_output + 'modelplot_'+ str(idx) + filename_suffix, 'wb')
             pickle.dump(modelPlot, f)
             f.close()
 
-        modelPlot.plot_main()
-        plt.show()
-        _=input('continue')
+        if chi2_array is None:
+            chi2_array = out
+        else:
+            chi2_array = np.vstack((chi2_array, out))
+
+        if plot_results:
+            modelPlot.plot_main()
+            plt.show()
+            print(kwargs_result)
+            a=input('continue')
 
     if chi2_array is not None:
-        np.savetxt(path_to_simulation_output + 'chi2_image_data' + filename_suffix + '.txt',X=chi2_array)
+        np.savetxt(fname_chi2, X=chi2_array)
 
