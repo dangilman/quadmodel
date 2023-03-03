@@ -323,17 +323,16 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             # If the statistic is less than the tolerance threshold, we keep the parameters
             accepted_realizations_counter += 1
             n_kept += 1
-
-            params = np.append(np.append(np.append(realization_samples, source_samples)), macromodel_samples)
+            params = np.append(np.append(np.append(realization_samples, source_samples), macromodel_samples), stat)
             param_names = param_names_realization + param_names_source + param_names_macro + ['summary_statistic']
             saved_lens_systems.append(lens_system)
             lens_data_class_sampling_list.append(lens_data_class_sampling)
             acceptance_ratio = accepted_realizations_counter/iteration_counter
 
             if parameter_array is None:
-                parameter_array = np.append(params, stat)
+                parameter_array = params
             else:
-                parameter_array = np.vstack((parameter_array, np.append(params, stat)))
+                parameter_array = np.vstack((parameter_array, params))
 
             if mags_out is None:
                 mags_out = mags
