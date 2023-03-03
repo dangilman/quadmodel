@@ -166,10 +166,10 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel(**kwargs_sample_macromodel)
         macromodel = MacroLensModel(model.component_list)
         # create the realization
-        # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
-        cone_opening_angle = 6 * R_ein_approx
-        realization = preset_model(zlens, zsource, cone_opening_angle_arcsec=cone_opening_angle,
-                          **kwargs_preset_model)
+        if 'cone_opening_angle' not in kwargs_preset_model.keys():
+            # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
+            kwargs_preset_model['cone_opening_angle'] = 6 * R_ein_approx
+        realization = preset_model(zlens, zsource, **kwargs_preset_model)
         lens_model_list, _, kw, _ = realization.lensing_quantities()
 
         if verbose:
