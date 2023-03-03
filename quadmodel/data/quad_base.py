@@ -51,12 +51,12 @@ class Quad(object):
         self.delta_xy = np.array(astrometric_uncertainties)
         self.approx_einstein_radius = approx_theta_E(self.x, self.y)
 
-        self._macromodel_type = macromodel_type
-        self._kwargs_macromodel = kwargs_macromodel
-        self._kwargs_source_model = kwargs_source_model
+        self.macromodel_type = macromodel_type
+        self.kwargs_macromodel = kwargs_macromodel
+        self.kwargs_source_model = kwargs_source_model
 
         self.uncertainty_in_magnifications = uncertainty_in_magnifications
-        self._sourcemodel_type = sourcemodel_type
+        self.sourcemodel_type = sourcemodel_type
         self.keep_flux_ratio_index = keep_flux_ratio_index
 
     @classmethod
@@ -69,7 +69,6 @@ class Quad(object):
                       kwargs_macromodel={}):
 
         """
-
         :param hst_data_class: an instance of the HSTData class
         :param sourcemodel_type: possibilities include
         1) midIR_Gaussian (0.5-10 pc fwhm)
@@ -95,7 +94,6 @@ class Quad(object):
         return Quad(zlens, zsource, x_image, y_image, magnifications, magnification_uncertainties, astrometric_uncertainties,
                  sourcemodel_type, kwargs_source_model, macromodel_type, kwargs_macromodel, keep_flux_ratio_index,
                  uncertainty_in_magnifications)
-
 
     @staticmethod
     def _flux_chi_square(scale, fluxes_measured, fluxes_modeled, measurement_uncertainties, dof_increment=0):
@@ -127,7 +125,8 @@ class Quad(object):
             df += (flux_ratios_measured[i] - flux_ratios_modeled[i])**2/self.delta_m[i]**2
         return df/dof
 
-    def generate_macromodel(self, m3_amplitude=None, m4_amplitude=None):
+    def generate_macromodel(self, m3_amplitude_prior=None, m4_amplitude_prior=None, gamma_macro_prior=None,
+                            shear_strength_prior=None):
         """
         Used only if lens-specific data class has no satellite galaxies; for systems with satellites, add them in the
         lens-specific data class and override this method
@@ -135,60 +134,51 @@ class Quad(object):
         a default optimization routine to fit the lens (can be changed), random parameters sampled to
         create the macromodel class, the names of sampled parameters
         """
-        if self._macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE':
 
-            shear_min, shear_max = self._kwargs_macromodel['shear_amplitude_min'], \
-                                   self._kwargs_macromodel['shear_amplitude_max']
+        if gamma_macro_prior is None:
             gamma_macro = default_priors('gamma_macro')
-            shear_amplitude = sample_from_prior(['UNIFORM', shear_min, shear_max])
+        else:
+            gamma_macro = gamma_macro_prior[0](gamma_macro_prior[1], gamma_macro_prior[2])
+
+        if m4_amplitude_prior is None:
+            multipole_amplitude_m4 = default_priors('multipole_amplitude')
+        else:
+            multipole_amplitude_m4 = m4_amplitude_prior[0](m4_amplitude_prior[1], m4_amplitude_prior[2])
+
+        if m3_amplitude_prior is None:
+            multipole_amplitude_m3 = default_priors('multipole_amplitude_m3')
+        else:
+            multipole_amplitude_m3 = m3_amplitude_prior[0](m3_amplitude_prior[1], m3_amplitude_prior[2])
+
+        if shear_strength_prior is None:
+            shear_amplitude = None
+        else:
+            shear_amplitude = shear_strength_prior[0](shear_strength_prior[1], shear_strength_prior[2])
+
+        if self.macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE':
             optimization_routine = 'fixed_shear_powerlaw_multipole'
             constrain_params = {'shear': shear_amplitude}
-            if m4_amplitude is None:
-                multipole_amplitude = default_priors('multipole_amplitude')
-            else:
-                multipole_amplitude = np.random.normal(0, m4_amplitude)
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole
-            model = EPLShearMultipole(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude, self.approx_einstein_radius,
+            model = EPLShearMultipole(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4, self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
-            params_sampled = np.array([multipole_amplitude, gamma_macro, shear_amplitude])
+            params_sampled = np.array([multipole_amplitude_m4, gamma_macro, shear_amplitude])
             param_names_macro = ['a4', 'gamma', 'gamma_ext']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
-        elif self._macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE_34':
-
-            shear_min, shear_max = self._kwargs_macromodel['shear_amplitude_min'], \
-                                   self._kwargs_macromodel['shear_amplitude_max']
-            gamma_macro = default_priors('gamma_macro')
-            shear_amplitude = sample_from_prior(['UNIFORM', shear_min, shear_max])
+        elif self.macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE_34':
             optimization_routine = 'fixed_shear_powerlaw_multipole_34'
             m3_orientation = np.random.uniform(0, 2*np.pi)
             constrain_params = {'shear': shear_amplitude, 'delta_phi_m3': m3_orientation}
-
-            if m4_amplitude is None:
-                multipole_amplitude_m4 = default_priors('multipole_amplitude')
-            else:
-                multipole_amplitude_m4 = np.random.normal(0, m4_amplitude)
-            if m3_amplitude is None:
-                multipole_amplitude_m3 = default_priors('multipole_amplitude_m3')
-            else:
-                multipole_amplitude_m3 = np.random.normal(0, m3_amplitude)
-
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole_34
             model = EPLShearMultipole_34(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4,
                                       multipole_amplitude_m3,
                                       self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
-
             params_sampled = np.array([multipole_amplitude_m3, multipole_amplitude_m4, m3_orientation, gamma_macro, shear_amplitude])
             param_names_macro = ['a3', 'a4', 'd_phi_a3', 'gamma', 'gamma_ext']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
-        elif self._macromodel_type == 'EPL_FIXED_SHEAR':
-
-            shear_min, shear_max = self._kwargs_macromodel['shear_amplitude_min'], \
-                                   self._kwargs_macromodel['shear_amplitude_max']
-            gamma_macro = default_priors('gamma_macro')
-            shear_amplitude = sample_from_prior(['UNIFORM', shear_min, shear_max])
+        elif self.macromodel_type == 'EPL_FIXED_SHEAR':
             optimization_routine = 'fixed_shear_powerlaw'
             constrain_params = {'shear': shear_amplitude}
             from quadmodel.deflector_models.preset_macromodels import EPLShear
@@ -198,37 +188,25 @@ class Quad(object):
             param_names_macro = ['gamma', 'gamma_ext']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
-        elif self._macromodel_type == 'EPL_FREE_SHEAR_MULTIPOLE':
-
+        elif self.macromodel_type == 'EPL_FREE_SHEAR_MULTIPOLE':
+            # doesn't matter how shear is initialized
             random_shear_init = np.random.uniform(0.05, 0.25)
-            gamma_macro = default_priors('gamma_macro')
             optimization_routine = 'free_shear_powerlaw_multipole'
             constrain_params = None
-            multipole_amplitude = default_priors('multipole_amplitude')
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole
-            model = EPLShearMultipole(self.zlens, gamma_macro, random_shear_init, multipole_amplitude,
+            model = EPLShearMultipole(self.zlens, gamma_macro, random_shear_init, multipole_amplitude_m4,
                                       self.approx_einstein_radius,
                                       0.0, 0.0, 0.2, 0.1)
-            params_sampled = np.array([multipole_amplitude, gamma_macro])
+            params_sampled = np.array([multipole_amplitude_m4, gamma_macro])
             param_names_macro = ['a4', 'gamma']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
-        elif self._macromodel_type == 'EPL_FREE_SHEAR_MULTIPOLE_34':
-
-            # doesn't matter how this is initialized
+        elif self.macromodel_type == 'EPL_FREE_SHEAR_MULTIPOLE_34':
+            # doesn't matter how shear is initialized
             random_shear_init = np.random.uniform(0.05, 0.25)
-            gamma_macro = default_priors('gamma_macro')
             optimization_routine = 'free_shear_powerlaw_multipole_34'
             m3_orientation = np.random.uniform(0, 2*np.pi)
             constrain_params = {'delta_phi_m3': m3_orientation}
-            if m4_amplitude is None:
-                multipole_amplitude_m4 = default_priors('multipole_amplitude')
-            else:
-                multipole_amplitude_m4 = np.random.normal(0, m4_amplitude)
-            if m3_amplitude is None:
-                multipole_amplitude_m3 = default_priors('multipole_amplitude_m3')
-            else:
-                multipole_amplitude_m3 = np.random.normal(0, m3_amplitude)
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole_34
             model = EPLShearMultipole_34(self.zlens, gamma_macro, random_shear_init, multipole_amplitude_m4,
                                       multipole_amplitude_m3,
@@ -238,10 +216,8 @@ class Quad(object):
             param_names_macro = ['a3', 'a4', 'd_phi_a3', 'gamma']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
 
-        elif self._macromodel_type == 'EPL_FREE_SHEAR':
-
-            random_shear_init = np.random.uniform(0.05, 0.25)
-            gamma_macro = default_priors('gamma_macro')
+        elif self.macromodel_type == 'EPL_FREE_SHEAR':
+            random_shear_init = np.random.uniform(0.025, 0.3)
             optimization_routine = 'free_shear_powerlaw'
             constrain_params = None
             from quadmodel.deflector_models.preset_macromodels import EPLShear
@@ -257,19 +233,19 @@ class Quad(object):
 
     def generate_sourcemodel(self):
 
-        if self._sourcemodel_type in ['NARROW_LINE_Gaussian', 'midIR_Gaussian', 'CO11-10_Gaussian']:
+        if self.sourcemodel_type in ['NARROW_LINE_Gaussian', 'midIR_Gaussian', 'CO11-10_Gaussian']:
 
-            source_size_pc = default_priors(self._sourcemodel_type)
+            source_size_pc = default_priors(self.sourcemodel_type)
             kwargs_source_model = {'source_model': 'GAUSSIAN'}
             source_samples = np.array(source_size_pc)
             param_names_source = ['source_size_pc']
             return source_size_pc, kwargs_source_model, source_samples, param_names_source
 
-        elif self._sourcemodel_type == 'DOUBLE_NL_Gaussian':
+        elif self.sourcemodel_type == 'DOUBLE_NL_Gaussian':
 
-            source_size_pc, dx, dy, amp_scale, size_scale = default_priors(self._sourcemodel_type)
+            source_size_pc, dx, dy, amp_scale, size_scale = default_priors(self.sourcemodel_type)
             kwargs_source_model = {'source_model': 'DOUBLE_GAUSSIAN', 'dx': dx, 'dy': dy, 'amp_scale': amp_scale, 'size_scale': size_scale}
-            kwargs_source_model.update(self._kwargs_source_model)
+            kwargs_source_model.update(self.kwargs_source_model)
             source_samples = np.array([source_size_pc, dx, dy, amp_scale, size_scale])
             param_names_source = ['source_size_pc', 'dx', 'dy', 'amp_scale', 'size_scale']
             return source_size_pc, kwargs_source_model, source_samples, param_names_source

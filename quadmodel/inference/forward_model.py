@@ -14,7 +14,7 @@ from copy import deepcopy
 
 
 def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_realization,
-                  kwargs_sample_macromodel={}, tolerance=0.5,
+                  kwargs_sample_macromodel, tolerance=0.5,
                   verbose=False, readout_steps=2, kwargs_realization_other={},
                   ray_tracing_optimization='default', test_mode=False,
                   statistic_type='METRIC_DISTANCE', save_realizations=False, kwargs_preset_lens={},
@@ -162,13 +162,9 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             except:
                 raise Exception('must specify the host halo mass either in the list of priors, or inside the lens data class')
 
-        # check for priors on the mutlipole amplitudes; this only has effect when using macromodel classes with multipoles
-        macromodel_hyperparam_samples, kwargs_hyperparam_macro, param_names_macro_hyper = setup_macromodel(kwargs_sample_macromodel)
-        # load the lens macromodel defined in the data class
         model, constrain_params_macro, optimization_routine, \
-        macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel(**kwargs_hyperparam_macro)
+        macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel(**kwargs_sample_macromodel)
         macromodel = MacroLensModel(model.component_list)
-        import matplotlib.pyplot as plt
         # create the realization
         # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
         cone_opening_angle = 6 * R_ein_approx
@@ -182,8 +178,6 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             print('realization hyper-parameters: ', realization_samples)
             print(param_names_source)
             print('source/lens parameters: ', source_samples)
-            print(param_names_macro_hyper)
-            print('macromodel hyper-parameters: ', macromodel_hyperparam_samples)
             print(param_names_macro)
             print('macromodel samples: ', macromodel_samples)
 
@@ -195,19 +189,11 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
         # observed image coordinates to common source position in the presence of all the dark matter halos along the
         # line of sight and in the main lens plane.
 
-        if ray_tracing_optimization == 'brute':
-            optimizer = BruteOptimization(lens_system)
-            kwargs_lens_final, lens_model_full, return_kwargs = optimizer.fit(lens_data_class_sampling, optimization_routine,
-                                                                              constrain_params_macro, verbose)
-
-        else:
-
-            optimizer = HierarchicalOptimization(lens_system, settings_class=ray_tracing_optimization)
-
-            kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class_sampling,
-                                                                               constrain_params=constrain_params_macro,
-                                                                               param_class_name=optimization_routine,
-                                                                               verbose=verbose)
+        optimizer = HierarchicalOptimization(lens_system, settings_class=ray_tracing_optimization)
+        kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class_sampling,
+                                                                           constrain_params=constrain_params_macro,
+                                                                           param_class_name=optimization_routine,
+                                                                           verbose=verbose)
 
 
 
@@ -237,7 +223,7 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
                     plt.plot(ra_crit_list[i], dec_crit_list[i], color='k', lw=2)
 
             plt.show()
-            a=input('continue')
+            _=input('continue')
 
         try:
             mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
@@ -338,8 +324,8 @@ def forward_model(output_path, job_index, lens_data, n_keep, kwargs_sample_reali
             accepted_realizations_counter += 1
             n_kept += 1
 
-            params = np.append(np.append(np.append(realization_samples, source_samples), macromodel_hyperparam_samples), macromodel_samples)
-            param_names = param_names_realization + param_names_source + param_names_macro_hyper + param_names_macro + ['summary_statistic']
+            params = np.append(np.append(np.append(realization_samples, source_samples)), macromodel_samples)
+            param_names = param_names_realization + param_names_source + param_names_macro + ['summary_statistic']
             saved_lens_systems.append(lens_system)
             lens_data_class_sampling_list.append(lens_data_class_sampling)
             acceptance_ratio = accepted_realizations_counter/iteration_counter
