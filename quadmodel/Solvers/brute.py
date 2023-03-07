@@ -1,6 +1,6 @@
-from lenstronomy.LensModel.QuadOptimizer.param_manager import PowerLawFixedShear, \
-    PowerLawFixedShearMultipole, PowerLawFreeShear, PowerLawFreeShearMultipole
-from quadmodel.Solvers.optimization_param_managers import PowerLawFixedShearMultipole_34, PowerLawFreeShearMultipole_34
+from quadmodel.Solvers.optimization_param_managers import PowerLawFixedShear, \
+    PowerLawFixedShearMultipole, PowerLawFreeShear, PowerLawFreeShearMultipole, PowerLawFixedShearMultipole_34, \
+    PowerLawFreeShearMultipole_34
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
 from quadmodel.Solvers.base import OptimizationBase
 
