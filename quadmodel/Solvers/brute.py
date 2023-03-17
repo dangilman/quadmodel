@@ -42,6 +42,10 @@ class BruteOptimization(OptimizationBase):
         kwargs_lens_final, lens_model_full, [source_x, source_y] = self.fit(data_to_fit, param_class,
                                       args_param_class, verbose, include_substructure, **kwargs_optimizer)
 
+        self.lens_system.clear_static_lensmodel()
+        self.lens_system.set_lensmodel_static(lens_model_full, kwargs_lens_final)
+        self.lens_system.update_kwargs_macro(kwargs_lens_final)
+
         return self.return_results(
             [source_x, source_y], kwargs_lens_final, lens_model_full,
             self.realization_initial, None
