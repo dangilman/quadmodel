@@ -36,7 +36,8 @@ class QuadLensSystem(object):
     @classmethod
     def shift_background_auto(cls, lens_data_class, macromodel, zsource,
                               realization, cosmo=None, particle_swarm_init=False,
-                              opt_routine='free_shear_powerlaw', constrain_params=None, verbose=False):
+                              opt_routine='free_shear_powerlaw', constrain_params=None, verbose=False,
+                              re_optimize=False):
 
         """
         This method takes a macromodel and a substructure realization, fits a smooth model to the data
@@ -46,16 +47,18 @@ class QuadLensSystem(object):
         LOS galaxies the path can be complicated and it is important to shift the line of sight halos;
         often, when line of sight galaxies are included, the source is not even close to being
         behind directly main deflector.
-
+        :param lens_data_class: class that contaains the lens data (see data.quad_base)
         :param macromodel: an instance of MacroLensModel (see LensSystem.macrolensmodel)
-        :param z_source: source redshift
-        :param substructure_realization: an instance of Realization (see pyhalo.single_realization)
+        :param zsource: source redshift
+        :param realization: an instance of Realization (see pyhalo.single_realization)
         :param cosmo: an instance of Cosmology() from pyhalo
         :param particle_swarm_init: whether or not to use a particle swarm algorithm when fitting the macromodel.
         You should use a particle swarm routine if you're starting the lens model from scratch
         :param opt_routine: the optimization routine to use... more documentation coming soon
         :param constrain_params: keywords to be passed to optimization routine
         :param verbose: whether to print stuff
+        :param re_optimize: bool; determines the prior volume explored by the particle swarm. Set to True if starting from
+        a good initial guess for the macromodel
 
         This routine can be immediately followed by doing a lens model fit to the data, for example:
 
@@ -73,9 +76,8 @@ class QuadLensSystem(object):
 
         lens_system_init = QuadLensSystem(macromodel, zsource, None,
                                           pyhalo_cosmology=cosmo)
-
         lens_system_init.initialize(lens_data_class, opt_routine=opt_routine, constrain_params=constrain_params,
-                                    kwargs_optimizer={'particle_swarm': particle_swarm_init}, verbose=verbose)
+                                    kwargs_optimizer={'particle_swarm': particle_swarm_init, 're_optimize': re_optimize}, verbose=verbose)
 
         source_x, source_y = lens_system_init.source_centroid_x, lens_system_init.source_centroid_y
 
@@ -359,5 +361,21 @@ class QuadLensSystem(object):
         x_image, y_image = ext.findBrightImage(source_x, source_y, kwargs)
         return x_image, y_image
 
+    def get_model_samples(self, n):
+
+        """
+        Returns a numpy array with the values of the keyword arguments corresponding to the first n lens models
+        :param n: number of lens models for which to read out the values of the keyword arguments
+        :return: an array of values
+        """
+        _, kw = self.get_lensmodel()
+        kwargs = kw[0:n]
+        kwargs_list = []
+        param_names = []
+        for kw in kwargs:
+            for key in kw.keys():
+                param_names.append(key)
+                kwargs_list.append(kw[key])
+        return np.array(kwargs_list), param_names
 
 

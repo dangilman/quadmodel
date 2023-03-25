@@ -16,7 +16,7 @@ class MacroBase(object):
 class EPLShear(MacroBase):
 
     def __init__(self, zlens, gamma_macro, shear_amplitude,
-                 r_ein_approx=None, center_x=None, center_y=None, e1=None, e2=None, theta_shear=None):
+                 theta_E=None, center_x=None, center_y=None, e1=None, e2=None, theta_shear=None):
 
         if shear_amplitude is None:
             shear_amplitude = np.random.uniform(0.02, 0.25)
@@ -30,12 +30,12 @@ class EPLShear(MacroBase):
             center_x = 0.0
             center_y = 0.0
 
-        if r_ein_approx is None:
-            r_ein_approx = np.random.uniform(0.8, 1.2)
+        if theta_E is None:
+            theta_E = np.random.uniform(0.8, 1.2)
         if theta_shear is None:
             theta_shear = np.random.uniform(0, 2 * np.pi)
         g1, g2 = shear_amplitude * np.cos(2 * theta_shear), shear_amplitude * np.sin(2 * theta_shear)
-        kwargs_epl_shear = [{'theta_E': r_ein_approx, 'center_x': center_x, 'center_y': center_y, 'e1': e1, 'e2': e2,
+        kwargs_epl_shear = [{'theta_E': theta_E, 'center_x': center_x, 'center_y': center_y, 'e1': e1, 'e2': e2,
                              'gamma': gamma_macro},
                             {'gamma1': g2, 'gamma2': g2}]
         component_1 = PowerLawShear(zlens, kwargs_epl_shear)
@@ -45,10 +45,10 @@ class EPLShear(MacroBase):
 class EPLShearMultipole(MacroBase):
 
     def __init__(self, zlens, gamma_macro, shear_amplitude, multipole_amplitude,
-                 r_ein_approx, center_x, center_y, e1, e2):
+                 theta_E, center_x, center_y, e1, e2):
 
         _epl_shear = EPLShear(zlens, gamma_macro, shear_amplitude,
-                 r_ein_approx, center_x, center_y, e1, e2)
+                              theta_E, center_x, center_y, e1, e2)
 
         phi = np.random.uniform(0, 2*np.pi)
 
@@ -63,10 +63,10 @@ class EPLShearMultipole(MacroBase):
 class EPLShearMultipole_34(MacroBase):
 
     def __init__(self, zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4, multipole_amplitude_m3,
-                  r_ein_approx, center_x, center_y, e1, e2):
+                 theta_E, center_x, center_y, e1, e2):
 
         _epl_shear = EPLShear(zlens, gamma_macro, shear_amplitude,
-                 r_ein_approx, center_x, center_y, e1, e2)
+                              theta_E, center_x, center_y, e1, e2)
 
         # orientation initially random but will be fixed to that of EPL during fitting
         phi = np.random.uniform(0, 2*np.pi)

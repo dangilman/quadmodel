@@ -126,7 +126,7 @@ class Quad(object):
         return df/dof
 
     def generate_macromodel(self, m3_amplitude_prior=None, m4_amplitude_prior=None, gamma_macro_prior=None,
-                            shear_strength_prior=None):
+                            shear_strength_prior=None, kwargs_lens_macro_init=None):
         """
         Used only if lens-specific data class has no satellite galaxies; for systems with satellites, add them in the
         lens-specific data class and override this method
@@ -155,13 +155,23 @@ class Quad(object):
         else:
             shear_amplitude = shear_strength_prior[0](shear_strength_prior[1], shear_strength_prior[2])
 
+        if kwargs_lens_macro_init is None:
+            random_thetaE = np.random.uniform(-0.2, 0.2) + self.approx_einstein_radius
+            random_e1 = np.random.uniform(-0.25, 0.25)
+            random_e2 = np.random.uniform(-0.25, 0.25)
+            random_center_x, random_center_y = np.random.uniform(-0.2, 0.2), np.random.uniform(-0.2, 0.2)
+            kwargs_lens_macro_init = {'theta_E': random_thetaE,
+                                      'center_x': random_center_x,
+                                      'center_y': random_center_y,
+                                      'e1': random_e1,
+                                      'e2': random_e2}
 
         if self.macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE':
             optimization_routine = 'fixed_shear_powerlaw_multipole'
             constrain_params = {'shear': shear_amplitude}
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole
-            model = EPLShearMultipole(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4, self.approx_einstein_radius,
-                                      0.0, 0.0, 0.2, 0.1)
+            model = EPLShearMultipole(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4,
+                                          **kwargs_lens_macro_init)
             params_sampled = np.array([multipole_amplitude_m4, gamma_macro, shear_amplitude])
             param_names_macro = ['a4', 'gamma', 'gamma_ext']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
@@ -172,9 +182,7 @@ class Quad(object):
             constrain_params = {'shear': shear_amplitude, 'delta_phi_m3': m3_orientation}
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole_34
             model = EPLShearMultipole_34(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4,
-                                      multipole_amplitude_m3,
-                                      self.approx_einstein_radius,
-                                      0.0, 0.0, 0.2, 0.1)
+                                      multipole_amplitude_m3, **kwargs_lens_macro_init)
             params_sampled = np.array([multipole_amplitude_m3, multipole_amplitude_m4, m3_orientation, gamma_macro, shear_amplitude])
             param_names_macro = ['a3', 'a4', 'd_phi_a3', 'gamma', 'gamma_ext']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
@@ -183,8 +191,7 @@ class Quad(object):
             optimization_routine = 'fixed_shear_powerlaw'
             constrain_params = {'shear': shear_amplitude}
             from quadmodel.deflector_models.preset_macromodels import EPLShear
-            model = EPLShear(self.zlens, gamma_macro, shear_amplitude, self.approx_einstein_radius,
-                                      0.0, 0.0, 0.2, 0.1)
+            model = EPLShear(self.zlens, gamma_macro, shear_amplitude, **kwargs_lens_macro_init)
             params_sampled = np.array([gamma_macro, shear_amplitude])
             param_names_macro = ['gamma', 'gamma_ext']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
@@ -194,8 +201,7 @@ class Quad(object):
             constrain_params = None
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole
             model = EPLShearMultipole(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4,
-                                      self.approx_einstein_radius,
-                                      0.0, 0.0, 0.2, 0.1)
+                                      **kwargs_lens_macro_init)
             params_sampled = np.array([multipole_amplitude_m4, gamma_macro])
             param_names_macro = ['a4', 'gamma']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
@@ -206,9 +212,7 @@ class Quad(object):
             constrain_params = {'delta_phi_m3': m3_orientation}
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole_34
             model = EPLShearMultipole_34(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4,
-                                      multipole_amplitude_m3,
-                                      self.approx_einstein_radius,
-                                      0.0, 0.0, 0.2, 0.1)
+                                      multipole_amplitude_m3, **kwargs_lens_macro_init)
             params_sampled = np.array([multipole_amplitude_m3, multipole_amplitude_m4, m3_orientation, gamma_macro])
             param_names_macro = ['a3', 'a4', 'd_phi_a3', 'gamma']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro
@@ -217,9 +221,7 @@ class Quad(object):
             optimization_routine = 'free_shear_powerlaw'
             constrain_params = None
             from quadmodel.deflector_models.preset_macromodels import EPLShear
-            model = EPLShear(self.zlens, gamma_macro, shear_amplitude,
-                                      self.approx_einstein_radius,
-                                      0.0, 0.0, 0.2, 0.1)
+            model = EPLShear(self.zlens, gamma_macro, shear_amplitude, **kwargs_lens_macro_init)
             params_sampled = np.array([gamma_macro])
             param_names_macro = ['gamma']
             return model, constrain_params, optimization_routine, params_sampled, param_names_macro

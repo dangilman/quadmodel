@@ -60,7 +60,9 @@ def filenames(output_path, job_index):
     filename_realizations = output_path + 'job_' + str(job_index) + '/'
     filename_sampling_rate = output_path + 'job_' + str(job_index) + '/sampling_rate.txt'
     filename_acceptance_ratio = output_path + 'job_' + str(job_index) + '/acceptance_ratio.txt'
-    return filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio
+    filename_macromodel_samples = output_path + 'job_' + str(job_index) + '/macromodel_samples.txt'
+    return filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, \
+           filename_acceptance_ratio, filename_macromodel_samples
 
 def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, record_chi2=False,
                    filename_suffix_chi2=None, keep_modelplot=False):

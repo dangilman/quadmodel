@@ -16,7 +16,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                   verbose=False, readout_steps=2, kwargs_realization_other={},
                   ray_tracing_optimization='default', test_mode=False,
                   save_realizations=False, crit_curves_in_test_mode=False, write_sampling_rate=False,
-                  importance_weights_function=None):
+                  importance_weights_function=None, readout_macromodel_samples=False, n_macro=None):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -56,12 +56,15 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     :param importance_weights_function: a function that returns an importance weight given sampled parameters;
     this function also effectively overrides the prior, as new samples will be generated with probability given
     by the function
+    :param readout_macromodel_samples: bool; whether or not to readout textfiles containing all macromodel samples
+    :param n_macro: integer defining how many lens models correspond to the macromodel (only if readout_macromodel_samples is True)
+    For example, for an EPL+SHEAR+MULTIPOLE model n_macro = 3
     :return:
     """
 
     # set up the filenames and folders for writing output
 
-    filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio = \
+    filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, filename_macromodel_samples = \
         filenames(output_path, job_index)
 
     # if the required directories do not exist, create them
@@ -87,14 +90,18 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         except:
             n_kept = 1
         write_param_names = False
+        write_param_names_macromodel_samples = False
     else:
         n_kept = 0
         _m = None
         write_param_names = True
+        write_param_names_macromodel_samples = True
 
     if n_kept >= n_keep:
         print('\nSIMULATION ALREADY FINISHED.')
         return
+    if readout_macromodel_samples:
+        assert n_macro is not None
 
     # Initialize stuff for the inference
     idx_init = deepcopy(n_kept)
@@ -128,7 +135,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                                                                 verbose, crit_curves_in_test_mode, importance_weights_function)
         acceptance_rate_counter += 1
         # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
-        if acceptance_rate_counter == 10 or acceptance_rate_counter == 50:
+        if acceptance_rate_counter == 25 or acceptance_rate_counter == 50:
             time_elapsed = time() - t0
             time_elapsed_minutes = time_elapsed / 60
             sampling_rate = time_elapsed_minutes / acceptance_rate_counter
@@ -212,6 +219,26 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                         f.write(str(np.round(mags_out[row, col], 6)) + ' ')
                     f.write('\n')
 
+            if readout_macromodel_samples:
+                macromodel_samples_array = None
+                for l, system in enumerate(saved_lens_systems):
+                    if macromodel_samples_array is None:
+                        macromodel_samples_array, param_names_macromodel_samples = system.get_model_samples(n_macro)
+                    else:
+                        macromodel_samples_array = np.vstack((macromodel_samples_array, system.get_model_samples(n_macro)[0]))
+                nrows, ncols = int(macromodel_samples_array.shape[0]), int(macromodel_samples_array.shape[1])
+                with open(filename_macromodel_samples, 'a') as f:
+                    if write_param_names_macromodel_samples:
+                        param_name_string = ''
+                        for name in param_names_macromodel_samples:
+                            param_name_string += name + ' '
+                        f.write(param_name_string + '\n')
+                        write_param_names_macromodel_samples = False
+                    for row in range(0, nrows):
+                        for col in range(0, ncols):
+                            f.write(str(np.round(macromodel_samples_array[row, col], 6)) + ' ')
+                        f.write('\n')
+
             if save_realizations:
                 for idx_system, system in enumerate(saved_lens_systems):
 
@@ -259,7 +286,8 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
                                                                                           kwargs_sample_realization,
                                                                                           kwargs_realization_other,
                                                                                           kwargs_sample_macromodel,
-                                                                                          importance_weights_function)
+                                                                                          importance_weights_function,
+                                                                                          verbose)
     macromodel = MacroLensModel(model.component_list)
     # create the realization
     R_ein_approx = lens_data_class.approx_einstein_radius
@@ -383,11 +411,12 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
         param_names_source, param_names_macro, lens_system, lens_data_class_sampling, importance_weight, mags
 
 def _parameters_from_priors(lens_data_class_sampling, kwargs_sample_realization,
-                            kwargs_realization_other, kwargs_sample_macromodel, importance_weights_function):
+                            kwargs_realization_other, kwargs_sample_macromodel, importance_weights_function,
+                            verbose):
 
     u = np.random.rand()
     while True:
-        # Now, setup the source model, and ray trace to compute the image magnifications
+        # Now, set up the source model, and ray trace to compute the image magnifications
         source_size_pc, kwargs_source_model, source_samples, param_names_source = \
             lens_data_class_sampling.generate_sourcemodel()
 
@@ -402,7 +431,7 @@ def _parameters_from_priors(lens_data_class_sampling, kwargs_sample_realization,
         model, constrain_params_macro, optimization_routine, \
         macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel(**kwargs_sample_macromodel)
 
-        model_probability = importance_weights_function(realization_samples, macromodel_samples, source_samples)
+        model_probability = importance_weights_function(realization_samples, macromodel_samples, source_samples, verbose)
 
         if model_probability >= u:
             break
