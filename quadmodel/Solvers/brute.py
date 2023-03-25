@@ -85,7 +85,7 @@ class BruteOptimization(OptimizationBase):
                  'particle_swarm': particle_swarm, 're_optimize':re_optimize, 're_optimize_scale': re_optimize_scale,
                       'pso_convergence_mean': pso_convergence_mean,'tol_source':1e-6,
                       'foreground_rays': None, 'simplex_n_iterations': self.n_iterations}
-        print(run_kwargs['re_optimize'])
+        
         kwargs_lens_final, ray_shooting_class, source = self._fit(run_kwargs, param_class, args_param_class,
                                     include_substructure, n_particles, realization, verbose, threadCount,
                                                                   z_mass_sheet_max)
