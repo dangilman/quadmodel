@@ -16,7 +16,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                   verbose=False, readout_steps=2, kwargs_realization_other={},
                   ray_tracing_optimization='default', test_mode=False,
                   save_realizations=False, crit_curves_in_test_mode=False, write_sampling_rate=False,
-                  importance_weights_function=None, readout_macromodel_samples=False, n_macro=None):
+                  importance_weights_function=None, readout_macromodel_samples=False, n_macro=None,
+                  reoptimize_initial_fit=False):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -59,6 +60,9 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     :param readout_macromodel_samples: bool; whether or not to readout textfiles containing all macromodel samples
     :param n_macro: integer defining how many lens models correspond to the macromodel (only if readout_macromodel_samples is True)
     For example, for an EPL+SHEAR+MULTIPOLE model n_macro = 3
+    :param reoptimize_initial_fit: bool; whether to start the lens modeling for each iteration with a tight prior
+    around an initial value. This should only be used when you have a good idea of what macromodel parameters are viable
+    and are doing the random sampling from this distribution 
     :return:
     """
 
@@ -132,7 +136,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         stat, realization_samples, source_samples, macromodel_samples, param_names_realization, \
         param_names_source, param_names_macro, lens_system, lens_data_class_sampling, importance_weight, model_mags = _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
                                                                 kwargs_sample_macromodel, ray_tracing_optimization, test_mode,
-                                                                verbose, crit_curves_in_test_mode, importance_weights_function)
+                                                                verbose, crit_curves_in_test_mode,
+                                                              importance_weights_function, reoptimize_initial_fit)
         acceptance_rate_counter += 1
         # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
         if acceptance_rate_counter == 25 or acceptance_rate_counter == 50:
@@ -261,7 +266,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
 
 def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
                     kwargs_sample_macromodel, ray_tracing_optimization, test_mode, verbose, crit_curves_in_test_mode,
-                    importance_weights_function):
+                    importance_weights_function, reoptimize_initial_fit):
 
     # add astrometric uncertainties to image positions
     magnifications, magnification_uncertainties, astrometric_uncertainty = \
@@ -307,7 +312,9 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
 
     # This sets up a baseline lens macromodel and aligns the dark matter halos to follow the path taken by the
     # light rays. This is important if the source is significantly offset from the lens centroid
-    lens_system = QuadLensSystem.shift_background_auto(lens_data_class_sampling, macromodel, zsource, realization)
+    lens_system = QuadLensSystem.shift_background_auto(lens_data_class_sampling,
+                                                       macromodel, zsource,
+                                                       realization, re_optimize=reoptimize_initial_fit)
 
     # Now we set up the optimization routine, which will solve for a set of macromodel parameters that map the
     # observed image coordinates to common source position in the presence of all the dark matter halos along the
