@@ -62,7 +62,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     For example, for an EPL+SHEAR+MULTIPOLE model n_macro = 3
     :param reoptimize_initial_fit: bool; whether to start the lens modeling for each iteration with a tight prior
     around an initial value. This should only be used when you have a good idea of what macromodel parameters are viable
-    and are doing the random sampling from this distribution 
+    and are doing the random sampling from this distribution
     :return:
     """
 
