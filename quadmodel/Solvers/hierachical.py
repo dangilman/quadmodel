@@ -34,28 +34,28 @@ class HierarchicalOptimization(BruteOptimization):
         mass_global_back = [12, 7, 7]
         aperture_mass_list_front = [7, -10, -10]
         aperture_mass_list_back = [12, 7, -10]
-        window_sizes_front = [100, 0.3, 0.3]
-        window_sizes_back = [100, 100, 0.2]
+        aperture_sizes_front = [100, 0.3, 0.3]
+        aperture_sizes_back = [100, 100, 0.25]
+        re_optimize_list = [True, True, True]
         reoptimized_realizations = []
 
         for run in range(0, len(aperture_mass_list_back)):
 
+            re_optimize = re_optimize_list[run]
             if run == 0:
                 use_pso = True
-                re_optimize = False
                 ray_x_interp, ray_y_interp = interpolate_ray_paths_system(data_to_fit.x, data_to_fit.y,
                                                                           self.lens_system,
                                                                           include_substructure=False)
 
             else:
                 use_pso = False
-                re_optimize = True
                 ray_x_interp, ray_y_interp = interpolate_ray_paths_system(data_to_fit.x, data_to_fit.y,
                                                                           self.lens_system,
                                                                           realization=_realization_iteration)
 
-            filter_kwargs = {'aperture_radius_front': window_sizes_front[run],
-                             'aperture_radius_back': window_sizes_back[run],
+            filter_kwargs = {'aperture_radius_front': aperture_sizes_front[run],
+                             'aperture_radius_back': aperture_sizes_back[run],
                              'log_mass_allowed_in_aperture_front': aperture_mass_list_front[run],
                              'log_mass_allowed_in_aperture_back': aperture_mass_list_back[run],
                              'log_mass_allowed_global_front': mass_global_front[run],
@@ -81,8 +81,8 @@ class HierarchicalOptimization(BruteOptimization):
             self.lens_system.clear_static_lensmodel()
 
             if verbose:
-                print('aperture size (front): ', window_sizes_front[run])
-                print('aperture size (back): ', window_sizes_back[run])
+                print('aperture size (front): ', aperture_sizes_front[run])
+                print('aperture size (back): ', aperture_sizes_back[run])
                 print('log10 minimum mass anywhere (front): ', mass_global_front[run])
                 print('log10 minimum mass anywhere (back): ', mass_global_back[run])
                 print('log10 minimum mass in aperture (front): ', aperture_mass_list_front[run])
