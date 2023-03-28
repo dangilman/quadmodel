@@ -155,7 +155,6 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
             # If the statistic is less than the tolerance threshold, we keep the parameters
             accepted_realizations_counter += 1
             n_kept += 1
-            importance_weight = 1.0
             params = np.append(np.append(np.append(np.append(realization_samples, source_samples), macromodel_samples), stat), importance_weight)
             param_names = param_names_realization + param_names_source + param_names_macro + ['summary_statistic', 'importance_weight']
             saved_lens_systems.append(lens_system)
