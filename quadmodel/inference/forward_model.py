@@ -421,8 +421,8 @@ def _parameters_from_priors(lens_data_class_sampling, kwargs_sample_realization,
                             kwargs_realization_other, kwargs_sample_macromodel, importance_weights_function,
                             verbose):
 
-    u = np.random.rand()
     while True:
+        u = np.random.rand()
         # Now, set up the source model, and ray trace to compute the image magnifications
         source_size_pc, kwargs_source_model, source_samples, param_names_source = \
             lens_data_class_sampling.generate_sourcemodel()
@@ -437,13 +437,25 @@ def _parameters_from_priors(lens_data_class_sampling, kwargs_sample_realization,
 
         model, constrain_params_macro, optimization_routine, \
         macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel(**kwargs_sample_macromodel)
-
-        model_probability = importance_weights_function(realization_samples, macromodel_samples, source_samples, verbose)
+        # print(realization_samples)
+        # print(param_names_realization)
+        # print(macromodel_samples)
+        # print(param_names_macro)
+        # print(source_samples)
+        # print(param_names_source)
+        model_probability = importance_weights_function(realization_samples, param_names_realization,
+                                                        macromodel_samples, param_names_macro,
+                                                        source_samples, param_names_source,
+                                                        verbose)
 
         if model_probability >= u:
             break
 
-    importance_weight = 1/model_probability
+    importance_weight = 1 / model_probability
+    if verbose:
+        print('importance weight for sample: ', importance_weight)
+        print('sample (from realization samples): ', realization_samples)
+
     return source_size_pc, kwargs_source_model, source_samples, param_names_source, realization_samples, \
            preset_model, kwargs_preset_model, param_names_realization, model, constrain_params_macro, \
            optimization_routine, macromodel_samples, param_names_macro, importance_weight
