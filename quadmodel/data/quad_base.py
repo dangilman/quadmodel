@@ -165,6 +165,8 @@ class Quad(object):
                                       'center_y': random_center_y,
                                       'e1': random_e1,
                                       'e2': random_e2}
+        elif callable(kwargs_lens_macro_init):
+            kwargs_lens_macro_init = kwargs_lens_macro_init()
 
         if self.macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE':
             optimization_routine = 'fixed_shear_powerlaw_multipole'
