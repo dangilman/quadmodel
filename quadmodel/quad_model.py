@@ -374,8 +374,16 @@ class QuadLensSystem(object):
         param_names = []
         for kw in kwargs:
             for key in kw.keys():
-                param_names.append(key)
-                kwargs_list.append(kw[key])
+                if key=='a_m':
+                    if kw['m']==4:
+                        param_names.append('a_m_4')
+                    elif kw['m']==3:
+                        param_names.append('a_m_3')
+                    else:
+                        raise Exception('if multipole is in lens model, must have m=3 or m=4')
+                else:
+                    kwargs_list.append(kw[key])
+                    param_names.append(key)
         return np.array(kwargs_list), param_names
 
 

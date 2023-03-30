@@ -16,8 +16,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                   verbose=False, readout_steps=2, kwargs_realization_other={},
                   ray_tracing_optimization='default', test_mode=False,
                   save_realizations=False, crit_curves_in_test_mode=False, write_sampling_rate=False,
-                  importance_weights_function=None, readout_macromodel_samples=False, n_macro=None,
-                  reoptimize_initial_fit=False):
+                  importance_weights_function=None, readout_macromodel_samples=False, n_macro=None):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -60,9 +59,6 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     :param readout_macromodel_samples: bool; whether or not to readout textfiles containing all macromodel samples
     :param n_macro: integer defining how many lens models correspond to the macromodel (only if readout_macromodel_samples is True)
     For example, for an EPL+SHEAR+MULTIPOLE model n_macro = 3
-    :param reoptimize_initial_fit: bool; whether to start the lens modeling for each iteration with a tight prior
-    around an initial value. This should only be used when you have a good idea of what macromodel parameters are viable
-    and are doing the random sampling from this distribution
     :return:
     """
 
@@ -130,6 +126,11 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
     if importance_weights_function is None:
         importance_weights_function = _flat_prior_importance_weights
+
+    if 'kwargs_lens_macro_init' in kwargs_sample_macromodel.keys():
+        reoptimize_initial_fit = True
+    else:
+        reoptimize_initial_fit = False
 
     while True:
 

@@ -2,14 +2,14 @@ import numpy as np
 
 class MacromodelInitSampler(object):
 
-    def __init__(self, kde):
+    def __init__(self, kde, param_names_in_order):
+        self._param_names_in_order = param_names_in_order
         self._kde = kde
 
     def __call__(self):
-        param_names_in_order = ['theta_E', 'center_x', 'center_y', 'e1', 'e2']
         sample = self._kde.resample(1)
         kwargs_macro_init = {}
-        for i, param_name in enumerate(param_names_in_order):
+        for i, param_name in enumerate(self._param_names_in_order):
             kwargs_macro_init[param_name] = float(sample[i])
         return kwargs_macro_init
 
