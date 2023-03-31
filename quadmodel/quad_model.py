@@ -377,10 +377,15 @@ class QuadLensSystem(object):
                 if key=='a_m':
                     if kw['m']==4:
                         param_names.append('a_m_4')
+                        kwargs_list.append(kw[key])
                     elif kw['m']==3:
                         param_names.append('a_m_3')
+                        kwargs_list.append(kw[key])
                     else:
                         raise Exception('if multipole is in lens model, must have m=3 or m=4')
+                elif key=='gamma':
+                    param_names.append('gamma_macro')
+                    kwargs_list.append(kw[key])
                 else:
                     kwargs_list.append(kw[key])
                     param_names.append(key)
