@@ -16,7 +16,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                   verbose=False, readout_steps=2, kwargs_realization_other={},
                   ray_tracing_optimization='default', test_mode=False,
                   save_realizations=False, crit_curves_in_test_mode=False, write_sampling_rate=False,
-                  importance_weights_function=None, readout_macromodel_samples=False, n_macro=None):
+                  importance_weights_function=None, readout_macromodel_samples=False, n_macro=None,
+                  realization_class=None):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -59,6 +60,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     :param readout_macromodel_samples: bool; whether or not to readout textfiles containing all macromodel samples
     :param n_macro: integer defining how many lens models correspond to the macromodel (only if readout_macromodel_samples is True)
     For example, for an EPL+SHEAR+MULTIPOLE model n_macro = 3
+    :param realization_class: a fixed instance of Realization in pyHalo to use for the simulation
     :return:
     """
 
@@ -138,7 +140,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         param_names_source, param_names_macro, lens_system, lens_data_class_sampling, importance_weight, model_mags = _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
                                                                 kwargs_sample_macromodel, ray_tracing_optimization, test_mode,
                                                                 verbose, crit_curves_in_test_mode,
-                                                              importance_weights_function, reoptimize_initial_fit)
+                                                              importance_weights_function, reoptimize_initial_fit, realization_class)
         acceptance_rate_counter += 1
         # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
         if acceptance_rate_counter == 25 or acceptance_rate_counter == 50:
@@ -166,12 +168,10 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                 parameter_array = params
             else:
                 parameter_array = np.vstack((parameter_array, params))
-
             if mags_out is None:
                 mags_out = model_mags
             else:
                 mags_out = np.vstack((mags_out, model_mags))
-
             if verbose:
                 print('N_kept: ', n_kept)
                 print('N remaining: ', n_keep - n_kept)
@@ -266,7 +266,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
 
 def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
                     kwargs_sample_macromodel, ray_tracing_optimization, test_mode, verbose, crit_curves_in_test_mode,
-                    importance_weights_function, reoptimize_initial_fit):
+                    importance_weights_function, reoptimize_initial_fit, realization_class):
 
     # add astrometric uncertainties to image positions
     magnifications, magnification_uncertainties, astrometric_uncertainty = \
@@ -294,13 +294,20 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
                                                                                           importance_weights_function,
                                                                                           verbose)
     macromodel = MacroLensModel(model.component_list)
-    # create the realization
     R_ein_approx = lens_data_class.approx_einstein_radius
-    if 'cone_opening_angle' not in kwargs_preset_model.keys():
-        # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
-        kwargs_preset_model['cone_opening_angle'] = 6 * R_ein_approx
+    if realization_class is None:
+        # create the realization
+        if 'cone_opening_angle' not in kwargs_preset_model.keys():
+            # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
+            kwargs_preset_model['cone_opening_angle'] = 6 * R_ein_approx
 
-    realization = preset_model(zlens, zsource, **kwargs_preset_model)
+        realization = preset_model(zlens, zsource, **kwargs_preset_model)
+    else:
+        realization_samples = np.array([])
+        param_names_realization = []
+        realization = deepcopy(realization_class)
+        if verbose: print('using fixed realization instance')
+
     if verbose:
         print('realization contains ' + str(len(realization.halos)) + ' halos.')
         print(param_names_realization)
