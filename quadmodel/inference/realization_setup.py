@@ -46,13 +46,14 @@ def setup_macromodel(priors):
 def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
 
     realization_priors = deepcopy(priors)
-    realization_params = None
+    realization_params = np.array([])
     kwargs_realization = {}
     preset_model_name = realization_priors['PRESET_MODEL']
 
     del realization_priors['PRESET_MODEL']
     param_names_realization = []
 
+    start = True
     for parameter_name in realization_priors.keys():
 
         prior_type = realization_priors[parameter_name][0]
@@ -68,8 +69,9 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         else:
             param_names_realization.append(parameter_name)
 
-        if realization_params is None:
+        if start:
             realization_params = value
+            start = False
         else:
             realization_params = np.append(realization_params, value)
 

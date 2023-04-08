@@ -17,7 +17,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                   ray_tracing_optimization='default', test_mode=False,
                   save_realizations=False, crit_curves_in_test_mode=False, write_sampling_rate=False,
                   importance_weights_function=None, readout_macromodel_samples=False, n_macro=None,
-                  realization_class=None):
+                  realization_class=None, shift_background_realization=True):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -61,6 +61,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     :param n_macro: integer defining how many lens models correspond to the macromodel (only if readout_macromodel_samples is True)
     For example, for an EPL+SHEAR+MULTIPOLE model n_macro = 3
     :param realization_class: a fixed instance of Realization in pyHalo to use for the simulation
+    :param shift_background_realization: bool; whether or not to align halos with the center of the volume
+    traversed by light
     :return:
     """
 
@@ -140,7 +142,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         param_names_source, param_names_macro, lens_system, lens_data_class_sampling, importance_weight, model_mags = _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
                                                                 kwargs_sample_macromodel, ray_tracing_optimization, test_mode,
                                                                 verbose, crit_curves_in_test_mode,
-                                                              importance_weights_function, reoptimize_initial_fit, realization_class)
+                                                              importance_weights_function, reoptimize_initial_fit,
+                                                              realization_class, shift_background_realization)
         acceptance_rate_counter += 1
         # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
         if acceptance_rate_counter == 25 or acceptance_rate_counter == 50:
@@ -211,7 +214,6 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                     write_param_names = False
 
                 nrows, ncols = int(parameter_array.shape[0]), int(parameter_array.shape[1])
-
                 for row in range(0, nrows):
                     for col in range(0, ncols):
                         f.write(str(np.round(parameter_array[row, col], 6)) + ' ')
@@ -266,7 +268,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
 
 def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
                     kwargs_sample_macromodel, ray_tracing_optimization, test_mode, verbose, crit_curves_in_test_mode,
-                    importance_weights_function, reoptimize_initial_fit, realization_class):
+                    importance_weights_function, reoptimize_initial_fit, realization_class,
+                    shift_background_realization):
 
     # add astrometric uncertainties to image positions
     magnifications, magnification_uncertainties, astrometric_uncertainty = \
@@ -308,6 +311,8 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
         realization = deepcopy(realization_class)
         if verbose: print('using fixed realization instance')
 
+    if shift_background_realization is False:
+        realization._has_been_shifted = True
     if verbose:
         print('realization contains ' + str(len(realization.halos)) + ' halos.')
         print(param_names_realization)
@@ -348,7 +353,7 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
         lensmodel_macro, kwargs_macro = lens_system.get_lensmodel(include_substructure=False)
         kappa_macro = lensmodel_macro.kappa(xx.ravel(), yy.ravel(), kwargs_macro).reshape(shape0)
         extent = [-2 * R_ein_approx, 2 * R_ein_approx, -2 * R_ein_approx, 2 * R_ein_approx]
-        plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.1, vmax=0.1, cmap='bwr', extent=extent)
+        plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.05, vmax=0.05, cmap='bwr', extent=extent)
         plt.scatter(lens_data_class_sampling.x, lens_data_class_sampling.y, color='k')
         if crit_curves_in_test_mode:
             from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions

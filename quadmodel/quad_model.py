@@ -76,6 +76,7 @@ class QuadLensSystem(object):
 
         lens_system_init = QuadLensSystem(macromodel, zsource, None,
                                           pyhalo_cosmology=cosmo)
+
         lens_system_init.initialize(lens_data_class, opt_routine=opt_routine, constrain_params=constrain_params,
                                     kwargs_optimizer={'particle_swarm': particle_swarm_init, 're_optimize': re_optimize}, verbose=verbose)
 
