@@ -55,7 +55,7 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
         #                       kwargs_result, arrow_size=0.02, cmap_string="gist_heat")
 
         kwargs_best = fitting_seq.best_fit()
-        neff = fitting_seq.likelihoodModule.effective_num_data_points(kwargs_best)
+        neff = fitting_seq.likelihoodModule.effective_num_data_points(**kwargs_best)
         # num_data = fitting_seq.likelihoodModule.num_data
         # num_param_nonlinear = fitting_seq.param_class.num_param()[0]
         # num_param_linear = fitting_seq.param_class.num_param_linear()
