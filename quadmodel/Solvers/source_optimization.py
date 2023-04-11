@@ -114,7 +114,7 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
     coordinate_system = Coordinates(pix2angle, ra_at_x0, dec_at_x0)
     ra_coords, dec_coords = coordinate_system.coordinate_grid(nx, ny)
     tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_init)
-    lens_model_list = ['NumericalAlpha']
+    lens_model_list = ['TABULATED_DEFLECTIONS']
 
     if initialize_from_fit:
         f = open(path_to_smooth_lens_fit, 'rb')
