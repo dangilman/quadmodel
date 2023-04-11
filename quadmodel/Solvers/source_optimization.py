@@ -53,10 +53,15 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
                 path_to_smooth_lens_fit, add_shapelets_source, n_max_source, npix_mask_images)
         # modelPlot = ModelPlot(multi_band_list, kwargs_model,
         #                       kwargs_result, arrow_size=0.02, cmap_string="gist_heat")
-        n_data = fitting_seq.likelihoodModule.num_data
+
+        num_data = fitting_seq.likelihoodModule.num_data
+        num_param_nonlinear = fitting_seq.param_class.num_param()[0]
+        num_param_linear = fitting_seq.param_class.num_param_linear()
+        num_param = num_param_nonlinear + num_param_linear
         log_l = fitting_seq.best_fit_likelihood
-        chi2_array = np.array([2 * log_l / n_data, n_data])
-        print('CHI2 FROM FIT: ', 2 * log_l / n_data)
+
+        chi2_array = np.array([2 * log_l / (num_data - num_param), num_data - num_param])
+        print('CHI2 FROM FIT: ', 2 * log_l / (num_data - num_param))
 
         f = open(path_to_simulation_output + 'kwargs_fitting_sequence_' + str(idx) + filename_suffix, 'wb')
         dill.dump(fitting_kwargs_class, f)
