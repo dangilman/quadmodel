@@ -54,15 +54,17 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
         # modelPlot = ModelPlot(multi_band_list, kwargs_model,
         #                       kwargs_result, arrow_size=0.02, cmap_string="gist_heat")
 
-        num_data = fitting_seq.likelihoodModule.num_data
-        num_param_nonlinear = fitting_seq.param_class.num_param()[0]
-        num_param_linear = fitting_seq.param_class.num_param_linear()
-        num_param = num_param_nonlinear + num_param_linear
-        print(num_param, num_param_linear, num_param_nonlinear, num_data)
+        kwargs_best = fitting_seq.best_fit()
+        neff = fitting_seq.likelihoodModule.effective_num_data_points(kwargs_best)
+        # num_data = fitting_seq.likelihoodModule.num_data
+        # num_param_nonlinear = fitting_seq.param_class.num_param()[0]
+        # num_param_linear = fitting_seq.param_class.num_param_linear()
+        # num_param = num_param_nonlinear + num_param_linear
+        #
         log_l = fitting_seq.best_fit_likelihood
 
-        chi2_array = np.array([2 * log_l / num_data, num_data])
-        print('CHI2 FROM FIT: ', 2 * log_l / num_data)
+        chi2_array = np.array([2 * log_l / neff, neff])
+        print('CHI2 FROM FIT: ', 2 * log_l / neff)
 
         f = open(path_to_simulation_output + 'kwargs_fitting_sequence_' + str(idx) + filename_suffix, 'wb')
         dill.dump(fitting_kwargs_class, f)
