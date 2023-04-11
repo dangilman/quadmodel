@@ -36,11 +36,11 @@ class BruteOptimization(OptimizationBase):
 
         super(BruteOptimization, self).__init__(lens_system)
 
-    def optimize(self, data_to_fit, param_class, args_param_class, verbose,
-                 include_substructure, kwargs_optimizer):
+    def optimize(self, data_to_fit, param_class, constrain_params, verbose=False,
+                 include_substructure=True, kwargs_optimizer={}):
 
         kwargs_lens_final, lens_model_full, [source_x, source_y] = self.fit(data_to_fit, param_class,
-                                      args_param_class, verbose, include_substructure, **kwargs_optimizer)
+                                      constrain_params, verbose, include_substructure, **kwargs_optimizer)
 
         self.lens_system.clear_static_lensmodel()
         self.lens_system.set_lensmodel_static(lens_model_full, kwargs_lens_final)
