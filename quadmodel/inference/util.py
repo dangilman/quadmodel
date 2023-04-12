@@ -180,7 +180,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     continue
 
         print('stacking parameters and output... ')
-        a=input('continue')
+        
         if init:
             init = False
             params = deepcopy(_params)
