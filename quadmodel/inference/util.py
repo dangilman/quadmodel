@@ -148,7 +148,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
 
         if keep_kwargs_fitting_seq:
             proceed = False
-            _fittinig_seq_kwargs = []
+            _fitting_seq_kwargs = []
             for n in range(1, 1 + int(_params.shape[0])):
                 filename_kwargs_fitting_seq = output_path + 'job_' + str(job_index) + \
                                 '/kwargs_fitting_sequence_' + str(n) + filename_suffix_chi2
@@ -159,12 +159,12 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                         f.close()
                     except:
                         raise Exception('could not open file '+str(filename_kwargs_fitting_seq))
-                    _fittinig_seq_kwargs.append(new)
+                    _fitting_seq_kwargs.append(new)
                 else:
                     print('could not find file '+filename_kwargs_fitting_seq)
                     proceed = False
                     break
-            assert len(fittinig_seq_kwargs) == num_realizations, 'number of saved fitting sequence classes not right'
+            assert len(_fitting_seq_kwargs) == num_realizations, 'number of saved fitting sequence classes not right'
 
         if proceed is False:
             continue
