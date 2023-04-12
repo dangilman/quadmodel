@@ -179,7 +179,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 except:
                     print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(n + 1))
                     continue
-
+        print('stacking parameters and output... ')
         if params is None:
             params = deepcopy(_params)
             fluxes = deepcopy(_fluxes)
@@ -188,15 +188,8 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             if keep_macromodel_samples:
                 macro_samples = deepcopy(_macro_samples)
             if keep_kwargs_fitting_seq:
-                fittinig_seq_kwargs += _fittinig_seq_kwargs
+                fittinig_seq_kwargs += _fitting_seq_kwargs
         else:
-            if params.shape[1] != _params.shape[1]:
-                print('shape mismatch on file '+str(job_index))
-                print(params[-1,:])
-                print(_params)
-                print(_params.shape)
-                print(params.shape)
-                continue
             params = np.vstack((params, _params))
             fluxes = np.vstack((fluxes, _fluxes))
             if keep_chi2:
@@ -205,8 +198,8 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 macro_samples = np.vstack((macro_samples, _macro_samples))
             if keep_kwargs_fitting_seq:
                 fittinig_seq_kwargs += _fittinig_seq_kwargs
-            n_kept += _params.shape[0]
-    print('compiled ' + str(n_kept) + ' realizations')
+
+    print('compiled ' + str(params.shape[0]) + ' realizations')
     container = FullSimulationContainer(realizations_and_lens_systems, params, fluxes, chi2_imaging_data, fittinig_seq_kwargs)
     return container
 
