@@ -202,7 +202,8 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 fitting_seq_kwargs += _fitting_seq_kwargs
 
     print('compiled ' + str(params.shape[0]) + ' realizations')
-    container = FullSimulationContainer(realizations_and_lens_systems, params, fluxes, chi2_imaging_data, fittinig_seq_kwargs)
+    container = FullSimulationContainer(realizations_and_lens_systems, params,
+                                        fluxes, chi2_imaging_data, fitting_seq_kwargs)
     return container
 
 
