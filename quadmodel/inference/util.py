@@ -92,12 +92,11 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         realizations_and_lens_systems = None
 
     if keep_kwargs_fitting_seq:
-        fittinig_seq_kwargs = []
+        fitting_seq_kwargs = []
     else:
         fittinig_seq_kwargs = None
 
-    params, fluxes, chi2_imaging_data = None, None, None
-    n_kept = 0
+    init = True
     for job_index in range(job_index_min, job_index_max + 1):
         proceed = True
         filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, \
@@ -147,9 +146,9 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         assert _chi2.shape[0] == num_realizations, 'chi2 file has wrong shape'
 
         if keep_kwargs_fitting_seq:
-            proceed = False
+            proceed = True
             _fitting_seq_kwargs = []
-            for n in range(1, 1 + int(_params.shape[0])):
+            for n in range(1, 1 + num_realizations):
                 filename_kwargs_fitting_seq = output_path + 'job_' + str(job_index) + \
                                 '/kwargs_fitting_sequence_' + str(n) + filename_suffix_chi2
                 if os.path.exists(filename_kwargs_fitting_seq):
@@ -179,8 +178,11 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 except:
                     print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(n + 1))
                     continue
+
         print('stacking parameters and output... ')
-        if params is None:
+        a=input('continue')
+        if init:
+            init = False
             params = deepcopy(_params)
             fluxes = deepcopy(_fluxes)
             if keep_chi2:
@@ -188,16 +190,16 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             if keep_macromodel_samples:
                 macro_samples = deepcopy(_macro_samples)
             if keep_kwargs_fitting_seq:
-                fittinig_seq_kwargs += _fitting_seq_kwargs
+                fitting_seq_kwargs += _fitting_seq_kwargs
         else:
             params = np.vstack((params, _params))
             fluxes = np.vstack((fluxes, _fluxes))
             if keep_chi2:
-                chi2_imaging_data = np.append(chi2_imaging_data, _chi2)
+                chi2_imaging_data = np.vstack((chi2_imaging_data, _chi2))
             if keep_macromodel_samples:
                 macro_samples = np.vstack((macro_samples, _macro_samples))
             if keep_kwargs_fitting_seq:
-                fittinig_seq_kwargs += _fittinig_seq_kwargs
+                fitting_seq_kwargs += _fitting_seq_kwargs
 
     print('compiled ' + str(params.shape[0]) + ' realizations')
     container = FullSimulationContainer(realizations_and_lens_systems, params, fluxes, chi2_imaging_data, fittinig_seq_kwargs)
