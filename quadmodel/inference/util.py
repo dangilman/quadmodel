@@ -1,10 +1,12 @@
 import numpy as np
 import dill as pickle
 from copy import deepcopy
+import os
+
 
 class FullSimulationContainer(object):
 
-    def __init__(self, individual_simulations, parameters, magnifications, chi2_imaging_data=None, modelplots=None):
+    def __init__(self, individual_simulations, parameters, magnifications, chi2_imaging_data=None, kwargs_fitting_seq=None):
 
         """
         A storage class for individual simulation containers
@@ -18,7 +20,7 @@ class FullSimulationContainer(object):
         self.parameters = parameters
         self.magnifications = magnifications
         self.chi2_imaging_data = chi2_imaging_data
-        self.modelplots=modelplots
+        self.kwargs_fitting_seq = kwargs_fitting_seq
 
     @classmethod
     def join(cls, sim1, sim2):
@@ -39,13 +41,15 @@ class SimulationOutputContainer(object):
     It includes the lens data class, the accepted lens system, and the corresponding set of parameters
     """
 
-    def __init__(self, lens_data, lens_system, magnifications, parameters, chi2_imaging_data=None):
+    def __init__(self, lens_data, lens_system, magnifications, parameters, chi2_imaging_data=None, kwargs_fitting_seq=None):
 
         self.data = lens_data
         self.lens_system = lens_system
         self.parameters = parameters
         self.magnifications = magnifications
         self.chi2_imaging_data = chi2_imaging_data
+        self.kwargs_fitting_seq = kwargs_fitting_seq
+
 
 def filenames(output_path, job_index):
     """
@@ -61,12 +65,11 @@ def filenames(output_path, job_index):
     filename_sampling_rate = output_path + 'job_' + str(job_index) + '/sampling_rate.txt'
     filename_acceptance_ratio = output_path + 'job_' + str(job_index) + '/acceptance_ratio.txt'
     filename_macromodel_samples = output_path + 'job_' + str(job_index) + '/macromodel_samples.txt'
-    return filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, \
-           filename_acceptance_ratio, filename_macromodel_samples
+    return filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, \
+           filename_macromodel_samples
 
-def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, record_chi2=False,
-                   filename_suffix_chi2=None, keep_modelplot=False):
-
+def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, keep_chi2=False,
+                   filename_suffix_chi2=None, keep_kwargs_fitting_seq=False, keep_macromodel_samples=False):
     """
     This function complies the result from a simulation into a single pickled python class
     :param output_path: the directly where output will be produced; individual jobs (indexed by job_index) will be created
@@ -75,13 +78,12 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     :param job_index_max: the ending index for output folders
     :param keep_realizations: bool, whether or not to store the accepted realizations and the full lens system for each
     set of accepted parameters
-    :param record_chi2: bool, whether or not to search for/save the chi2 fit to imaging data for each realization.
+    :param keep_chi2: bool, whether or not to search for/save the chi2 fit to imaging data for each realization.
     NOTE - if the chi2 file is searched for but not found, then the corresponding flux ratios and parameters
     will not be saved
     :param filename_suffix_chi2: an optional string to append on a filename; format is
     'output_foler/job_$job_index$/chi2_$index$_$filename_suffix$.txt'
-    :param keep_modelplot: bool; whether or not to save pickled classes of the ModelPlot in lenstronomy
-    :return: an instance of FullSimulationContainer
+    :param keep_kwargs_fitting_seq: bool; whether or not to save kwargs for FittingSequence
     """
 
     if keep_realizations:
@@ -89,73 +91,98 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     else:
         realizations_and_lens_systems = None
 
-    if keep_modelplot:
-        modelplots = []
+    if keep_kwargs_fitting_seq:
+        fittinig_seq_kwargs = []
     else:
-        modelplots = None
+        fittinig_seq_kwargs = None
 
     params, fluxes, chi2_imaging_data = None, None, None
     n_kept = 0
     for job_index in range(job_index_min, job_index_max + 1):
+        proceed = True
+        filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, \
+        filename_macromodel_samples = filenames(output_path, job_index)
 
-        filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio = \
-            filenames(output_path, job_index)
-        # np.loadtxt(filename_parameters, skiprows=1)
         try:
             _params = np.loadtxt(filename_parameters, skiprows=1)
         except:
             print('could not find file ' + filename_parameters)
             continue
+        num_realizations = int(_params.shape[0])
+
         try:
             _fluxes = np.loadtxt(filename_mags)
         except:
             print('could not find file ' + filename_mags)
             continue
-        if record_chi2:
-            _chi2 = []
+        assert _fluxes.shape[0] == num_realizations
+
+        if keep_macromodel_samples:
+            try:
+                _macro_samples = np.loadtxt(filename_macromodel_samples, skiprows=1)
+            except:
+                print('could not find file ' + filename_macromodel_samples)
+                continue
+            assert _macro_samples.shape[0] == num_realizations
+
+        _chi2 = None
+        if keep_chi2:
+            proceed = True
             for n in range(1, 1+int(_params.shape[0])):
                 filename_chi2 = output_path + 'job_' + str(job_index) + \
-                                '/chi2_'+ str(n) + filename_suffix_chi2 +'.txt'
-                try:
-                    __chi2 = np.loadtxt(filename_chi2)
-                except:
-                    print('could not find chi2 file ' + filename_chi2)
-                    continue
-                _chi2.append(__chi2)
-            _chi2 = np.array(_chi2)
+                                '/chi2_' + str(n) + filename_suffix_chi2 + '.txt'
+                if os.path.exists(filename_chi2):
+                    new = np.loadtxt(filename_chi2)
+                    if _chi2 is None:
+                        _chi2 = new
+                    else:
+                        _chi2 = np.vstack((_chi2, new))
+                else:
+                    proceed = False
+                    break
+        if proceed is False:
+            continue
+        assert _chi2.shape[0] == num_realizations
 
-        number = _fluxes.shape[0]
+        if keep_kwargs_fitting_seq:
+            proceed = False
+            _fittinig_seq_kwargs = []
+            for n in range(1, 1 + int(_params.shape[0])):
+                filename_kwargs_fitting_seq = output_path + 'job_' + str(job_index) + \
+                                '/kwargs_fitting_sequence_' + str(n) + filename_suffix_chi2
+                if os.path.exists(filename_kwargs_fitting_seq):
+                    f = open(filename_kwargs_fitting_seq, 'rb')
+                    new = pickle.load(f)
+                    f.close()
+                    _fittinig_seq_kwargs.append(new)
+                else:
+                    proceed = False
+                    break
+            assert len(fittinig_seq_kwargs) == num_realizations
+
+        if proceed is False:
+            continue
 
         if keep_realizations:
-            for n in range(0, number):
+            for n in range(0, num_realizations):
                 try:
                     f = open(filename_realizations + 'simulation_output_' + str(n + 1), 'rb')
                     sim = pickle.load(f)
                     f.close()
+                    realizations_and_lens_systems.append(sim)
                 except:
                     print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(n + 1))
-                    continue
-            realizations_and_lens_systems.append(sim)
-
-        if keep_modelplot:
-            for n in range(0, number):
-                filename_modelplot = output_path + 'job_' + str(job_index) + \
-                            '/modelplot_'+ str(n+1) + filename_suffix_chi2 + '.txt'
-
-                try:
-                    f = open(filename_modelplot, 'rb')
-                    _modelplot = pickle.load(f)
-                    f.close()
-                    modelplots.append(_modelplot)
-                except:
-                    print('could not find pickled class ' + filename_modelplot)
                     continue
 
         if params is None:
             params = deepcopy(_params)
             fluxes = deepcopy(_fluxes)
-            if record_chi2:
+            if keep_chi2:
                 chi2_imaging_data = deepcopy(_chi2)
+            if keep_macromodel_samples:
+                macro_samples = deepcopy(_macro_samples)
+            if keep_kwargs_fitting_seq:
+                fittinig_seq_kwargs += _fittinig_seq_kwargs
         else:
             if params.shape[1] != _params.shape[1]:
                 print('shape mismatch on file '+str(job_index))
@@ -166,10 +193,15 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 continue
             params = np.vstack((params, _params))
             fluxes = np.vstack((fluxes, _fluxes))
-            chi2_imaging_data = np.append(chi2_imaging_data, _chi2)
+            if keep_chi2:
+                chi2_imaging_data = np.append(chi2_imaging_data, _chi2)
+            if keep_macromodel_samples:
+                macro_samples = np.vstack((macro_samples, _macro_samples))
+            if keep_kwargs_fitting_seq:
+                fittinig_seq_kwargs += _fittinig_seq_kwargs
             n_kept += _params.shape[0]
     print('compiled ' + str(n_kept) + ' realizations')
-    container = FullSimulationContainer(realizations_and_lens_systems, params, fluxes, chi2_imaging_data, modelplots)
+    container = FullSimulationContainer(realizations_and_lens_systems, params, fluxes, chi2_imaging_data, fittinig_seq_kwargs)
     return container
 
 
