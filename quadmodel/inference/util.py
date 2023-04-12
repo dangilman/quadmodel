@@ -115,7 +115,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         except:
             print('could not find file ' + filename_mags)
             continue
-        assert _fluxes.shape[0] == num_realizations
+        assert _fluxes.shape[0] == num_realizations, 'fluxes file has wrong shape'
 
         if keep_macromodel_samples:
             try:
@@ -123,7 +123,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             except:
                 print('could not find file ' + filename_macromodel_samples)
                 continue
-            assert _macro_samples.shape[0] == num_realizations
+            assert _macro_samples.shape[0] == num_realizations, 'macromodel file has wrong shape'
 
         _chi2 = None
         if keep_chi2:
@@ -138,11 +138,13 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     else:
                         _chi2 = np.vstack((_chi2, new))
                 else:
+                    print('could not find chi2 file '+filename_chi2)
                     proceed = False
                     break
         if proceed is False:
             continue
-        assert _chi2.shape[0] == num_realizations
+
+        assert _chi2.shape[0] == num_realizations, 'chi2 file has wrong shape'
 
         if keep_kwargs_fitting_seq:
             proceed = False
@@ -151,14 +153,18 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 filename_kwargs_fitting_seq = output_path + 'job_' + str(job_index) + \
                                 '/kwargs_fitting_sequence_' + str(n) + filename_suffix_chi2
                 if os.path.exists(filename_kwargs_fitting_seq):
-                    f = open(filename_kwargs_fitting_seq, 'rb')
-                    new = pickle.load(f)
-                    f.close()
+                    try:
+                        f = open(filename_kwargs_fitting_seq, 'rb')
+                        new = pickle.load(f)
+                        f.close()
+                    except:
+                        raise Exception('could not open file '+str(filename_kwargs_fitting_seq))
                     _fittinig_seq_kwargs.append(new)
                 else:
+                    print('could not find file '+filename_kwargs_fitting_seq)
                     proceed = False
                     break
-            assert len(fittinig_seq_kwargs) == num_realizations
+            assert len(fittinig_seq_kwargs) == num_realizations, 'number of saved fitting sequence classes not right'
 
         if proceed is False:
             continue
