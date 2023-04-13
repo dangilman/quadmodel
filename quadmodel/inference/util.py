@@ -216,6 +216,13 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 fitting_seq_kwargs += _fitting_seq_kwargs
 
     print('compiled ' + str(params.shape[0]) + ' realizations')
+    assert params.shape[0] == fluxes.shape[0]
+    if keep_macromodel_samples:
+        assert macro_samples.shape[0] == params.shape[0]
+    if keep_chi2:
+        assert chi2_imaging_data.shape[0] == params.shape[0]
+    if keep_kwargs_fitting_seq:
+        assert len(fitting_seq_kwargs) == params.shape[0]
     container = FullSimulationContainer(realizations_and_lens_systems, params,
                                         fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
     return container
