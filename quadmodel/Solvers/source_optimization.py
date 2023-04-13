@@ -253,7 +253,7 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
     astropy_class = lens_system.astropy
     kwargs_model_true = {'lens_model_list': lens_model_list_true,
                          'lens_redshift_list': lens_redshift_list_true,
-                         'z_source': lens_system.z_source,
+                         'z_source': lens_system.zsource,
                          'multi_plane': True,
                          'cosmo': astropy_class,
                         'source_light_model_list': source_model_list,
