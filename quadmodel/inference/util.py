@@ -7,7 +7,7 @@ import os
 class FullSimulationContainer(object):
 
     def __init__(self, individual_simulations, parameters, magnifications,
-                 chi2_imaging_data=None, kwargs_fitting_seq=None):
+                 chi2_imaging_data=None, kwargs_fitting_seq=None, macromodel_samples=None):
 
         """
         A storage class for individual simulation containers
@@ -22,6 +22,7 @@ class FullSimulationContainer(object):
         self.magnifications = magnifications
         self.chi2_imaging_data = chi2_imaging_data
         self.kwargs_fitting_seq = kwargs_fitting_seq
+        self.macromodel_samples = macromodel_samples
 
     @classmethod
     def join(cls, sim1, sim2):
@@ -95,7 +96,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     if keep_kwargs_fitting_seq:
         fitting_seq_kwargs = []
     else:
-        fittinig_seq_kwargs = None
+        fitting_seq_kwargs = None
 
     init = True
     for job_index in range(job_index_min, job_index_max + 1):
@@ -204,7 +205,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
 
     print('compiled ' + str(params.shape[0]) + ' realizations')
     container = FullSimulationContainer(realizations_and_lens_systems, params,
-                                        fluxes, chi2_imaging_data, fitting_seq_kwargs)
+                                        fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
     return container
 
 
