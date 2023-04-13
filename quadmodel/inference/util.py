@@ -194,7 +194,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
 
         if proceed is False:
             continue
-        print('stacking parameters and output... ')
+        print('compiling output for job '+str(job_index)+'... ')
         if init:
             init = False
             params = deepcopy(_params)
