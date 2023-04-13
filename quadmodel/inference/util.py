@@ -116,7 +116,10 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         except:
             print('could not find file ' + filename_mags)
             continue
-        assert _fluxes.shape[0] == num_realizations, 'fluxes file has wrong shape'
+
+        if _fluxes.shape[0] != num_realizations:
+            print('fluxes file has wrong shape')
+            continue
 
         if keep_macromodel_samples:
             try:
@@ -124,7 +127,9 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             except:
                 print('could not find file ' + filename_macromodel_samples)
                 continue
-            assert _macro_samples.shape[0] == num_realizations, 'macromodel file has wrong shape'
+            if _macro_samples.shape[0] != num_realizations:
+                print('macromodel file has wrong shape')
+                continue
 
         _chi2 = None
         if keep_chi2:
@@ -142,10 +147,13 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     print('could not find chi2 file '+filename_chi2)
                     proceed = False
                     break
+
         if proceed is False:
             continue
 
-        assert _chi2.shape[0] == num_realizations, 'chi2 file has wrong shape'
+        if _chi2.shape[0] != num_realizations:
+            print('chi2 file has wrong shape')
+            continue
 
         if keep_kwargs_fitting_seq:
             proceed = True
@@ -165,7 +173,9 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     print('could not find file '+filename_kwargs_fitting_seq)
                     proceed = False
                     break
-            assert len(_fitting_seq_kwargs) == num_realizations, 'number of saved fitting sequence classes not right'
+            if len(_fitting_seq_kwargs) != num_realizations:
+                print('number of saved fitting sequence classes not right')
+                proceed = False
 
         if proceed is False:
             continue
@@ -179,10 +189,12 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     realizations_and_lens_systems.append(sim)
                 except:
                     print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(n + 1))
-                    continue
+                    proceed = False
+                    break
 
+        if proceed is False:
+            continue
         print('stacking parameters and output... ')
-
         if init:
             init = False
             params = deepcopy(_params)
