@@ -79,6 +79,7 @@ class FittingSequenceKwargs(object):
 
     def __init__(self, kwargs_data_joint, kwargs_model, kwargs_constraints, kwargs_likelihood, kwargs_params,
                  kwargs_result):
+
         multi_band_list = kwargs_data_joint['multi_band_list']
         multi_band_type = kwargs_data_joint['multi_band_type']
         image_likelihood_mask_list = kwargs_likelihood['image_likelihood_mask_list']

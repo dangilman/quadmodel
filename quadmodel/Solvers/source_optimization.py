@@ -122,7 +122,7 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
     coordinate_system = Coordinates(pix2angle, ra_at_x0, dec_at_x0)
     ra_coords, dec_coords = coordinate_system.coordinate_grid(nx, ny)
     tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_init)
-    lens_model_list = ['TABULATED_DEFLECTIONS']
+    lens_model_list_fit = ['TABULATED_DEFLECTIONS']
 
     if initialize_from_fit:
         f = open(path_to_smooth_lens_fit, 'rb')
@@ -189,7 +189,7 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
     else:
         raise Exception('REALISTIC PSF NOT YET IMPLEMENTED')
 
-    kwargs_model = {'lens_model_list': lens_model_list,
+    kwargs_model_fit = {'lens_model_list': lens_model_list_fit,
                     'source_light_model_list': source_model_list,
                     'lens_light_model_list': lens_light_model_list,
                     'point_source_model_list': point_source_list,
@@ -199,8 +199,8 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                     # list of bools (same length as point_source_type_list). If True, magnification ratio of point sources is fixed to the one given by the lens model
                    # 'fixed_lens_model': True
                     }
-    kwargs_numerics = {'supersampling_factor': 1, 'supersampling_convolution': False}
 
+    kwargs_numerics = {'supersampling_factor': 1, 'supersampling_convolution': False}
     kwargs_constraints = {
         'joint_source_with_point_source': [[0, 0]],
         'num_point_source_list': [4],
@@ -244,13 +244,30 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                      'point_source_model': point_source_params
                      }
 
-    fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model,
+    fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model_fit,
                                   kwargs_constraints, kwargs_likelihood, kwargs_params)
     _ = fitting_seq.fit_sequence(fitting_kwargs_list)
     kwargs_result = fitting_seq.best_fit()
-    fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model, kwargs_constraints,
-                                           kwargs_likelihood, kwargs_params, kwargs_result)
-    modelPlot = ModelPlot(multi_band_list, kwargs_model, kwargs_result, arrow_size=0.02,
+
+    lens_model_list_true, lens_redshift_list_true, kwargs_lens_true, _ = lens_system._get_lenstronomy_args()
+    astropy_class = lens_system.astropy
+    kwargs_model_true = {'lens_model_list': lens_model_list_true,
+                         'lens_redshift_list': lens_redshift_list_true,
+                         'z_source': lens_system.z_source,
+                         'multi_plane': True,
+                         'cosmo': astropy_class,
+                        'source_light_model_list': source_model_list,
+                        'lens_light_model_list': lens_light_model_list,
+                        'point_source_model_list': point_source_list,
+                        'additional_images_list': [False],
+                        'fixed_magnification_list': [True]
+                         }
+    kwargs_result_true = deepcopy(kwargs_result)
+    kwargs_result_true['kwargs_lens'] = kwargs_lens_true
+    fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
+                                           kwargs_likelihood, kwargs_params, kwargs_result_true)
+
+    modelPlot = ModelPlot(multi_band_list, kwargs_model_fit, kwargs_result, arrow_size=0.02,
                           cmap_string="gist_heat")
     return fitting_seq, fitting_kwargs_class, modelPlot
 

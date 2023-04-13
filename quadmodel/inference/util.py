@@ -6,7 +6,8 @@ import os
 
 class FullSimulationContainer(object):
 
-    def __init__(self, individual_simulations, parameters, magnifications, chi2_imaging_data=None, kwargs_fitting_seq=None):
+    def __init__(self, individual_simulations, parameters, magnifications,
+                 chi2_imaging_data=None, kwargs_fitting_seq=None):
 
         """
         A storage class for individual simulation containers
@@ -180,7 +181,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     continue
 
         print('stacking parameters and output... ')
-        
+
         if init:
             init = False
             params = deepcopy(_params)
