@@ -142,7 +142,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     if _chi2 is None:
                         _chi2 = new
                     else:
-                        _chi2 = np.append((_chi2, new))
+                        _chi2 = np.append(_chi2, new)
                 else:
                     print('could not find chi2 file '+filename_chi2)
                     proceed = False
