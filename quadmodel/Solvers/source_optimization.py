@@ -49,20 +49,13 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
                 print('chi2 computation already performed for file ' + str(idx))
                 continue
 
-        fitting_seq, fitting_kwargs_class, modelPlot = _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_from_fit,
+        fitting_seq, fitting_kwargs_class = _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_from_fit,
                 path_to_smooth_lens_fit, add_shapelets_source, n_max_source, npix_mask_images)
         # modelPlot = ModelPlot(multi_band_list, kwargs_model,
         #                       kwargs_result, arrow_size=0.02, cmap_string="gist_heat")
-
         kwargs_best = fitting_seq.best_fit()
         neff = fitting_seq.likelihoodModule.effective_num_data_points(**kwargs_best)
-        # num_data = fitting_seq.likelihoodModule.num_data
-        # num_param_nonlinear = fitting_seq.param_class.num_param()[0]
-        # num_param_linear = fitting_seq.param_class.num_param_linear()
-        # num_param = num_param_nonlinear + num_param_linear
-        #
         log_l = fitting_seq.best_fit_likelihood
-
         chi2_array = np.array([2 * log_l / neff, neff])
         print('CHI2 FROM FIT: ', 2 * log_l / neff)
 
@@ -248,7 +241,6 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                                   kwargs_constraints, kwargs_likelihood, kwargs_params)
     _ = fitting_seq.fit_sequence(fitting_kwargs_list)
     kwargs_result = fitting_seq.best_fit()
-
     lens_model_list_true, lens_redshift_list_true, kwargs_lens_true, _ = lens_system._get_lenstronomy_args()
     astropy_class = lens_system.astropy
     kwargs_model_true = {'lens_model_list': lens_model_list_true,
@@ -262,14 +254,18 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                         'additional_images_list': [False],
                         'fixed_magnification_list': [True]
                          }
+
     kwargs_result_true = deepcopy(kwargs_result)
     kwargs_result_true['kwargs_lens'] = kwargs_lens_true
+    # update the likelihood mask with the one tht cuts out images and parts far from the arc
+    print('log_L before new mask: ', fitting_seq.best_fit_likelihood)
+    kwargs_likelihood['image_likelihood_mask_list'] = [hst_data.custom_mask]
+    fitting_seq.kwargs_likelhood = kwargs_likelihood
+    print('log_L after new mask: ', fitting_seq.best_fit_likelihood)
+    a=input('continue')
     fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
                                            kwargs_likelihood, kwargs_params, kwargs_result_true)
-
-    modelPlot = ModelPlot(multi_band_list, kwargs_model_fit, kwargs_result, arrow_size=0.02,
-                          cmap_string="gist_heat")
-    return fitting_seq, fitting_kwargs_class, modelPlot
+    return fitting_seq, fitting_kwargs_class
 
 class FixedLensModel(object):
 
