@@ -61,7 +61,7 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
         f = open(path_to_simulation_output + 'kwargs_fitting_sequence_' + str(idx) + filename_suffix, 'wb')
         dill.dump(fitting_kwargs_class, f)
         f.close()
-        np.savetxt(fname_chi2, X=log_l)
+        np.savetxt(fname_chi2, X=np.atleast_1d(log_l))
 
         # if plot_results:
         #     print('chi2: ', 2 * log_l/neff)
