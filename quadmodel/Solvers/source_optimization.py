@@ -258,11 +258,11 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
     kwargs_result_true = deepcopy(kwargs_result)
     kwargs_result_true['kwargs_lens'] = kwargs_lens_true
     # update the likelihood mask with the one tht cuts out images and parts far from the arc
-    print('log_L before new mask: ', fitting_seq.best_fit_likelihood)
+    # print('log_L before new mask: ', fitting_seq.best_fit_likelihood)
     kwargs_likelihood['image_likelihood_mask_list'] = [hst_data.custom_mask]
     fitting_seq.kwargs_likelhood = kwargs_likelihood
-    print('log_L after new mask: ', fitting_seq.best_fit_likelihood)
-    a=input('continue')
+    # print('log_L after new mask: ', fitting_seq.best_fit_likelihood)
+    # a=input('continue')
     fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
                                            kwargs_likelihood, kwargs_params, kwargs_result_true)
     return fitting_seq, fitting_kwargs_class
