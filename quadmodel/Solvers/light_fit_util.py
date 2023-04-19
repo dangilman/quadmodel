@@ -4,9 +4,40 @@ from lenstronomy.Plots.model_plot import ModelPlot
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from lenstronomy.LensModel.lens_model import LensModel
 
-
 __all__ = ['source_params_sersic_ellipse', 'lens_light_params_sersic_ellipse',
-           'lensmodel_params', 'ps_params', 'mask_images', 'source_params_shapelets', 'FittingSequenceKwargs']
+           'lensmodel_params', 'ps_params', 'mask_images',
+           'source_params_shapelets', 'FittingSequenceKwargs', 'customized_mask']
+
+
+def customized_mask(x_image, y_image, ra_grid, dec_grid, mask_image_arcsec, r_semi_major_arcsec, q, rotation,
+                    thickness_arcsec, shift_x=0.0, shift_y=0.0):
+    baseline_mask = np.ones_like(ra_grid)
+
+    for (xi, yi) in zip(x_image, y_image):
+        dx = abs(xi - ra_grid)
+        dy = abs(yi - dec_grid)
+        dr = np.hypot(dx, dy)
+        inds_mask = np.where(dr <= mask_image_arcsec)
+        baseline_mask[inds_mask] = 0.0
+    dr_mins = []
+    theta = np.linspace(0, 2 * np.pi, 1000)
+
+    x_ellipse = r_semi_major_arcsec * np.cos(theta) - shift_y
+    y_ellipse = r_semi_major_arcsec * np.sin(theta) / q - shift_x
+    rotation *= np.pi / 180
+    x_ellipse, y_ellipse = x_ellipse * np.cos(rotation) + y_ellipse * np.sin(rotation), -x_ellipse * np.sin(
+        rotation) + y_ellipse * np.cos(rotation)
+    for (xi, yi) in zip(ra_grid.ravel(), dec_grid.ravel()):
+        dx = xi - x_ellipse
+        dy = yi - y_ellipse
+        dr = np.sqrt(dx ** 2 + (dy) ** 2)
+        dr_min = np.min(dr)
+        dr_mins.append(dr_min)
+    dr_mins = np.array(dr_mins).reshape(ra_grid.shape)
+    ring_mask = np.ones_like(baseline_mask)
+    ring_mask[np.where(dr_mins > thickness_arcsec)] = 0.0
+    baseline_mask *= ring_mask
+    return baseline_mask
 
 def source_params_sersic_ellipse(source_x, source_y, kwargs_init):
 

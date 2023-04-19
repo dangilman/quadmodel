@@ -56,6 +56,7 @@ class HSTData(object):
         #self.psf_class = PSF(**self.kwargs_psf)
 
         self.satellite_centroid_list = satellite_centroid_list
+        self.custom_mask = None
 
     def get_lensed_image(self, mask=False):
 
