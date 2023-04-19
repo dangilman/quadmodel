@@ -46,7 +46,7 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
 
         if os.path.exists(fname_chi2):
             if overwrite is False:
-                print('chi2 computation already performed for file ' + str(idx))
+                print('logL computation already performed for file ' + str(idx))
                 continue
 
         fitting_seq, fitting_kwargs_class = _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_from_fit,
@@ -56,45 +56,44 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
         kwargs_best = fitting_seq.best_fit()
         neff = fitting_seq.likelihoodModule.effective_num_data_points(**kwargs_best)
         log_l = fitting_seq.best_fit_likelihood
-        chi2_array = np.array([2 * log_l / neff, neff])
         print('CHI2 FROM FIT: ', 2 * log_l / neff)
 
         f = open(path_to_simulation_output + 'kwargs_fitting_sequence_' + str(idx) + filename_suffix, 'wb')
         dill.dump(fitting_kwargs_class, f)
         f.close()
-        np.savetxt(fname_chi2, X=chi2_array)
+        np.savetxt(fname_chi2, X=log_l)
 
-        if plot_results:
-            print('chi2: ', chi2_array[0])
-            chain_list = fitting_seq.fit_sequence(fitting_kwargs_list)
-            for i in range(len(chain_list)):
-                chain_plot.plot_chain_list(chain_list, i)
-
-            f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
-
-            modelPlot.data_plot(ax=axes[0, 0])
-            modelPlot.model_plot(ax=axes[0, 1])
-            modelPlot.normalized_residual_plot(ax=axes[0, 2], v_min=-6, v_max=6)
-            modelPlot.source_plot(ax=axes[1, 0], deltaPix_source=0.01, numPix=100)
-            modelPlot.convergence_plot(ax=axes[1, 1], v_max=1)
-            modelPlot.magnification_plot(ax=axes[1, 2])
-            # f.tight_layout()
-            # f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
-            # plt.show()
-
-            f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
-
-            modelPlot.decomposition_plot(ax=axes[0, 0], text='Lens light', lens_light_add=True, unconvolved=True)
-            modelPlot.decomposition_plot(ax=axes[1, 0], text='Lens light convolved', lens_light_add=True)
-            modelPlot.decomposition_plot(ax=axes[0, 1], text='Source light', source_add=True, unconvolved=True)
-            modelPlot.decomposition_plot(ax=axes[1, 1], text='Source light convolved', source_add=True)
-            modelPlot.decomposition_plot(ax=axes[0, 2], text='All components', source_add=True, lens_light_add=True,
-                                         unconvolved=True)
-            modelPlot.decomposition_plot(ax=axes[1, 2], text='All components convolved', source_add=True,
-                                         lens_light_add=True, point_source_add=True)
-            f.tight_layout()
-            f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
-            plt.show()
+        # if plot_results:
+        #     print('chi2: ', 2 * log_l/neff)
+        #     chain_list = fitting_seq.fit_sequence(fitting_kwargs_list)
+        #     for i in range(len(chain_list)):
+        #         chain_plot.plot_chain_list(chain_list, i)
+        #
+        #     f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
+        #
+        #     modelPlot.data_plot(ax=axes[0, 0])
+        #     modelPlot.model_plot(ax=axes[0, 1])
+        #     modelPlot.normalized_residual_plot(ax=axes[0, 2], v_min=-6, v_max=6)
+        #     modelPlot.source_plot(ax=axes[1, 0], deltaPix_source=0.01, numPix=100)
+        #     modelPlot.convergence_plot(ax=axes[1, 1], v_max=1)
+        #     modelPlot.magnification_plot(ax=axes[1, 2])
+        #     # f.tight_layout()
+        #     # f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
+        #     # plt.show()
+        #
+        #     f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
+        #
+        #     modelPlot.decomposition_plot(ax=axes[0, 0], text='Lens light', lens_light_add=True, unconvolved=True)
+        #     modelPlot.decomposition_plot(ax=axes[1, 0], text='Lens light convolved', lens_light_add=True)
+        #     modelPlot.decomposition_plot(ax=axes[0, 1], text='Source light', source_add=True, unconvolved=True)
+        #     modelPlot.decomposition_plot(ax=axes[1, 1], text='Source light convolved', source_add=True)
+        #     modelPlot.decomposition_plot(ax=axes[0, 2], text='All components', source_add=True, lens_light_add=True,
+        #                                  unconvolved=True)
+        #     modelPlot.decomposition_plot(ax=axes[1, 2], text='All components convolved', source_add=True,
+        #                                  lens_light_add=True, point_source_add=True)
+        #     f.tight_layout()
+        #     f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
+        #     plt.show()
 
 
 def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_from_fit,
