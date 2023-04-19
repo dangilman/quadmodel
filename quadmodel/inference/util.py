@@ -142,7 +142,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     if _chi2 is None:
                         _chi2 = new
                     else:
-                        _chi2 = np.vstack((_chi2, new))
+                        _chi2 = np.append((_chi2, new))
                 else:
                     print('could not find chi2 file '+filename_chi2)
                     proceed = False
@@ -151,7 +151,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         if proceed is False:
             continue
 
-        if _chi2.shape[0] != num_realizations:
+        if len(_chi2) != num_realizations:
             print('chi2 file has wrong shape')
             continue
 
@@ -209,7 +209,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             params = np.vstack((params, _params))
             fluxes = np.vstack((fluxes, _fluxes))
             if keep_chi2:
-                chi2_imaging_data = np.vstack((chi2_imaging_data, _chi2))
+                chi2_imaging_data = np.append(chi2_imaging_data, _chi2)
             if keep_macromodel_samples:
                 macro_samples = np.vstack((macro_samples, _macro_samples))
             if keep_kwargs_fitting_seq:
@@ -220,7 +220,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     if keep_macromodel_samples:
         assert macro_samples.shape[0] == params.shape[0]
     if keep_chi2:
-        assert chi2_imaging_data.shape[0] == params.shape[0]
+        assert len(chi2_imaging_data) == params.shape[0]
     if keep_kwargs_fitting_seq:
         assert len(fitting_seq_kwargs) == params.shape[0]
     container = FullSimulationContainer(realizations_and_lens_systems, params,
