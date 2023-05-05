@@ -101,8 +101,7 @@ class BruteOptimization(OptimizationBase):
         """
 
         lens_model_list, redshift_list, kwargs_lens, numerical_alpha_class = \
-            self.lens_system._get_lenstronomy_args(include_substructure, realization=realization,
-                                                   z_mass_sheet_max=z_mass_sheet_max)
+            self.lens_system._get_lenstronomy_args(include_substructure, realization=realization)
 
         if args_param_class is None:
             param_class = param_class(kwargs_lens)

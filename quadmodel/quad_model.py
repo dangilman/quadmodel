@@ -187,7 +187,7 @@ class QuadLensSystem(object):
                               multi_plane=True, numerical_alpha_class=numercial_alpha_class, cosmo=self.astropy)
         return lensModel, kwargs
 
-    def _get_lenstronomy_args(self, include_substructure=True, realization=None, z_mass_sheet_max=None):
+    def _get_lenstronomy_args(self, include_substructure=True, realization=None):
 
         lens_model_names, macro_redshifts, macro_kwargs = \
             self.macromodel.get_lenstronomy_args()
@@ -198,7 +198,7 @@ class QuadLensSystem(object):
         if realization is not None and include_substructure:
 
             halo_names, halo_redshifts, kwargs_halos, numerical_alpha_class = \
-                realization.lensing_quantities(z_mass_sheet_max=z_mass_sheet_max)
+                realization.lensing_quantities()
 
         else:
             halo_names, halo_redshifts, kwargs_halos, numerical_alpha_class = [], [], [], None
