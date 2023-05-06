@@ -62,44 +62,48 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
         dill.dump(fitting_kwargs_class, f)
         f.close()
         np.savetxt(fname_chi2, X=np.atleast_1d(log_l))
+        
+        if plot_results:
 
-        # if plot_results:
-        #     print('chi2: ', 2 * log_l/neff)
-        #     chain_list = fitting_seq.fit_sequence(fitting_kwargs_list)
-        #     for i in range(len(chain_list)):
-        #         chain_plot.plot_chain_list(chain_list, i)
-        #
-        #     f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
-        #
-        #     modelPlot.data_plot(ax=axes[0, 0])
-        #     modelPlot.model_plot(ax=axes[0, 1])
-        #     modelPlot.normalized_residual_plot(ax=axes[0, 2], v_min=-6, v_max=6)
-        #     modelPlot.source_plot(ax=axes[1, 0], deltaPix_source=0.01, numPix=100)
-        #     modelPlot.convergence_plot(ax=axes[1, 1], v_max=1)
-        #     modelPlot.magnification_plot(ax=axes[1, 2])
-        #     # f.tight_layout()
-        #     # f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
-        #     # plt.show()
-        #
-        #     f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
-        #
-        #     modelPlot.decomposition_plot(ax=axes[0, 0], text='Lens light', lens_light_add=True, unconvolved=True)
-        #     modelPlot.decomposition_plot(ax=axes[1, 0], text='Lens light convolved', lens_light_add=True)
-        #     modelPlot.decomposition_plot(ax=axes[0, 1], text='Source light', source_add=True, unconvolved=True)
-        #     modelPlot.decomposition_plot(ax=axes[1, 1], text='Source light convolved', source_add=True)
-        #     modelPlot.decomposition_plot(ax=axes[0, 2], text='All components', source_add=True, lens_light_add=True,
-        #                                  unconvolved=True)
-        #     modelPlot.decomposition_plot(ax=axes[1, 2], text='All components convolved', source_add=True,
-        #                                  lens_light_add=True, point_source_add=True)
-        #     f.tight_layout()
-        #     f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
-        #     plt.show()
+            modelPlot = ModelPlot(**fitting_kwargs_class.kwargs_model_plot)
+            chain_list = fitting_seq.fit_sequence(fitting_kwargs_list)
+            for i in range(len(chain_list)):
+                chain_plot.plot_chain_list(chain_list, i)
+
+            f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
+
+            modelPlot.data_plot(ax=axes[0, 0])
+            modelPlot.model_plot(ax=axes[0, 1])
+            modelPlot.normalized_residual_plot(ax=axes[0, 2], v_min=-6, v_max=6)
+            modelPlot.source_plot(ax=axes[1, 0], deltaPix_source=0.01, numPix=100)
+            modelPlot.convergence_plot(ax=axes[1, 1], v_max=1)
+            modelPlot.magnification_plot(ax=axes[1, 2])
+            f.tight_layout()
+            f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
+            plt.show()
+
+            f, axes = plt.subplots(2, 3, figsize=(16, 8), sharex=False, sharey=False)
+
+            modelPlot.decomposition_plot(ax=axes[0, 0], text='Lens light', lens_light_add=True, unconvolved=True)
+            modelPlot.decomposition_plot(ax=axes[1, 0], text='Lens light convolved', lens_light_add=True)
+            modelPlot.decomposition_plot(ax=axes[0, 1], text='Source light', source_add=True, unconvolved=True)
+            modelPlot.decomposition_plot(ax=axes[1, 1], text='Source light convolved', source_add=True)
+            modelPlot.decomposition_plot(ax=axes[0, 2], text='All components', source_add=True, lens_light_add=True,
+                                         unconvolved=True)
+            modelPlot.decomposition_plot(ax=axes[1, 2], text='All components convolved', source_add=True,
+                                         lens_light_add=True, point_source_add=True)
+            f.tight_layout()
+            f.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0., hspace=0.05)
+            plt.show()
+            print('OKOKOKKOKOK')
+            a=input('continue')
 
 
 def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_from_fit,
                 path_to_smooth_lens_fit, add_shapelets_source, n_max_source, npix_mask_images):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
+    x_image_data, y_image_data = hst_data.x, hst_data.y
     fluxes = simulation_output.data.m
     lens_system = simulation_output.lens_system
     lensmodel, kwargs_lens_init = lens_system.get_lensmodel()
@@ -173,13 +177,16 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                    'dec_at_xy_0': hst_data.dec_at_xy_0,
                    'transform_pix2angle': np.array(hst_data.transform_pix2angle)
                    }
+
     ############################### SETUP THE PSF MODEL ######################################################
     if hst_data.psf_estimate is None:
         kwargs_psf = {'psf_type': 'GAUSSIAN',
                       'fwhm': 0.1,
                       'pixel_size': hst_data.deltaPix}
     else:
-        raise Exception('REALISTIC PSF NOT YET IMPLEMENTED')
+        kwargs_psf = {'psf_type': 'PIXEL',
+                      'kernel_point_source': hst_data.psf_estimate,
+                      'psf_error_map': hst_data.psf_error_map}
 
     kwargs_model_fit = {'lens_model_list': lens_model_list_fit,
                     'source_light_model_list': source_model_list,
@@ -187,14 +194,10 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                     'point_source_model_list': point_source_list,
                     'additional_images_list': [False],
                     'fixed_magnification_list': [True],
-                    'tabulated_deflection_angles': tabulated_lens_model
-                    # list of bools (same length as point_source_type_list). If True, magnification ratio of point sources is fixed to the one given by the lens model
-                   # 'fixed_lens_model': True
-                    }
+                    'tabulated_deflection_angles': tabulated_lens_model}
 
     kwargs_numerics = {'supersampling_factor': 1, 'supersampling_convolution': False}
     kwargs_constraints = {
-        'joint_source_with_point_source': [[0, 0]],
         'num_point_source_list': [4],
         #'solver_type': 'PROFILE_SHEAR'
     }
@@ -203,20 +206,15 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
     prior_lens_light = None
 
     ############################### OPTIONAL LIKELIHOOD MASK OVER IMAGES ############################
-    coordinate_system = Coordinates(hst_data.transform_pix2angle, hst_data.ra_at_xy_0, hst_data.dec_at_xy_0)
-    likelihood_mask = mask_images(x_image, y_image, npix_mask_images, hst_data.likelihood_mask, coordinate_system)
-    # plt.imshow(likelihood_mask, origin='lower')
-    # plt.show()
     kwargs_likelihood = {'check_bounds': True,
                          'force_no_add_image': True,
                          'source_marg': False,
-                         'image_position_uncertainty': 0.005,
                          'check_matched_source_position': False,
-                         # 'source_position_tolerance': 0.001,
-                         # 'source_position_sigma': 0.001,
+                         'astrometric_likelihood': True,
+                         'image_position_uncertainty': 0.075,
                          'prior_lens': prior_lens,
                          'prior_lens_light': prior_lens_light,
-                         'image_likelihood_mask_list': [likelihood_mask]
+                         'image_likelihood_mask_list': [hst_data.likelihood_mask]
                          }
     image_band = [kwargs_data, kwargs_psf, kwargs_numerics]
 
@@ -230,10 +228,17 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                          kwargs_lower_lens_light, kwargs_upper_lens_light]
     point_source_params = [kwargs_ps, kwargs_ps_sigma, kwargs_ps_fixed, kwargs_ps_lower, kwargs_ps_upper]
 
+    special_init = {'delta_x_image': x_image - x_image_data, 'delta_y_image': y_image - y_image_data}
+    special_sigma = {'delta_x_image': [0.05] * 4, 'delta_y_image': [0.05] * 4}
+    special_lower = {'delta_x_image': [-0.25] * 4, 'delta_y_image': [-0.25] * 4}
+    special_upper = {'delta_x_image': [0.25] * 4, 'delta_y_image': [0.25] * 4}
+    special_fixed = [{}]
+    kwargs_special = [special_init, special_sigma, special_fixed, special_lower, special_upper]
     kwargs_params = {'lens_model': lens_params,
                      'source_model': source_params,
                      'lens_light_model': lens_light_params,
-                     'point_source_model': point_source_params
+                     'point_source_model': point_source_params,
+                     'special': kwargs_special
                      }
 
     fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model_fit,
@@ -247,35 +252,42 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                          'z_source': lens_system.zsource,
                          'multi_plane': True,
                          'cosmo': astropy_class,
-                        'source_light_model_list': source_model_list,
-                        'lens_light_model_list': lens_light_model_list,
-                        'point_source_model_list': point_source_list,
-                        'additional_images_list': [False],
-                        'fixed_magnification_list': [True]
+                         'source_light_model_list': source_model_list,
+                         'lens_light_model_list': lens_light_model_list,
+                         'point_source_model_list': point_source_list,
+                         'additional_images_list': [False],
+                         'fixed_magnification_list': [True]
                          }
 
     kwargs_result_true = deepcopy(kwargs_result)
     kwargs_result_true['kwargs_lens'] = kwargs_lens_true
     # update the likelihood mask with the one tht cuts out images and parts far from the arc
     # print('log_L before new mask: ', fitting_seq.best_fit_likelihood)
-    kwargs_likelihood['image_likelihood_mask_list'] = [hst_data.custom_mask]
-    fitting_seq.kwargs_likelhood = kwargs_likelihood
+    # kwargs_likelihood['image_likelihood_mask_list'] = [hst_data.custom_mask]
+    # fitting_seq.kwargs_likelhood = kwargs_likelihood
     # print('log_L after new mask: ', fitting_seq.best_fit_likelihood)
     # a=input('continue')
     fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
                                            kwargs_likelihood, kwargs_params, kwargs_result_true)
     return fitting_seq, fitting_kwargs_class
 
+
 class FixedLensModel(object):
 
-    def __init__(self, ra_coords, dec_coords, lens_model, kwargs_lens):
+    def __init__(self, ra_coords, dec_coords, lens_model, kwargs_lens, super_sample_factor=10.0):
 
-        nx = int(np.sqrt(len(ra_coords.ravel())))
-        ny = int(np.sqrt(len(dec_coords.ravel())))
+        nx_0 = int(np.sqrt(len(ra_coords.ravel())))
+        ny_0 = int(np.sqrt(len(dec_coords.ravel())))
+        nx = int(nx_0 * super_sample_factor)
+        ny = int(ny_0 * super_sample_factor)
+        _ra_coords = np.linspace(np.min(ra_coords), np.max(ra_coords), nx)
+        _dec_coords = np.linspace(np.min(dec_coords), np.max(dec_coords), ny)
+        ra_coords, dec_coords = np.meshgrid(_ra_coords, _dec_coords)
+
         alpha_x, alpha_y = lens_model.alpha(ra_coords.ravel(), dec_coords.ravel(), kwargs_lens)
-        points = (ra_coords[0,:], dec_coords[:,0])
-        self._interp_x = RegularGridInterpolator(points, alpha_x.reshape(nx, ny))
-        self._interp_y = RegularGridInterpolator(points, alpha_y.reshape(nx, ny))
+        points = (ra_coords[0, :], dec_coords[:, 0])
+        self._interp_x = RegularGridInterpolator(points, alpha_x.reshape(nx, ny), bounds_error=False, fill_value=None)
+        self._interp_y = RegularGridInterpolator(points, alpha_y.reshape(nx, ny), bounds_error=False, fill_value=None)
 
     def __call__(self, x, y, *args, **kwargs):
 

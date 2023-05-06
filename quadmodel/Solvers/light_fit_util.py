@@ -41,8 +41,8 @@ def customized_mask(x_image, y_image, ra_grid, dec_grid, mask_image_arcsec, r_se
 
 def source_params_sersic_ellipse(source_x, source_y, kwargs_init):
 
-    kwargs_sigma = [{'amp': 100.0,
-        'R_sersic': 0.2,
+    kwargs_sigma = [{'amp': 50000,
+                    'R_sersic': 0.2,
                      'n_sersic': 2.0,
                      'e1': 0.25, 'e2': 0.25,
                         'center_x': 0.1, 'center_y': 0.1}]
@@ -88,9 +88,9 @@ def lensmodel_params(lens_model_list, kwargs_lens_fixed):
 
 def ps_params(x_image, y_image):
 
-    kwargs_sigma = [{'ra_image': [0.1]*len(x_image), 'dec_image': [0.1]*len(y_image)}]
-    kwargs_lower = [{'ra_image': [-10.0]*len(x_image), 'dec_image': [-10.0]*len(y_image)}]
-    kwargs_upper = [{'ra_image': [10.0]*len(x_image), 'dec_image': [10.0]*len(y_image)}]
+    kwargs_sigma = [{'ra_image': [0.01]*len(x_image), 'dec_image': [0.01]*len(y_image)}]
+    kwargs_lower = [{'ra_image': x_image - 0.1, 'dec_image': y_image - 0.1}]
+    kwargs_upper = [{'ra_image': x_image + 0.1, 'dec_image': y_image + 0.1}]
     kwargs_fixed = [{'ra_image': x_image, 'dec_image': y_image}]
     return kwargs_sigma, kwargs_lower, kwargs_upper, kwargs_fixed
 

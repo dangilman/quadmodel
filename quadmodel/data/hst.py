@@ -1,7 +1,7 @@
 import numpy as np
 from lenstronomy.Data.psf import PSF
 from quadmodel.data.quad_base import Quad
-
+from lenstronomy.Data.coord_transforms import Coordinates
 
 class HSTDataModel(object):
 
@@ -22,7 +22,8 @@ class HSTData(object):
     def __init__(self, zlens, zsource, image_data, x_image, y_image, astrometric_uncertainties,
                  fluxes, flux_uncertainties, deflector_centroid,
                  ra_at_xy_0, dec_at_xy_0, deltaPix, transform_pix2angle, background_rms, exposure_time,
-                 mask, psf_estimate, psf_error_map, psf_symmetry, satellite_centroid_list=None):
+                 mask, psf_estimate, psf_error_map, psf_symmetry, satellite_centroid_list=None, delta_x_offset=None,
+                 delta_y_offset=None):
 
         #### quantities that describe lens geometry and coordinate system ####
         self.zlens = zlens
@@ -57,6 +58,22 @@ class HSTData(object):
 
         self.satellite_centroid_list = satellite_centroid_list
         self.custom_mask = None
+
+        self.delta_x_offset = delta_x_offset
+        self.delta_y_offset = delta_y_offset
+
+    @property
+    def pixel_coordinates(self):
+        coords = Coordinates(self.transform_pix2angle, self.ra_at_xy_0, self.dec_at_xy_0)
+        x_image_pixels, y_image_pixels = coords.map_coord2pix(self.x + self.delta_x_offset,
+                                                              self.y + self.delta_y_offset)
+        return x_image_pixels, y_image_pixels
+
+    @property
+    def arcsec_coordinates(self):
+        coords = Coordinates(self.transform_pix2angle, self.ra_at_xy_0, self.dec_at_xy_0)
+        x_image_pixels, y_image_pixels = self.pixel_coordinates
+        return coords.map_pix2coord(x_image_pixels, y_image_pixels)
 
     def get_lensed_image(self, mask=False):
 
