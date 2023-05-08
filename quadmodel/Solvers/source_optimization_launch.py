@@ -54,6 +54,7 @@ fitting_kwargs_list = [
             ['PSO', {'sigma_scale': 1.0, 'n_particles': n_pso_particles, 'n_iterations': n_pso_iterations, 'threadCount': n_threads}],
             ['MCMC', {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': 0.1, 'threadCount': n_threads}]
             ]
+
 print('fitting realization '+path_to_simulation_output+' ...')
 run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation_output, path_to_data,
                  fitting_kwargs_list, initialize_from_fit, path_to_smooth_lens_fit, add_shapelets_source, n_max_source,
