@@ -62,7 +62,7 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
         dill.dump(fitting_kwargs_class, f)
         f.close()
         np.savetxt(fname_chi2, X=np.atleast_1d(log_l))
-        
+
         if plot_results:
 
             modelPlot = ModelPlot(**fitting_kwargs_class.kwargs_model_plot)
@@ -101,15 +101,16 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
 
 def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_from_fit,
                 path_to_smooth_lens_fit, add_shapelets_source, n_max_source, npix_mask_images):
-
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
-    x_image_data, y_image_data = hst_data.x, hst_data.y
+    x_image_data, y_image_data = hst_data.arcsec_coordinates
+    # x_image_data, y_image_data = x_image, y_image
     fluxes = simulation_output.data.m
     lens_system = simulation_output.lens_system
     lensmodel, kwargs_lens_init = lens_system.get_lensmodel()
     source_x, source_y = lensmodel.ray_shooting(x_image, y_image, kwargs_lens_init)
     source_x = np.mean(source_x)
     source_y = np.mean(source_y)
+    print(source_x, source_y)
 
     ra_at_x0 = hst_data.ra_at_xy_0
     dec_at_x0 = hst_data.dec_at_xy_0
@@ -135,21 +136,22 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
         print('USING RANDOM LIGHT MODELS')
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 1.0, 'center_x': source_x, 'center_y': source_y, 'e1': 0.1, 'e2': 0.1, 'R_sersic': 0.1,
-             'n_sersic': 4}]
+            {'amp': 1, 'R_sersic': 2.7640786091513947,
+             'n_sersic': 9.997486183214777, 'e1': -0.09586436369120921, 'e2': 0.08652509597040224,
+             'center_x': source_x, 'center_y': source_x}]
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
-            {'amp': 1.0, 'center_x': source_x, 'center_y': source_y, 'e1': 0.1, 'e2': 0.1, 'R_sersic': 0.5,
-             'n_sersic': 4}]
+            {'amp': 1, 'R_sersic': 0.18033276090370226, 'n_sersic': 3.007623615897361,
+             'e1': 0.02475164426715629, 'e2': 0.115023337548889,
+             'center_x': 0.0, 'center_y': 0.0}]
 
     kwargs_source_sigma, kwargs_lower_source, kwargs_upper_source, kwargs_fixed_source = \
         source_params_sersic_ellipse(source_x, source_y, kwargs_source_init)
     kwargs_lens_light_sigma, kwargs_lower_lens_light, kwargs_upper_lens_light, kwargs_fixed_lens_light = \
         lens_light_params_sersic_ellipse(kwargs_lens_light_init[0])
-
+    kwargs_fixed_lens_light[0]['e1'] = 0.0001
+    kwargs_fixed_lens_light[0]['e2'] = 0.0001
     kwargs_lens_sigma, kwargs_lower_lens, kwargs_upper_lens, kwargs_fixed_lens = [{}], [{}], [{}], [{}]
-    # kwargs_lens_sigma, kwargs_lower_lens, kwargs_upper_lens, kwargs_fixed_lens = lensmodel_params(lens_model_list,
-    #                                                                                               kwargs_lens_init)
 
     if add_shapelets_source:
         source_model_list += ['SHAPELETS']
@@ -163,11 +165,19 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
 
     point_source_list = ['UNLENSED']
     # point_source_list = None
-    kwargs_ps = [{'ra_image': x_image, 'dec_image': y_image,
-                  'point_amp': np.array(fluxes) * 100}]
-    # kwargs_ps = {}
-    kwargs_ps_sigma, kwargs_ps_lower, kwargs_ps_upper, kwargs_ps_fixed = ps_params(x_image, y_image)
 
+    kwargs_ps_sigma, kwargs_ps_lower, kwargs_ps_upper, kwargs_ps_fixed = ps_params(x_image_data, y_image_data)
+    kwargs_ps_init = [{'ra_image': x_image_data, 'dec_image': y_image_data}]
+    # kwargs_ps_fixed = [{}]
+    # kwargs_fixed_source = deepcopy(kwargs_source_init)
+    # del kwargs_fixed_source[0]['amp']
+    # kwargs_fixed_source = [{}]
+
+    #     kwargs_fixed_source[0]['amp'] = 20000
+    # del kwargs_fixed_source[0]['R_sersic']
+    # del kwargs_fixed_source[0]['e1']
+    # del kwargs_fixed_source[0]['e2']
+    # print(kwargs_fixed_source)
     ############################### SETUP THE DATA ######################################################
     kwargs_data = {'image_data': hst_data.image_data,
                    'background_rms': hst_data.background_rms,
@@ -187,19 +197,19 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
         kwargs_psf = {'psf_type': 'PIXEL',
                       'kernel_point_source': hst_data.psf_estimate,
                       'psf_error_map': hst_data.psf_error_map}
-
+    #
     kwargs_model_fit = {'lens_model_list': lens_model_list_fit,
-                    'source_light_model_list': source_model_list,
-                    'lens_light_model_list': lens_light_model_list,
-                    'point_source_model_list': point_source_list,
-                    'additional_images_list': [False],
-                    'fixed_magnification_list': [True],
-                    'tabulated_deflection_angles': tabulated_lens_model}
+                        'source_light_model_list': source_model_list,
+                        'lens_light_model_list': lens_light_model_list,
+                        'point_source_model_list': point_source_list,
+                        'additional_images_list': [False],
+                        'fixed_magnification_list': [True],
+                        'tabulated_deflection_angles': tabulated_lens_model}
 
     kwargs_numerics = {'supersampling_factor': 1, 'supersampling_convolution': False}
     kwargs_constraints = {
         'num_point_source_list': [4],
-        #'solver_type': 'PROFILE_SHEAR'
+        'point_source_offset': True
     }
     ############################### OPTIONAL PRIORS ############################
     prior_lens = None
@@ -220,15 +230,16 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
 
     multi_band_list = [image_band]
     kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': 'multi-linear'}
-
+    # print(source_x, source_y)
+    # print(kwargs_fixed_source)
     lens_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_fixed_lens, kwargs_lower_lens, kwargs_upper_lens]
     source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_fixed_source, kwargs_lower_source,
                      kwargs_upper_source]
     lens_light_params = [kwargs_lens_light_init, kwargs_lens_light_sigma, kwargs_fixed_lens_light,
                          kwargs_lower_lens_light, kwargs_upper_lens_light]
-    point_source_params = [kwargs_ps, kwargs_ps_sigma, kwargs_ps_fixed, kwargs_ps_lower, kwargs_ps_upper]
+    point_source_params = [kwargs_ps_init, kwargs_ps_sigma, kwargs_ps_fixed, kwargs_ps_lower, kwargs_ps_upper]
 
-    special_init = {'delta_x_image': x_image - x_image_data, 'delta_y_image': y_image - y_image_data}
+    special_init = {'delta_x_image': [0.0]*4, 'delta_y_image': [0.0]*4}
     special_sigma = {'delta_x_image': [0.05] * 4, 'delta_y_image': [0.05] * 4}
     special_lower = {'delta_x_image': [-0.25] * 4, 'delta_y_image': [-0.25] * 4}
     special_upper = {'delta_x_image': [0.25] * 4, 'delta_y_image': [0.25] * 4}
@@ -268,7 +279,7 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
     # print('log_L after new mask: ', fitting_seq.best_fit_likelihood)
     # a=input('continue')
     fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
-                                           kwargs_likelihood, kwargs_params, kwargs_result_true)
+                                                 kwargs_likelihood, kwargs_params, kwargs_result_true)
     return fitting_seq, fitting_kwargs_class
 
 
