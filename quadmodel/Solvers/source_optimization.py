@@ -100,7 +100,7 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
 
 
 def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_from_fit,
-                path_to_smooth_lens_fit, add_shapelets_source, n_max_source, npix_mask_images):
+                path_to_smooth_lens_fit, add_shapelets_source, n_max_source, npix_mask_images, super_sampling=1.0):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     # x_image_data, y_image_data = hst_data.arcsec_coordinates
@@ -119,7 +119,7 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
     (nx, ny) = hst_data.image_data.shape
     coordinate_system = Coordinates(pix2angle, ra_at_x0, dec_at_x0)
     ra_coords, dec_coords = coordinate_system.coordinate_grid(nx, ny)
-    tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_init)
+    tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_init, super_sampling)
     lens_model_list_fit = ['TABULATED_DEFLECTIONS']
 
     if initialize_from_fit:
@@ -286,7 +286,7 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
 
 class FixedLensModel(object):
 
-    def __init__(self, ra_coords, dec_coords, lens_model, kwargs_lens, super_sample_factor=10.0):
+    def __init__(self, ra_coords, dec_coords, lens_model, kwargs_lens, super_sample_factor=1.0):
 
         nx_0 = int(np.sqrt(len(ra_coords.ravel())))
         ny_0 = int(np.sqrt(len(dec_coords.ravel())))
