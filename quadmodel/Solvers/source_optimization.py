@@ -101,8 +101,9 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
 
 def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_from_fit,
                 path_to_smooth_lens_fit, add_shapelets_source, n_max_source, npix_mask_images):
+
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
-    x_image_data, y_image_data = hst_data.arcsec_coordinates
+    # x_image_data, y_image_data = hst_data.arcsec_coordinates
     # x_image_data, y_image_data = x_image, y_image
     fluxes = simulation_output.data.m
     lens_system = simulation_output.lens_system
@@ -166,8 +167,8 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
     point_source_list = ['UNLENSED']
     # point_source_list = None
 
-    kwargs_ps_sigma, kwargs_ps_lower, kwargs_ps_upper, kwargs_ps_fixed = ps_params(x_image_data, y_image_data)
-    kwargs_ps_init = [{'ra_image': x_image_data, 'dec_image': y_image_data}]
+    kwargs_ps_sigma, kwargs_ps_lower, kwargs_ps_upper, kwargs_ps_fixed = ps_params(x_image, y_image)
+    kwargs_ps_init = [{'ra_image': x_image, 'dec_image': y_image}]
     # kwargs_ps_fixed = [{}]
     # kwargs_fixed_source = deepcopy(kwargs_source_init)
     # del kwargs_fixed_source[0]['amp']
