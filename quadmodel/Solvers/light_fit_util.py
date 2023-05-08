@@ -42,12 +42,12 @@ def customized_mask(x_image, y_image, ra_grid, dec_grid, mask_image_arcsec, r_se
 def source_params_sersic_ellipse(source_x, source_y, kwargs_init):
 
     kwargs_sigma = [{'amp': 50000,
-                    'R_sersic': 0.2,
+                    'R_sersic': 0.1,
                      'n_sersic': 2.0,
                      'e1': 0.25, 'e2': 0.25,
                         'center_x': 0.1, 'center_y': 0.1}]
-    kwargs_lower = [{'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10}]
-    kwargs_upper = [{'amp': 1e9, 'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+    kwargs_lower = [{'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10}]
+    kwargs_upper = [{'amp': 1e9, 'R_sersic': 0.5, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10}]
     kwargs_fixed = [{'center_x': source_x, 'center_y': source_y,
                      #'e1': kwargs_init[0]['e1'],
                      #'e2': kwargs_init[0]['e2']
@@ -64,10 +64,10 @@ def source_params_shapelets(n_max, source_x, source_y):
 
 def lens_light_params_sersic_ellipse(kwargs_lens_light_init):
 
-    kwargs_sigma = [{'amp': 100, 'R_sersic': 0.25, 'n_sersic': 0.5, 'e1': 0.2, 'e2': 0.2,
+    kwargs_sigma = [{'amp': 100, 'R_sersic': 0.1, 'n_sersic': 0.5, 'e1': 0.1, 'e2': 0.1,
                      'center_x': 0.1, 'center_y': 0.1}]
-    kwargs_lower = [{'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5, 'center_x': -10, 'center_y': -10}]
-    kwargs_upper = [{'amp': 1e9, 'R_sersic': 10.0, 'n_sersic': 10.0, 'e1': 0.5, 'e2': 0.5, 'center_x': 10, 'center_y': 10}]
+    kwargs_lower = [{'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10}]
+    kwargs_upper = [{'amp': 1e9, 'R_sersic': 5.0, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10}]
     kwargs_fixed = [{}]
     return kwargs_sigma, kwargs_lower, kwargs_upper, kwargs_fixed
 
