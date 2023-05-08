@@ -21,7 +21,7 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
                      initialize_from_fit=False, path_to_smooth_lens_fit=None, add_shapelets_source=False,
                      n_max_source=None, plot_results=False, overwrite=False, random_seed=None,
                      run_index_list=None):
-    
+
     if random_seed is not None:
         np.random.seed(random_seed)
 
@@ -265,7 +265,6 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
     ]
 
     fitting_kwargs_list_run = fix_point_sources + fitting_kwargs_list
-    print(fitting_kwargs_list)
     fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model_fit,
                                   kwargs_constraints, kwargs_likelihood_custom_mask, kwargs_params)
     _ = fitting_seq.fit_sequence(fitting_kwargs_list_run)
@@ -284,8 +283,8 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                          'fixed_magnification_list': [True]
                          }
 
-    #     kwargs_result_true = deepcopy(kwargs_result)
-    #     kwargs_result_true['kwargs_lens'] = kwargs_lens_true
+    kwargs_result_true = deepcopy(kwargs_result)
+    kwargs_result_true['kwargs_lens'] = kwargs_lens_true
     #     # update the likelihood mask with the one tht cuts out images and parts far from the arc
     #     print('log_L before new mask: ', fitting_seq.best_fit_likelihood)
     #     kwargs_likelihood['image_likelihood_mask_list'] = [hst_data.custom_mask]
