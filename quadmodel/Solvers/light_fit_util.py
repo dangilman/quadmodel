@@ -2,11 +2,11 @@ from copy import deepcopy
 import numpy as np
 from lenstronomy.Plots.model_plot import ModelPlot
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
-from lenstronomy.LensModel.lens_model import LensModel
+from scipy.interpolate import RegularGridInterpolator
 
 __all__ = ['source_params_sersic_ellipse', 'lens_light_params_sersic_ellipse',
            'lensmodel_params', 'ps_params', 'mask_images',
-           'source_params_shapelets', 'FittingSequenceKwargs', 'customized_mask']
+           'source_params_shapelets', 'FittingSequenceKwargs', 'customized_mask', 'FixedLensModel']
 
 
 def customized_mask(x_image, y_image, ra_grid, dec_grid, mask_image_arcsec, r_semi_major_arcsec, q, rotation,
@@ -148,3 +148,35 @@ class FittingSequenceKwargs(object):
         n_dof = self.fitting_sequence.likelihoodModule.num_data
         reduced_chi2 = -2 * log_like / n_dof
         return reduced_chi2
+
+class FixedLensModel(object):
+
+    def __init__(self, ra_coords, dec_coords, lens_model, kwargs_lens, super_sample_factor=1.0):
+
+        nx_0 = int(np.sqrt(len(ra_coords.ravel())))
+        ny_0 = int(np.sqrt(len(dec_coords.ravel())))
+        nx = int(nx_0 * super_sample_factor)
+        ny = int(ny_0 * super_sample_factor)
+        _ra_coords = np.linspace(np.min(ra_coords), np.max(ra_coords), nx)
+        _dec_coords = np.linspace(np.min(dec_coords), np.max(dec_coords), ny)
+        ra_coords, dec_coords = np.meshgrid(_ra_coords, _dec_coords)
+
+        alpha_x, alpha_y = lens_model.alpha(ra_coords.ravel(), dec_coords.ravel(), kwargs_lens)
+        points = (ra_coords[0, :], dec_coords[:, 0])
+        self._interp_x = RegularGridInterpolator(points, alpha_x.reshape(nx, ny), bounds_error=False, fill_value=None)
+        self._interp_y = RegularGridInterpolator(points, alpha_y.reshape(nx, ny), bounds_error=False, fill_value=None)
+
+    def __call__(self, x, y, *args, **kwargs):
+
+        point = (y, x)
+        alpha_x = self._interp_x(point)
+        alpha_y = self._interp_y(point)
+
+        if isinstance(x, float) or isinstance(x, int) and isinstance(y, float) or isinstance(y, int):
+            alpha_x = float(alpha_x)
+            alpha_y = float(alpha_y)
+        else:
+            alpha_x = np.squeeze(alpha_x)
+            alpha_y = np.squeeze(alpha_y)
+
+        return alpha_x, alpha_y
