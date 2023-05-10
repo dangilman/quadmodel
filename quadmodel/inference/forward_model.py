@@ -300,9 +300,9 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
     R_ein_approx = lens_data_class.approx_einstein_radius
     if realization_class is None:
         # create the realization
-        if 'cone_opening_angle' not in kwargs_preset_model.keys():
+        if 'cone_opening_angle_arcsec' not in kwargs_preset_model.keys():
             # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
-            kwargs_preset_model['cone_opening_angle'] = 6 * R_ein_approx
+            kwargs_preset_model['cone_opening_angle_arcsec'] = 6 * R_ein_approx
 
         realization = preset_model(zlens, zsource, **kwargs_preset_model)
     else:
