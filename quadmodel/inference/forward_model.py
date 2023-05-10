@@ -248,10 +248,12 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                         f.write('\n')
 
             if save_realizations:
-                for idx_system, system_with_pyhalo in enumerate(saved_lens_systems):
                 
+                for idx_system, system_with_pyhalo in enumerate(saved_lens_systems):
+
                     zd, zs = system_with_pyhalo.zlens, system_with_pyhalo.zsource
-                    ximg, yimg = system_with_pyhalo.x, system_with_pyhalo.y
+                    ximg = lens_data_class_sampling_list[idx_system].x
+                    yimg = lens_data_class_sampling_list[idx_system].y
                     lm, kwargs_lens_save = system_with_pyhalo.get_lensmodel()
                     astropy_class = lm.cosmo
                     num_alpha_class = None

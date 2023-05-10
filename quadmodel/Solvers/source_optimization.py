@@ -51,7 +51,7 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
                                                         n_max_source, astrometric_uncertainty,
                                                         delta_x_offset_init, delta_y_offset_init)
         elif launch_fuction == 'WGDJ0405':
-            fitting_seq, fitting_kwargs_class = fit_wgdj0405_light(fitting_kwargs_list, hst_data, simulation_output,
+            fitting_seq, fitting_kwargs_class = fit_wgdj0405_light(hst_data, simulation_output,
                                                                    astrometric_uncertainty, delta_x_offset_init,
                                                                    delta_y_offset_init)
         else:
