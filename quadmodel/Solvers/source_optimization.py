@@ -20,7 +20,8 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
                      fitting_kwargs_list,
                      initialize_from_fit=False, path_to_smooth_lens_fit=None, add_shapelets_source=False,
                      n_max_source=None, plot_results=False, overwrite=False, random_seed=None,
-                     run_index_list=None):
+                     run_index_list=None, astrometric_uncertainty=0.005, delta_x_offset_init=None,
+                     delta_y_offset_init=None):
 
     if random_seed is not None:
         np.random.seed(random_seed)
@@ -54,7 +55,8 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
         fitting_seq, fitting_kwargs_class = _run_single(fitting_kwargs_list, hst_data, simulation_output,
                                                         initialize_from_fit,
                                                         path_to_smooth_lens_fit, add_shapelets_source,
-                                                        n_max_source)
+                                                        n_max_source, astrometric_uncertainty,
+                                                        delta_x_offset_init, delta_y_offset_init)
         # modelPlot = ModelPlot(multi_band_list, kwargs_model,
         #                       kwargs_result, arrow_size=0.02, cmap_string="gist_heat")
         kwargs_best = fitting_seq.best_fit()
@@ -102,7 +104,8 @@ def run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation
 
 
 def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_from_fit,
-                path_to_smooth_lens_fit, add_shapelets_source, n_max_source):
+                path_to_smooth_lens_fit, add_shapelets_source, n_max_source, astrometric_uncertainty,
+                delta_x_offset_init, delta_y_offset_init):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
@@ -212,7 +215,7 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                          'source_marg': False,
                          'check_matched_source_position': False,
                          'astrometric_likelihood': True,
-                         'image_position_uncertainty': 0.05,
+                         'image_position_uncertainty': astrometric_uncertainty,
                          'prior_lens': prior_lens,
                          'prior_lens_light': prior_lens_light,
                          'image_likelihood_mask_list': [hst_data.likelihood_mask]
@@ -231,10 +234,15 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
                          kwargs_lower_lens_light, kwargs_upper_lens_light]
     point_source_params = [kwargs_ps_init, kwargs_ps_sigma, kwargs_ps_fixed, kwargs_ps_lower, kwargs_ps_upper]
 
-    special_init = {'delta_x_image': [0.0] * 4, 'delta_y_image': [0.0] * 4}
-    special_sigma = {'delta_x_image': [0.05] * 4, 'delta_y_image': [0.05] * 4}
-    special_lower = {'delta_x_image': [-0.25] * 4, 'delta_y_image': [-0.25] * 4}
-    special_upper = {'delta_x_image': [0.25] * 4, 'delta_y_image': [0.25] * 4}
+    if delta_x_offset_init is None or delta_y_offset_init is None:
+        special_init = {'delta_x_image': [0.0] * 4, 'delta_y_image': [0.0] * 4}
+    else:
+        special_init = {'delta_x_image': delta_x_offset_init, 'delta_y_image': delta_y_offset_init}
+    special_sigma = {'delta_x_image': [astrometric_uncertainty] * 4, 'delta_y_image': [astrometric_uncertainty] * 4}
+    special_lower = {'delta_x_image': [-5*astrometric_uncertainty] * 4,
+                     'delta_y_image': [-5*astrometric_uncertainty] * 4}
+    special_upper = {'delta_x_image': [5*astrometric_uncertainty] * 4,
+                     'delta_y_image': [5*astrometric_uncertainty] * 4}
     special_fixed = [{}]
     kwargs_special = [special_init, special_sigma, special_fixed, special_lower, special_upper]
 
@@ -252,7 +260,7 @@ def _run_single(fitting_kwargs_list, hst_data, simulation_output, initialize_fro
         source_remove_fixed.append(remove_source)
     lens_light_remove_fixed = []
     for i in range(0, len(lens_light_model_list)):
-        keys_remove_lens_light = [key for key in lens_params[0][i].keys()]
+        keys_remove_lens_light = [key for key in lens_light_params[0][i].keys()]
         remove_light = [i, keys_remove_lens_light]
         lens_light_remove_fixed.append(remove_light)
 
