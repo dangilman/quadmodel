@@ -6,6 +6,7 @@ from time import time
 from quadmodel.inference.realization_setup import *
 from quadmodel.macromodel import MacroLensModel
 from quadmodel.inference.util import filenames, SimulationOutputContainer
+from quadmodel.lens_system_nopyhalo import LensSystem
 import numpy as np
 import dill
 from copy import deepcopy
@@ -247,8 +248,22 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                         f.write('\n')
 
             if save_realizations:
-                for idx_system, system in enumerate(saved_lens_systems):
-
+                for idx_system, system_with_pyhalo in enumerate(saved_lens_systems):
+                
+                    zd, zs = system_with_pyhalo.zlens, system_with_pyhalo.zsource
+                    ximg, yimg = system_with_pyhalo.x, system_with_pyhalo.y
+                    lm, kwargs_lens_save = system_with_pyhalo.get_lensmodel()
+                    astropy_class = lm.cosmo
+                    num_alpha_class = None
+                    if hasattr(system_with_pyhalo, '_numerical_alpha_class'):
+                        num_alpha_class = system_with_pyhalo._numerical_alpha_class
+                    kwargs_lens_model = {'lens_model_list': lm.lens_model_list,
+                                         'lens_redshift_list': lm.redshift_list,
+                                         'z_source': zs, 'z_lens': zd, 'multi_plane': True,
+                                         'numerical_alpha_class': num_alpha_class}
+                    system = LensSystem(zd, zs,
+                                        ximg, yimg,
+                                        kwargs_lens_model, kwargs_lens_save, astropy_class)
                     container = SimulationOutputContainer(lens_data_class_sampling_list[idx_system], system,
                                                           mags_out[idx_system,:],
                                                           parameter_array[idx_system,:])
