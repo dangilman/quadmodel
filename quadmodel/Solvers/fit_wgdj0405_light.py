@@ -9,6 +9,7 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
+    print(lens_system)
     lensmodel, kwargs_lens_init = lens_system.get_lensmodel()
     source_x, source_y = lensmodel.ray_shooting(x_image, y_image, kwargs_lens_init)
     source_x = np.mean(source_x)
