@@ -23,7 +23,6 @@ class QuadLensSystem(object):
         if pyhalo_cosmology is None:
             # the default cosmology in pyHalo, currently WMAP9
             pyhalo_cosmology = Cosmology()
-
         self.macromodel = macromodel
         self.zlens = macromodel.zlens
         self.zsource = z_source

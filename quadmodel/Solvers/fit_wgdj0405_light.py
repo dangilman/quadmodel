@@ -25,15 +25,16 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
 
     source_model_list = ['SERSIC_ELLIPSE']
 
-    kwargs_source_init_sersic_ellipse = {'amp': 10000, 'R_sersic': 0.1,
-         'n_sersic': 4.0, 'e1': 0.001, 'e2': 0.001,
-         'center_x': source_x, 'center_y': source_y}
+    kwargs_source_init_sersic_ellipse = {'amp': 6.358312774027695, 'R_sersic': 0.08327380936574075,
+                                         'n_sersic': 4.301124835127751, 'e1': 0.040385737144336034,
+                                         'e2': -0.2601074785707514, 'center_x': 0.019265664952451286,
+                                         'center_y': -0.04669552001350256}
     # kwargs_source_init_sersic = {'amp': 10000, 'R_sersic': 0.1,
     #      'n_sersic': 5.0, 'center_x': source_x, 'center_y': source_y}
     kwargs_source_init = [kwargs_source_init_sersic_ellipse,
                          # kwargs_source_init_sersic
                           ]
-    kwargs_sigma_source = [{'amp': 50000, 'R_sersic': 0.1, 'n_sersic': 2.0, 'e1': 0.25,
+    kwargs_sigma_source = [{'amp': 50000, 'R_sersic': 0.1, 'n_sersic': 1.0, 'e1': 0.25,
                             'e2': 0.25, 'center_x': 0.1, 'center_y': 0.1},
                            #{'amp': 10000, 'R_sersic': 0.1, 'n_sersic': 2.0, 'center_x': 0.1, 'center_y': 0.1}
                            ]
@@ -45,7 +46,10 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
                            ]
 
     lens_light_model_list = ['SERSIC_ELLIPSE']
-    kwargs_lens_light_init = [{'amp': 1, 'R_sersic': 0.2, 'n_sersic': 4.0, 'e1': 0.001, 'e2': 0.001, 'center_x': 0.0, 'center_y': 0.0}]
+    kwargs_lens_light_init = [{'amp': 51.40814730862164, 'R_sersic': 0.12396643337557135,
+                               'n_sersic': 1.8395724956851882,
+                               'e1': 0.05542385889659107, 'e2': 0.10265217079073591,
+                               'center_x': -0.011374769229750187, 'center_y': -0.046988615138562624}]
     kwargs_lens_light_sigma = [{'amp': 2000, 'R_sersic': 0.2, 'n_sersic': 1.0, 'e1': 0.25,
                             'e2': 0.25, 'center_x': 0.1, 'center_y': 0.1}]
     kwargs_lower_lens_light = [
@@ -55,7 +59,7 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
     kwargs_lens_init, kwargs_lens_sigma, kwargs_lower_lens, kwargs_upper_lens, kwargs_fixed_lens = [{}], [{}], [{}], [
         {}], [{}]
 
-    add_shapelets_source = True
+    add_shapelets_source = False
     if add_shapelets_source:
         source_model_list += ['SHAPELETS']
         n_max = 6
@@ -172,10 +176,9 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
                                   kwargs_constraints, kwargs_likelihood, kwargs_params)
     _ = fitting_seq.fit_sequence(fitting_kwargs_list)
     kwargs_result = fitting_seq.best_fit()
-    lens_model_list_true, lens_redshift_list_true, kwargs_lens_true, _ = lens_system._get_lenstronomy_args()
     astropy_class = lens_system.astropy
-    kwargs_model_true = {'lens_model_list': lens_model_list_true,
-                         'lens_redshift_list': lens_redshift_list_true,
+    kwargs_model_true = {'lens_model_list': lensmodel.lens_model_list,
+                         'lens_redshift_list': lensmodel.redshift_list,
                          'z_source': lens_system.zsource,
                          'multi_plane': True,
                          'cosmo': astropy_class,
@@ -187,7 +190,7 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
                          }
 
     kwargs_result_true = deepcopy(kwargs_result)
-    kwargs_result_true['kwargs_lens'] = kwargs_lens_true
+    kwargs_result_true['kwargs_lens'] = kwargs_lens_init
     #     # update the likelihood mask with the one tht cuts out images and parts far from the arc
     #     print('log_L before new mask: ', fitting_seq.best_fit_likelihood)
     #     kwargs_likelihood['image_likelihood_mask_list'] = [hst_data.custom_mask]
