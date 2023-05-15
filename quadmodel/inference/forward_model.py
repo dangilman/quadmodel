@@ -248,7 +248,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                         f.write('\n')
 
             if save_realizations:
-                
+
                 for idx_system, system_with_pyhalo in enumerate(saved_lens_systems):
 
                     zd, zs = system_with_pyhalo.zlens, system_with_pyhalo.zsource
