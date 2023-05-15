@@ -9,19 +9,17 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
-
-    lensmodel, kwargs_lens_init = lens_system.get_lensmodel()
-    source_x, source_y = lensmodel.ray_shooting(x_image, y_image, kwargs_lens_init)
+    lensmodel, kwargs_lens_true = lens_system.get_lensmodel()
+    source_x, source_y = lensmodel.ray_shooting(x_image, y_image, kwargs_lens_true)
     source_x = np.mean(source_x)
     source_y = np.mean(source_y)
-
     ra_at_x0 = hst_data.ra_at_xy_0
     dec_at_x0 = hst_data.dec_at_xy_0
     pix2angle = hst_data.transform_pix2angle
     (nx, ny) = hst_data.image_data.shape
     coordinate_system = Coordinates(pix2angle, ra_at_x0, dec_at_x0)
     ra_coords, dec_coords = coordinate_system.coordinate_grid(nx, ny)
-    tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_init)
+    tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_true)
     lens_model_list_fit = ['TABULATED_DEFLECTIONS']
 
     source_model_list = ['SERSIC_ELLIPSE']
@@ -192,7 +190,7 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
                          }
 
     kwargs_result_true = deepcopy(kwargs_result)
-    kwargs_result_true['kwargs_lens'] = kwargs_lens_init
+    kwargs_result_true['kwargs_lens'] = kwargs_lens_true
     #     # update the likelihood mask with the one tht cuts out images and parts far from the arc
     #     print('log_L before new mask: ', fitting_seq.best_fit_likelihood)
     #     kwargs_likelihood['image_likelihood_mask_list'] = [hst_data.custom_mask]
