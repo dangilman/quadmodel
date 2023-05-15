@@ -6,8 +6,8 @@ class LensSystem(object):
 
     def __init__(self, z_lens, z_source, x_image, y_image, kwargs_lens_model, kwargs_lens, astropy):
 
-        self.zlens = z_lens
-        self.zsource = z_source
+        self.z_lens = z_lens
+        self.z_source = z_source
         self.x = x_image
         self.y = y_image
         if 'cosmo' in kwargs_lens_model.keys():
