@@ -5,7 +5,8 @@ from lenstronomy.Data.coord_transforms import Coordinates
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 
 
-def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, delta_x_offset_init, delta_y_offset_init):
+def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, delta_x_offset_init,
+                            delta_y_offset_init):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
@@ -31,18 +32,20 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
     # kwargs_source_init_sersic = {'amp': 10000, 'R_sersic': 0.1,
     #      'n_sersic': 5.0, 'center_x': source_x, 'center_y': source_y}
     kwargs_source_init = [kwargs_source_init_sersic_ellipse,
-                         # kwargs_source_init_sersic
+                          # kwargs_source_init_sersic
                           ]
     kwargs_sigma_source = [{'amp': 50000, 'R_sersic': 0.1, 'n_sersic': 1.0, 'e1': 0.25,
                             'e2': 0.25, 'center_x': 0.1, 'center_y': 0.1},
-                           #{'amp': 10000, 'R_sersic': 0.1, 'n_sersic': 2.0, 'center_x': 0.1, 'center_y': 0.1}
+                           # {'amp': 10000, 'R_sersic': 0.1, 'n_sersic': 2.0, 'center_x': 0.1, 'center_y': 0.1}
                            ]
-    kwargs_lower_source = [{'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10},
-                           #{'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0,'center_x': -10, 'center_y': -10}
-                           ]
-    kwargs_upper_source = [{'amp': 1e9, 'R_sersic': 0.5, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10},
-                           #{'amp': 1e9, 'R_sersic': 0.5, 'n_sersic': 10.0, 'center_x': 10, 'center_y': 10}
-                           ]
+    kwargs_lower_source = [
+        {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10},
+        # {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0,'center_x': -10, 'center_y': -10}
+        ]
+    kwargs_upper_source = [
+        {'amp': 1e9, 'R_sersic': 0.5, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10},
+        # {'amp': 1e9, 'R_sersic': 0.5, 'n_sersic': 10.0, 'center_x': 10, 'center_y': 10}
+        ]
 
     lens_light_model_list = ['SERSIC_ELLIPSE']
     kwargs_lens_light_init = [{'amp': 51.40814730862164, 'R_sersic': 0.12396643337557135,
@@ -50,7 +53,7 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
                                'e1': 0.05542385889659107, 'e2': 0.10265217079073591,
                                'center_x': -0.011374769229750187, 'center_y': -0.046988615138562624}]
     kwargs_lens_light_sigma = [{'amp': 2000, 'R_sersic': 0.2, 'n_sersic': 1.0, 'e1': 0.25,
-                            'e2': 0.25, 'center_x': 0.1, 'center_y': 0.1}]
+                                'e2': 0.25, 'center_x': 0.1, 'center_y': 0.1}]
     kwargs_lower_lens_light = [
         {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10}]
     kwargs_upper_lens_light = [
@@ -89,8 +92,8 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
 
     ############################### SETUP THE PSF MODEL ######################################################
     kwargs_psf = {'psf_type': 'PIXEL',
-                      'kernel_point_source': hst_data.psf_estimate,
-                      'psf_error_map': hst_data.psf_error_map}
+                  'kernel_point_source': hst_data.psf_estimate,
+                  'psf_error_map': hst_data.psf_error_map}
 
     kwargs_model_fit = {'lens_model_list': lens_model_list_fit,
                         'source_light_model_list': source_model_list,
@@ -109,6 +112,9 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
     prior_lens = None
     prior_lens_light = [[0, 'e1', 0.0, 0.2], [0, 'e2', 0.0, 0.2]]
 
+    # create an optional mask
+    likelihood_mask_for_statistic = hst_data.custom_mask
+
     ############################### OPTIONAL LIKELIHOOD MASK OVER IMAGES ############################
     kwargs_likelihood = {'check_bounds': True,
                          'force_no_add_image': True,
@@ -120,6 +126,8 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
                          'prior_lens_light': prior_lens_light,
                          'image_likelihood_mask_list': [hst_data.likelihood_mask]
                          }
+    kwargs_likelihood_compute_statistic = deepcopy(kwargs_likelihood)
+    kwargs_likelihood_compute_statistic['image_likelihood_mask_list'] = [hst_data.likelihood_mask]
 
     image_band = [kwargs_data, kwargs_psf, kwargs_numerics]
     multi_band_list = [image_band]
@@ -163,19 +171,19 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
         lens_light_remove_fixed.append(remove_light)
 
     n_iterations = 100
-    n_run = 400
+    n_run = 300
     fitting_kwargs_list = [
         ['PSO', {'sigma_scale': 1.0, 'n_particles': 50, 'n_iterations': n_iterations}],
         ['update_settings', {'source_remove_fixed': source_remove_fixed,
                              'lens_light_remove_fixed': lens_light_remove_fixed}],
-        ['PSO', {'sigma_scale': 1.0, 'n_particles': 100, 'n_iterations': int(2*n_iterations)}],
+        ['PSO', {'sigma_scale': 1.0, 'n_particles': 100, 'n_iterations': int(2 * n_iterations)}],
         ['psf_iteration', {'psf_symmetry': hst_data.psf_symmetry, 'keep_psf_error_map': True}],
         ['MCMC', {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': 0.1, 'threadCount': 1}]
     ]
 
     fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model_fit,
                                   kwargs_constraints, kwargs_likelihood, kwargs_params)
-    _ = fitting_seq.fit_sequence(fitting_kwargs_list)
+    chain_list = fitting_seq.fit_sequence(fitting_kwargs_list)
     kwargs_result = fitting_seq.best_fit()
     astropy_class = lens_system.astropy
     kwargs_model_true = {'lens_model_list': lensmodel.lens_model_list,
@@ -200,5 +208,6 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
     #     a=input('continue')
 
     fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
-                                                 kwargs_likelihood, kwargs_params, kwargs_result_true)
+                                                 kwargs_likelihood_compute_statistic, kwargs_params, kwargs_result_true)
+
     return fitting_seq, fitting_kwargs_class

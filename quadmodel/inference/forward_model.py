@@ -68,7 +68,6 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     """
 
     # set up the filenames and folders for writing output
-
     filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, filename_macromodel_samples = \
         filenames(output_path, job_index)
 
@@ -84,7 +83,6 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         print('reading output to files: ')
         print(filename_parameters)
         print(filename_mags)
-
     # You can restart inferences from previous runs by simply running the function again. In the following lines, the
     # code looks for existing output files, and determines how many samples to add based on how much output already
     # exists.
@@ -127,11 +125,9 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         print('starting with '+str(n_kept)+' samples accepted, '+str(n_keep - n_kept)+' remain')
         print('existing magnifications: ', _m)
         print('samples remaining: ', n_keep - n_kept)
-
     # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
     if importance_weights_function is None:
         importance_weights_function = _flat_prior_importance_weights
-
     if 'kwargs_lens_macro_init' in kwargs_sample_macromodel.keys():
         reoptimize_initial_fit = True
     else:
@@ -248,9 +244,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                         f.write('\n')
 
             if save_realizations:
-
                 for idx_system, system_with_pyhalo in enumerate(saved_lens_systems):
-
                     zd, zs = system_with_pyhalo.zlens, system_with_pyhalo.zsource
                     ximg = lens_data_class_sampling_list[idx_system].x
                     yimg = lens_data_class_sampling_list[idx_system].y
@@ -348,7 +342,6 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
     # Now we set up the optimization routine, which will solve for a set of macromodel parameters that map the
     # observed image coordinates to common source position in the presence of all the dark matter halos along the
     # line of sight and in the main lens plane.
-
     optimizer = HierarchicalOptimization(lens_system, settings_class=ray_tracing_optimization)
     kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class_sampling,
                                                                            constrain_params=constrain_params_macro,
@@ -399,7 +392,6 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
 
     # Now we account for uncertainties in the image magnifications. These uncertainties are sometimes quoted for
     # individual image fluxes, or the flux ratios.
-
     if lens_data_class.uncertainty_in_magnifications:
         mags_with_uncertainties = []
         for j, mag in enumerate(mags):

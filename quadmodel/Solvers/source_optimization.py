@@ -44,7 +44,12 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
                 print('logL computation already performed for file ' + str(idx))
                 continue
 
-        if launch_fuction == 'MOCK':
+        if callable(launch_fuction):
+            fitting_seq, fitting_kwargs_class = launch_fuction(hst_data, simulation_output,
+                                                                   astrometric_uncertainty, delta_x_offset_init,
+                                                                   delta_y_offset_init)
+
+        elif launch_fuction == 'MOCK':
             fitting_seq, fitting_kwargs_class = fit_mock(fitting_kwargs_list, hst_data, simulation_output,
                                                         initialize_from_fit,
                                                         path_to_smooth_lens_fit, add_shapelets_source,
@@ -70,6 +75,7 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
 
         if plot_results:
             print('plotting... ')
+
             modelPlot = ModelPlot(**fitting_kwargs_class.kwargs_model_plot)
             #         chain_list = fitting_seq.fit_sequence(fitting_kwargs_list)
             #         for i in range(len(chain_list)):

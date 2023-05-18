@@ -11,8 +11,8 @@ __all__ = ['source_params_sersic_ellipse', 'lens_light_params_sersic_ellipse',
 
 def customized_mask(x_image, y_image, ra_grid, dec_grid, mask_image_arcsec, r_semi_major_arcsec, q, rotation,
                     thickness_arcsec, shift_x=0.0, shift_y=0.0):
-    baseline_mask = np.ones_like(ra_grid)
 
+    baseline_mask = np.ones_like(ra_grid)
     for (xi, yi) in zip(x_image, y_image):
         dx = abs(xi - ra_grid)
         dy = abs(yi - dec_grid)

@@ -20,5 +20,4 @@ def sample_from_prior(prior):
             p = pdf_interp(value)
             if p >= u:
                 break
-
     return value
