@@ -177,7 +177,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                 print('N remaining: ', n_keep - n_kept)
 
         if verbose:
-            print('accepeted realizations counter: ', acceptance_rate_counter)
+            print('accepted realizations counter: ', acceptance_rate_counter)
             print('readout steps: ', readout_steps)
 
         # readout if either of these conditions are met
@@ -359,11 +359,14 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
         _r = np.linspace(-2.0 * R_ein_approx, 2.0 * R_ein_approx, 200)
         xx, yy = np.meshgrid(_r, _r)
         shape0 = xx.shape
-        kappa = lens_model_full.kappa(xx.ravel(), yy.ravel(), kwargs_lens_final).reshape(shape0)
+        fxx, fxy, fyx, fyy = lens_model_full.hessian(xx.ravel(), yy.ravel(), kwargs_lens_final)
+        kappa = 0.5 * (fxx + fyy)
+        det_A = (1 - fxx) * (1 - fyy) - fxy * fyx
+        magnification_surface = 1. / det_A
         lensmodel_macro, kwargs_macro = lens_system.get_lensmodel(include_substructure=False)
         kappa_macro = lensmodel_macro.kappa(xx.ravel(), yy.ravel(), kwargs_macro).reshape(shape0)
         extent = [-2 * R_ein_approx, 2 * R_ein_approx, -2 * R_ein_approx, 2 * R_ein_approx]
-        plt.imshow(kappa - kappa_macro, origin='lower', vmin=-0.05, vmax=0.05, cmap='bwr', extent=extent)
+        plt.imshow(kappa.reshape(shape0) - kappa_macro, origin='lower', vmin=-0.05, vmax=0.05, cmap='bwr', extent=extent)
         plt.scatter(lens_data_class_sampling.x, lens_data_class_sampling.y, color='k')
         if crit_curves_in_test_mode:
             from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
@@ -374,6 +377,9 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
             for i in range(0, len(ra_crit_list)):
                 plt.plot(ra_crit_list[i], dec_crit_list[i], color='k', lw=2)
 
+        plt.show()
+        plt.imshow(magnification_surface.reshape(shape0), vmin=-10, vmax=10,
+        origin='lower', extent=extent, cmap='gist_heat')
         plt.show()
         _ = input('continue')
 

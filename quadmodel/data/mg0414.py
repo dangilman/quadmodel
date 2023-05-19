@@ -33,20 +33,6 @@ class MG0414(Quad):
         super(MG0414, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                     kwargs_macromodel, keep_flux_ratio_index, uncertainty_in_magnifications=False)
 
-    def generate_macromodel(self):
-        """
-        Used only if lens-specific data class has no satellite galaxies; for systems with satellites, add them in the
-        lens-specific data class and override this method
-        :return:
-        """
-
-        model, constrain_params, optimization_routine, params_sampled, param_names_macro = self._generate_macromodel()
-        model_satellite, params_satellite, param_names_satellite = self.satellite_galaxy()
-        model.add_satellite(model_satellite)
-        params_sampled = np.append(params_sampled, params_satellite)
-        param_names_macro += param_names_satellite
-        return model, constrain_params, optimization_routine, params_sampled, param_names_macro
-
     def satellite_galaxy(self, sample=True):
         """
         If the deflector system has no satellites, return an empty list of lens components (see macromodel class)

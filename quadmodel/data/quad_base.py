@@ -125,9 +125,34 @@ class Quad(object):
             df += (flux_ratios_measured[i] - flux_ratios_modeled[i])**2/self.delta_m[i]**2
         return df/dof
 
-    def generate_macromodel(self, m3_amplitude_prior=None, m4_amplitude_prior=None, gamma_macro_prior=None,
-                            shear_strength_prior=None, kwargs_lens_macro_init=None, center_x_prior=None,
-                            center_y_prior=None, e1_prior=None, e2_prior=None):
+    def satellite_galaxy(self, *args, **kwargs):
+        """
+        The default is no satellites or individual components
+        :return:
+        """
+        satellite_list = []
+        satellite_params = np.array([])
+        satellite_param_names = []
+        return satellite_list, satellite_params, satellite_param_names
+
+    def generate_macromodel(self, **kwargs_main):
+        """
+        Used only if lens-specific data class has no satellite galaxies; for systems with satellites, add them in the
+        lens-specific data class and override this method
+        :return:
+        """
+
+        model, constrain_params, optimization_routine, params_sampled, param_names_macro = self._generate_macromodel_main(
+            **kwargs_main)
+        model_satellite, params_satellite, param_names_satellite = self.satellite_galaxy()
+        model.add_satellite(model_satellite)
+        params_sampled = np.append(params_sampled, params_satellite)
+        param_names_macro += param_names_satellite
+        return model, constrain_params, optimization_routine, params_sampled, param_names_macro
+
+    def _generate_macromodel_main(self, m3_amplitude_prior=None, m4_amplitude_prior=None, gamma_macro_prior=None,
+                                  shear_strength_prior=None, kwargs_lens_macro_init=None, center_x_prior=None,
+                                  center_y_prior=None, e1_prior=None, e2_prior=None):
         """
         Used only if lens-specific data class has no satellite galaxies; for systems with satellites, add them in the
         lens-specific data class and override this method
