@@ -156,7 +156,7 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
                          'prior_lens': prior_lens,
                          'prior_lens_light': prior_lens_light,
                          'image_likelihood_mask_list': [hst_data.likelihood_mask],
-                         'custom_logL_addition': mass_light_position_angle_prior
+    #                     'custom_logL_addition': mass_light_position_angle_prior
                          }
     kwargs_likelihood_compute_statistic = deepcopy(kwargs_likelihood)
     kwargs_likelihood_compute_statistic['image_likelihood_mask_list'] = [hst_data.likelihood_mask]
