@@ -126,23 +126,23 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
     prior_lens = None
     prior_lens_light = [[1, 'center_x', sat_x, 0.05], [1, 'center_y', sat_y, 0.05]]
 
-    # class PositionAnglePrior(object):
-    #
-    #     def __init__(self, kwargs_lens_true):
-    #         self.e1mass, self.e2mass = kwargs_lens_true[0]['e1'], kwargs_lens_true[0]['e2']
-    #
-    #     def __call__(self, kwargs_lens, kwargs_source, kwargs_lens_light,
-    #                  kwargs_ps, kwargs_special, kwargs_extinction):
-    #         e1light, e2light = kwargs_lens_light[0]['e1'], kwargs_lens_light[0]['e2']
-    #         pa_mass, _ = ellipticity2phi_q(self.e1mass, self.e2mass)
-    #         pa_light, _ = ellipticity2phi_q(e1light, e2light)
-    #         pa_mass *= 180 / np.pi
-    #         pa_light *= 180 / np.pi
-    #         delta_angle = 10
-    #         logL_penalty = -0.5 * (pa_mass - pa_light) ** 2 / delta_angle ** 2
-    #         return logL_penalty
+    class PositionAnglePrior(object):
 
-    #mass_light_position_angle_prior = PositionAnglePrior(kwargs_lens_true)
+        def __init__(self, kwargs_lens_true):
+            self.e1mass, self.e2mass = kwargs_lens_true[0]['e1'], kwargs_lens_true[0]['e2']
+
+        def __call__(self, kwargs_lens, kwargs_source, kwargs_lens_light,
+                     kwargs_ps, kwargs_special, kwargs_extinction):
+            e1light, e2light = kwargs_lens_light[0]['e1'], kwargs_lens_light[0]['e2']
+            pa_mass, _ = ellipticity2phi_q(self.e1mass, self.e2mass)
+            pa_light, _ = ellipticity2phi_q(e1light, e2light)
+            pa_mass *= 180 / np.pi
+            pa_light *= 180 / np.pi
+            delta_angle = 10
+            logL_penalty = -0.5 * (pa_mass - pa_light) ** 2 / delta_angle ** 2
+            return logL_penalty
+
+    mass_light_position_angle_prior = PositionAnglePrior(kwargs_lens_true)
     # create an optional mask
     # likelihood_mask_for_statistic = hst_data.custom_mask
 
@@ -156,7 +156,7 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
                          'prior_lens': prior_lens,
                          'prior_lens_light': prior_lens_light,
                          'image_likelihood_mask_list': [hst_data.likelihood_mask],
-                        # 'custom_logL_addition': mass_light_position_angle_prior
+                         'custom_logL_addition': mass_light_position_angle_prior
                          }
     kwargs_likelihood_compute_statistic = deepcopy(kwargs_likelihood)
     kwargs_likelihood_compute_statistic['image_likelihood_mask_list'] = [hst_data.likelihood_mask]
@@ -207,8 +207,8 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
     n_run = 200
     n_iterations = 100
     if add_shapelets_source:
-        n_run = 400
-        n_iterations = 200
+        n_run = int(n_run * 2)
+        n_iterations = int(n_iterations * 2)
         update_settings['source_add_fixed'] = [[1, ['n_max', 'center_x', 'center_y'], [int(n_max), source_x, source_y]]]
 
     nthreads = 1
