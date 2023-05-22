@@ -126,23 +126,23 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
     prior_lens = None
     prior_lens_light = [[1, 'center_x', sat_x, 0.05], [1, 'center_y', sat_y, 0.05]]
 
-    class PositionAnglePrior(object):
+    # class PositionAnglePrior(object):
+    #
+    #     def __init__(self, kwargs_lens_true):
+    #         self.e1mass, self.e2mass = kwargs_lens_true[0]['e1'], kwargs_lens_true[0]['e2']
+    #
+    #     def __call__(self, kwargs_lens, kwargs_source, kwargs_lens_light,
+    #                  kwargs_ps, kwargs_special, kwargs_extinction):
+    #         e1light, e2light = kwargs_lens_light[0]['e1'], kwargs_lens_light[0]['e2']
+    #         pa_mass, _ = ellipticity2phi_q(self.e1mass, self.e2mass)
+    #         pa_light, _ = ellipticity2phi_q(e1light, e2light)
+    #         pa_mass *= 180 / np.pi
+    #         pa_light *= 180 / np.pi
+    #         delta_angle = 10
+    #         logL_penalty = -0.5 * (pa_mass - pa_light) ** 2 / delta_angle ** 2
+    #         return logL_penalty
 
-        def __init__(self, kwargs_lens_true):
-            self.e1mass, self.e2mass = kwargs_lens_true[0]['e1'], kwargs_lens_true[0]['e2']
-
-        def __call__(self, kwargs_lens, kwargs_source, kwargs_lens_light,
-                     kwargs_ps, kwargs_special, kwargs_extinction):
-            e1light, e2light = kwargs_lens_light[0]['e1'], kwargs_lens_light[0]['e2']
-            pa_mass, _ = ellipticity2phi_q(self.e1mass, self.e2mass)
-            pa_light, _ = ellipticity2phi_q(e1light, e2light)
-            pa_mass *= 180 / np.pi
-            pa_light *= 180 / np.pi
-            delta_angle = 10
-            logL_penalty = -0.5 * (pa_mass - pa_light) ** 2 / delta_angle ** 2
-            return logL_penalty
-
-    mass_light_position_angle_prior = PositionAnglePrior(kwargs_lens_true)
+    #mass_light_position_angle_prior = PositionAnglePrior(kwargs_lens_true)
     # create an optional mask
     # likelihood_mask_for_statistic = hst_data.custom_mask
 
