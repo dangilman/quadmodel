@@ -61,6 +61,8 @@ def setup_realization(priors, kwargs_other, x_image, y_image, source_size_pc):
         value = _draw(prior, prior_type)
         if parameter_name == 'log10_sigma_sub':
             kwargs_realization['sigma_sub'] = 10 ** value
+        elif parameter_name == 'log10_LOS_normalization':
+            kwargs_realization['LOS_normalization'] = 10 ** value
         else:
             kwargs_realization[parameter_name] = value
 
