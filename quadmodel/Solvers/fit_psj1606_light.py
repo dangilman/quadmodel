@@ -198,11 +198,11 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
 
     update_settings = {'lens_light_remove_fixed': lens_light_remove_fixed,
                        'source_remove_fixed': source_remove_fixed}
-    n_run = 200
+    n_run = 100
     n_iterations = 100
     if add_shapelets_source:
-        n_run = int(n_run * 2)
-        n_iterations = int(n_iterations * 2)
+        n_run = 250
+        n_iterations = 150
         update_settings['source_add_fixed'] = [[1, ['n_max', 'center_x', 'center_y'], [int(n_max), source_x, source_y]]]
 
     nthreads = 1

@@ -169,12 +169,12 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
         lens_light_remove_fixed.append(remove_light)
 
     n_iterations = 100
-    n_run = 300
+    n_run = 100
     fitting_kwargs_list = [
         ['PSO', {'sigma_scale': 1.0, 'n_particles': 50, 'n_iterations': n_iterations}],
         ['update_settings', {'source_remove_fixed': source_remove_fixed,
                              'lens_light_remove_fixed': lens_light_remove_fixed}],
-        ['PSO', {'sigma_scale': 1.0, 'n_particles': 100, 'n_iterations': int(2 * n_iterations)}],
+        ['PSO', {'sigma_scale': 1.0, 'n_particles': 100, 'n_iterations': n_iterations}],
         ['psf_iteration', {'psf_symmetry': hst_data.psf_symmetry, 'keep_psf_error_map': True}],
         ['MCMC', {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': 0.1, 'threadCount': 1}]
     ]
