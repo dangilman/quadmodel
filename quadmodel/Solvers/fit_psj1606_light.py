@@ -44,7 +44,9 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
         {'amp': 1e9, 'R_sersic': 100.0, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10},
         ]
 
-    lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC', 'UNIFORM']
+    lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC',
+                             #'UNIFORM'
+                             ]
     kwargs_lens_light_init = [{'amp': 35.97877654109787, 'R_sersic': 0.12991748696333505,
                                'n_sersic': 3.95953211626326, 'e1': -0.11070035861608879,
                                'e2': -0.09432940562626346, 'center_x': 0.027238985956765285,
