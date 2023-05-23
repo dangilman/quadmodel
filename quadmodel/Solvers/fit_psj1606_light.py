@@ -39,11 +39,9 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
                            ]
     kwargs_lower_source = [
         {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10},
-        # {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0,'center_x': -10, 'center_y': -10}
         ]
     kwargs_upper_source = [
-        {'amp': 1e9, 'R_sersic': 0.5, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10},
-        # {'amp': 1e9, 'R_sersic': 0.5, 'n_sersic': 10.0, 'center_x': 10, 'center_y': 10}
+        {'amp': 1e9, 'R_sersic': 100.0, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10},
         ]
 
     lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC', 'UNIFORM']
@@ -107,7 +105,6 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
     kwargs_psf = {'psf_type': 'PIXEL',
                   'kernel_point_source': hst_data.psf_estimate,
                   'psf_error_map': hst_data.psf_error_map}
-
     kwargs_model_fit = {'lens_model_list': lens_model_list_fit,
                         'source_light_model_list': source_model_list,
                         'lens_light_model_list': lens_light_model_list,
@@ -115,7 +112,6 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
                         'additional_images_list': [False],
                         'fixed_magnification_list': [True],
                         'tabulated_deflection_angles': tabulated_lens_model}
-
     kwargs_numerics = {'supersampling_factor': 1, 'supersampling_convolution': False}
     kwargs_constraints = {
         'num_point_source_list': [4],
@@ -127,10 +123,8 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
     prior_lens_light = [[1, 'center_x', sat_x, 0.05], [1, 'center_y', sat_y, 0.05]]
 
     class PositionAnglePrior(object):
-
         def __init__(self, kwargs_lens_true):
             self.e1mass, self.e2mass = kwargs_lens_true[0]['e1'], kwargs_lens_true[0]['e2']
-
         def __call__(self, kwargs_lens, kwargs_source, kwargs_lens_light,
                      kwargs_ps, kwargs_special, kwargs_extinction):
             e1light, e2light = kwargs_lens_light[0]['e1'], kwargs_lens_light[0]['e2']
@@ -156,7 +150,7 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
                          'prior_lens': prior_lens,
                          'prior_lens_light': prior_lens_light,
                          'image_likelihood_mask_list': [hst_data.likelihood_mask],
-    #                     'custom_logL_addition': mass_light_position_angle_prior
+                         'custom_logL_addition': mass_light_position_angle_prior
                          }
     kwargs_likelihood_compute_statistic = deepcopy(kwargs_likelihood)
     kwargs_likelihood_compute_statistic['image_likelihood_mask_list'] = [hst_data.likelihood_mask]

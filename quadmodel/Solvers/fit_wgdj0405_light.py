@@ -40,11 +40,9 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
                            ]
     kwargs_lower_source = [
         {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10},
-        # {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0,'center_x': -10, 'center_y': -10}
         ]
     kwargs_upper_source = [
-        {'amp': 1e9, 'R_sersic': 0.5, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10},
-        # {'amp': 1e9, 'R_sersic': 0.5, 'n_sersic': 10.0, 'center_x': 10, 'center_y': 10}
+        {'amp': 1e9, 'R_sersic': 100.0, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10},
         ]
 
     lens_light_model_list = ['SERSIC_ELLIPSE']
