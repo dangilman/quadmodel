@@ -70,6 +70,16 @@ def filenames(output_path, job_index):
     return filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, \
            filename_macromodel_samples
 
+def delete_custom_logL(kwargs_fitting_seq):
+    """
+    This function deletes fuctions from inside kwargs_likelihood because they cannot be pickled
+    :param kwargs_fitting_seq:
+    :return:
+    """
+    if 'custom_logL_addition' in kwargs_fitting_seq.kwargs_fitting_sequence['kwargs_likelihood'].keys():
+        del kwargs_fitting_seq.kwargs_fitting_sequence['kwargs_likelihood']['custom_logL_addition']
+    return kwargs_fitting_seq
+
 def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, keep_chi2=False,
                    filename_suffix_chi2=None, keep_kwargs_fitting_seq=False, keep_macromodel_samples=False):
     """
@@ -166,6 +176,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                         f = open(filename_kwargs_fitting_seq, 'rb')
                         new = pickle.load(f)
                         f.close()
+                        new = delete_custom_logL(new)
                     except:
                         raise Exception('could not open file '+str(filename_kwargs_fitting_seq))
                     _fitting_seq_kwargs.append(new)
