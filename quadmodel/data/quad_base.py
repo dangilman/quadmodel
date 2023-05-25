@@ -38,11 +38,11 @@ class Quad(object):
 
     def __init__(self, zlens, zsource, x_image, y_image, magnifications, magnification_uncertainties, astrometric_uncertainties,
                  sourcemodel_type, kwargs_source_model, macromodel_type, kwargs_macromodel, keep_flux_ratio_index,
-                 uncertainty_in_magnifications=True):
+                 uncertainty_in_magnifications=True, sample_zlens_pdf=False):
 
+        self._sample_zlens_pdf = sample_zlens_pdf
         self._zlens_init = zlens
         self.set_zlens(reset=True)
-        self.zlens = self._zlens
         self.zsource = zsource
         self.x = np.array(x_image)
         self.y = np.array(y_image)
@@ -58,6 +58,14 @@ class Quad(object):
         self.uncertainty_in_magnifications = uncertainty_in_magnifications
         self.sourcemodel_type = sourcemodel_type
         self.keep_flux_ratio_index = keep_flux_ratio_index
+
+    @property
+    def zlens(self):
+        """
+
+        :return: main defelector redshift
+        """
+        return self._zlens
 
     @classmethod
     def from_hst_data(cls, hst_data_class,
@@ -332,6 +340,12 @@ class Quad(object):
                 self._zlens = self._zlens_init
 
             else:
-                args = ['CUSTOM_PDF', self._zlens_init[0], self._zlens_init[1]]
-                zlens_sampled = sample_from_prior(args)
-                self._zlens = np.round(zlens_sampled, 2)
+                if self._sample_zlens_pdf:
+                    args = ['CUSTOM_PDF', self._zlens_init[0], self._zlens_init[1]]
+                    zlens_sampled = sample_from_prior(args)
+                    self._zlens = np.round(zlens_sampled, 2)
+                else:
+                    values, weights = self._zlens_init[0], self._zlens_init[1]
+                    weighted_values = np.array(values) * np.array(weights) / np.sum(weights)
+                    median_zlens = np.round(np.sum(weighted_values), 2)
+                    self._zlens = median_zlens

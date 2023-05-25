@@ -5,7 +5,7 @@ import numpy as np
 class WFI2026(Quad):
 
     def __init__(self, sourcemodel_type='NARROW_LINE_Gaussian',
-                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE', sample_zlens_pdf=True):
 
         _zvalues = [0.2, 0.2342857142857143, 0.26857142857142857,
                           0.3028571428571429, 0.3371428571428572, 0.37142857142857144,
@@ -47,4 +47,4 @@ class WFI2026(Quad):
         kwargs_macromodel = {'shear_amplitude_min': 0.015, 'shear_amplitude_max': 0.16}
 
         super(WFI2026, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
-                                    kwargs_macromodel, keep_flux_ratio_index)
+                                    kwargs_macromodel, keep_flux_ratio_index, sample_zlens_pdf=sample_zlens_pdf)
