@@ -81,21 +81,18 @@ def delete_custom_logL(kwargs_fitting_seq):
     return kwargs_fitting_seq
 
 def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, keep_chi2=False,
-                   filename_suffix_chi2=None, keep_kwargs_fitting_seq=False, keep_macromodel_samples=False):
+                   filename_suffix=None, keep_kwargs_fitting_seq=False, keep_macromodel_samples=False):
     """
-    This function complies the result from a simulation into a single pickled python class
-    :param output_path: the directly where output will be produced; individual jobs (indexed by job_index) will be created
-    in directories output_path/job_1, output_path/job_2, etc. where the 1, 2 are set by job_index
-    :param job_index_min: the starting index for output folders
-    :param job_index_max: the ending index for output folders
-    :param keep_realizations: bool, whether or not to store the accepted realizations and the full lens system for each
-    set of accepted parameters
-    :param keep_chi2: bool, whether or not to search for/save the chi2 fit to imaging data for each realization.
-    NOTE - if the chi2 file is searched for but not found, then the corresponding flux ratios and parameters
-    will not be saved
-    :param filename_suffix_chi2: an optional string to append on a filename; format is
-    'output_foler/job_$job_index$/chi2_$index$_$filename_suffix$.txt'
-    :param keep_kwargs_fitting_seq: bool; whether or not to save kwargs for FittingSequence
+    This function compiles output from multiple jobs with output stored in different folders
+    :param output_path: the path to the directory where job_1, job_2, ... are located
+    :param job_index_min: starts at folder job_i where i=job_index_min
+    :param job_index_max: ends at folder job_j where j=job_index_max
+    :param keep_realizations: bool; flag to store the accepted realizations
+    :param keep_chi2: bool; flag to search for and record the logL from a fit to imaging data
+    :param filename_suffix: a string that appends to the end of a filename
+    :param keep_kwargs_fitting_seq: bool; keep the FittingSequenceKwargs class for each sample
+    :param keep_macromodel_samples: bool; keep macromodel samples
+    :return: an instance of FullSimulationContainer that contains the data for the simulation
     """
 
     if keep_realizations:
@@ -146,7 +143,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             proceed = True
             for n in range(1, 1+int(_params.shape[0])):
                 filename_chi2 = output_path + 'job_' + str(job_index) + \
-                                '/chi2_image_data_' + str(n) + filename_suffix_chi2 + '.txt'
+                                '/chi2_image_data_' + str(n) + filename_suffix + '.txt'
                 if os.path.exists(filename_chi2):
                     new = np.loadtxt(filename_chi2)
                     if _chi2 is None:
@@ -170,7 +167,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             _fitting_seq_kwargs = []
             for n in range(1, 1 + num_realizations):
                 filename_kwargs_fitting_seq = output_path + 'job_' + str(job_index) + \
-                                '/kwargs_fitting_sequence_' + str(n) + filename_suffix_chi2
+                                '/kwargs_fitting_sequence_' + str(n) + filename_suffix
                 if os.path.exists(filename_kwargs_fitting_seq):
                     try:
                         f = open(filename_kwargs_fitting_seq, 'rb')
