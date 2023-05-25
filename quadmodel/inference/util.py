@@ -143,7 +143,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             proceed = True
             for n in range(1, 1+int(_params.shape[0])):
                 filename_chi2 = output_path + 'job_' + str(job_index) + \
-                                '/chi2_image_data_' + str(n) + filename_suffix + '.txt'
+                                '/chi2_image_data' + filename_suffix + '_' + str(n) + '.txt'
                 if os.path.exists(filename_chi2):
                     new = np.loadtxt(filename_chi2)
                     if _chi2 is None:
