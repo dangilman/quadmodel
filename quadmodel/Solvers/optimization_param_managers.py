@@ -424,6 +424,7 @@ class PowerLawFreeShearMultipole_34(PowerLawParamManager):
         return 4
 
     def args_to_kwargs(self, args):
+
         (thetaE, center_x, center_y, e1, e2, g1, g2) = args
         gamma = self.kwargs_lens[0]['gamma']
 
@@ -445,7 +446,7 @@ class PowerLawFreeShearMultipole_34(PowerLawParamManager):
         # fix m=3 multipole centroid to EPL centroid
         self.kwargs_lens[3]['center_x'] = center_x
         self.kwargs_lens[3]['center_y'] = center_y
-        # fix m=3 multipole orientation to EPL orientation
+        # assign m=3 multipole orientation
         phi, _ = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[3]['phi_m'] = phi + self._delta_phi_m3
 

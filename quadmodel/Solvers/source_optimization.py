@@ -5,6 +5,7 @@ import pickle
 from lenstronomy.Plots.model_plot import ModelPlot
 import matplotlib.pyplot as plt
 from quadmodel.data.hst import HSTData, HSTDataModel
+from quadmodel.Solvers.fit_wgd2038_light import fit_wgd2038_light
 from quadmodel.Solvers.fit_wgdj0405_light import fit_wgdj0405_light
 from quadmodel.Solvers.fit_psj1606_light import fit_psj1606_light
 from quadmodel.Solvers.fit_mock import fit_mock
@@ -64,7 +65,11 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
             fitting_seq, fitting_kwargs_class = fit_psj1606_light(hst_data, simulation_output,
                                                                    astrometric_uncertainty, delta_x_offset_init,
                                                                    delta_y_offset_init, add_shapelets_source)
-
+        elif launch_fuction == 'WGD2038':
+            fitting_seq, fitting_kwargs_class = fit_wgd2038_light(hst_data, simulation_output,
+                                                                  astrometric_uncertainty, delta_x_offset_init,
+                                                                  delta_y_offset_init, add_shapelets_source,
+                                                                  n_max_source)
         else:
             raise Exception('launch function not recognized')
         # modelPlot = ModelPlot(multi_band_list, kwargs_model,
