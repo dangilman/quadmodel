@@ -6,7 +6,7 @@ from lenstronomy.Workflow.fitting_sequence import FittingSequence
 
 
 def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, delta_x_offset_init,
-                            delta_y_offset_init, add_shapelets_source=False):
+                            delta_y_offset_init, add_shapelets_source=False, n_max_source=None):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system

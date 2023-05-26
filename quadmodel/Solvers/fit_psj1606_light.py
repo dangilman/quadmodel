@@ -7,7 +7,7 @@ from lenstronomy.Util.param_util import ellipticity2phi_q
 
 
 def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
-                           delta_x_offset_init, delta_y_offset_init, add_shapelets_source):
+                           delta_x_offset_init, delta_y_offset_init, add_shapelets_source, n_max=10):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
@@ -70,7 +70,6 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
     kwargs_lens_init, kwargs_lens_sigma, kwargs_lower_lens, kwargs_upper_lens, kwargs_fixed_lens = [{}], [{}], [{}], [
         {}], [{}]
 
-    n_max = 10
     shapelets_init = {'amp': 1.0, 'beta': 1e-7, 'n_max': 1, 'center_x': source_x, 'center_y': source_y}
     shapelets_sigma = {'amp': 0.5, 'beta': 0.2, 'n_max': 1.0, 'center_x': 0.1, 'center_y': 0.1}
     shapelets_min = {'amp': 0.00001, 'beta': 1e-16, 'n_max': 1.0, 'center_x': -1.0, 'center_y': -1.0}

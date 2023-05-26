@@ -13,7 +13,7 @@ from quadmodel.Solvers.fit_mock import fit_mock
 
 def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, path_to_simulation_output, path_to_data,
                      fitting_kwargs_list, initialize_from_fit=False, path_to_smooth_lens_fit=None, add_shapelets_source=False,
-                     n_max_source=None, plot_results=False, overwrite=False, random_seed=None,
+                     n_max_source=10, plot_results=False, overwrite=False, random_seed=None,
                      run_index_list=None, astrometric_uncertainty=0.005, delta_x_offset_init=None,
                      delta_y_offset_init=None):
 
@@ -49,7 +49,7 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
         if callable(launch_fuction):
             fitting_seq, fitting_kwargs_class = launch_fuction(hst_data, simulation_output,
                                                                    astrometric_uncertainty, delta_x_offset_init,
-                                                                   delta_y_offset_init, add_shapelets_source)
+                                                                   delta_y_offset_init, add_shapelets_source, n_max_source)
 
         elif launch_fuction == 'MOCK':
             fitting_seq, fitting_kwargs_class = fit_mock(fitting_kwargs_list, hst_data, simulation_output,
@@ -60,11 +60,11 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
         elif launch_fuction == 'WGDJ0405':
             fitting_seq, fitting_kwargs_class = fit_wgdj0405_light(hst_data, simulation_output,
                                                                    astrometric_uncertainty, delta_x_offset_init,
-                                                                   delta_y_offset_init, add_shapelets_source)
+                                                                   delta_y_offset_init, add_shapelets_source, n_max_source)
         elif launch_fuction == 'PSJ1606':
             fitting_seq, fitting_kwargs_class = fit_psj1606_light(hst_data, simulation_output,
                                                                    astrometric_uncertainty, delta_x_offset_init,
-                                                                   delta_y_offset_init, add_shapelets_source)
+                                                                   delta_y_offset_init, add_shapelets_source, n_max_source)
         elif launch_fuction == 'WGD2038':
             fitting_seq, fitting_kwargs_class = fit_wgd2038_light(hst_data, simulation_output,
                                                                   astrometric_uncertainty, delta_x_offset_init,
