@@ -177,17 +177,28 @@ def CUSTOM_WDM(zlens, zsource, **kwargs_rendering):
     a_mc = a_func_mcrel(x)
     b_mc = b_func_mcrel(x)
 
-    kwargs_rendering['a_wdm_los'] = a_wdm
-    kwargs_rendering['b_wdm_los'] = b_wdm
-    kwargs_rendering['c_wdm_los'] = c_wdm
-    kwargs_rendering['a_wdm_sub'] = a_wdm
-    kwargs_rendering['b_wdm_sub'] = b_wdm
-    kwargs_rendering['c_wdm_sub'] = c_wdm
-    kwargs_rendering['kwargs_suppression_mc_relation_field'] = {'a_mc': a_mc, 'b_mc': b_mc}
-    kwargs_rendering['kwargs_suppression_mc_relation_sub'] = {'a_mc': a_mc, 'b_mc': b_mc}
-    kwargs_rendering['suppression_model_field'] = 'hyperbolic'
-    kwargs_rendering['suppression_model_sub'] = 'hyperbolic'
+    kwargs_mass_function_subhalos = {}
+    kwargs_mass_function_fieldhalos = {}
+    kwargs_mass_function_fieldhalos['a_wdm'] = a_wdm
+    kwargs_mass_function_fieldhalos['b_wdm'] = b_wdm
+    kwargs_mass_function_fieldhalos['c_wdm'] = c_wdm
+    kwargs_mass_function_subhalos['a_wdm'] = a_wdm
+    kwargs_mass_function_subhalos['b_wdm'] = b_wdm
+    kwargs_mass_function_subhalos['c_wdm'] = c_wdm
 
+    kwargs_mc_relation_subhalos = {'a': a_mc, 'b': b_mc}
+    kwargs_mc_relation_fieldhalos = {'a': a_mc, 'b': b_mc}
+
+    kwargs_rendering['mass_function_model_subhalos'] = 'LOVELL2020'
+    kwargs_rendering['mass_function_model_fieldhalos'] = 'LOVELL2020'
+    kwargs_rendering['concentration_model_subhalos'] = 'WDM_HYPERBOLIC'
+    kwargs_rendering['concentration_model_fieldhalos'] = 'WDM_HYPERBOLIC'
+
+    kwargs_rendering['kwargs_mass_function_subhalos'] = kwargs_mass_function_subhalos
+    kwargs_rendering['kwargs_mass_function_fieldhalos'] = kwargs_mass_function_fieldhalos
+    kwargs_rendering['kwargs_concentration_model_subhalos'] = kwargs_mc_relation_subhalos
+    kwargs_rendering['kwargs_concentration_model_fieldhalos'] = kwargs_mc_relation_fieldhalos
+    del kwargs_rendering['x_wdm']
     WDM = preset_model_from_name('WDM')
 
     return WDM(zlens, zsource, **kwargs_rendering)

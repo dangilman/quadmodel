@@ -2,17 +2,19 @@ import numpy as np
 from quadmodel.util import approx_theta_E
 from quadmodel.inference.sample_prior import sample_from_prior
 from scipy.optimize import minimize
+from copy import deepcopy
+
 
 def default_priors(param):
 
     if param == 'gamma_macro':
         gamma_min, gamma_max = 1.9, 2.2
         return np.random.uniform(gamma_min, gamma_max)
-    elif param == 'multipole_amplitude':
+    elif param == 'multipole_amplitude_m4':
         am_mean, am_sigma = 0.0, 0.01
         return np.random.normal(am_mean, am_sigma)
     elif param == 'multipole_amplitude_m3':
-        am_mean, am_sigma = 0.0, 0.01
+        am_mean, am_sigma = 0.0, 0.005
         return np.random.normal(am_mean, am_sigma)
     elif param == 'NARROW_LINE_Gaussian':
         source_fwhm_pc = np.random.uniform(25, 60)
@@ -225,7 +227,7 @@ class Quad(object):
 
         if multipole_amplitude_m4 is None:
             if m4_amplitude_prior is None:
-                multipole_amplitude_m4 = default_priors('multipole_amplitude')
+                multipole_amplitude_m4 = default_priors('multipole_amplitude_m4')
             else:
                 multipole_amplitude_m4 = m4_amplitude_prior[0](m4_amplitude_prior[1], m4_amplitude_prior[2])
 
@@ -337,7 +339,7 @@ class Quad(object):
         if self._zlens is None:
 
             if isinstance(self._zlens_init, float) or isinstance(self._zlens_init, int):
-                self._zlens = self._zlens_init
+                self._zlens = deepcopy(self._zlens_init)
 
             else:
                 if self._sample_zlens_pdf:
