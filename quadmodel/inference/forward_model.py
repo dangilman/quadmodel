@@ -314,7 +314,6 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
         if 'cone_opening_angle_arcsec' not in kwargs_preset_model.keys():
             # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
             kwargs_preset_model['cone_opening_angle_arcsec'] = 6 * R_ein_approx
-
         realization = preset_model(zlens, zsource, **kwargs_preset_model)
     else:
         realization_samples = np.array([])
@@ -332,6 +331,10 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
         print('source/lens parameters: ', source_samples)
         print(param_names_macro)
         print('macromodel samples: ', macromodel_samples)
+        print('\n')
+        print('keyword arguments for realization: ')
+        print('preset model function: ', preset_model)
+        print('kwargs preset model: ', kwargs_preset_model)
 
     # This sets up a baseline lens macromodel and aligns the dark matter halos to follow the path taken by the
     # light rays. This is important if the source is significantly offset from the lens centroid
