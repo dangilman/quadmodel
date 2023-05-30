@@ -39,6 +39,41 @@ class ForwardModelSimulation(object):
         self._n_macro = n_macro
         self._realization_class = realization_class
 
+    def print_settings(self):
+
+        """
+        This function prints the fixed settings of the class (for example, the dataset, priors, etc.)
+        :return:
+        """
+        print('SIMULATION NAME: ', self.simulation_name)
+        print('\n')
+        print('LENS DATA: ', self.lens_data_class)
+        print('LENS DATA (image positions): ', self.lens_data_class.x, self.lens_data_class.y)
+        print('LENS DATA (astrometric uncertainty): ', self.lens_data_class.delta_xy)
+        print('LENS DATA (normalized magnifications): ', self.lens_data_class.m)
+        print('LENS DATA (flux uncertainty): ', self.lens_data_class.delta_m)
+        print('LENS DATA (uncertainty in magnifications): ', self.lens_data_class.uncertainty_in_magnifications)
+        print('LENS DATA (use flux ratios): ', self.lens_data_class.keep_flux_ratio_index)
+        print('\n')
+        print('REALIZATION PRIORS: ')
+        for key in self.kwargs_sample_realization.keys():
+            print(key+': ', self.kwargs_sample_realization[key])
+        print('FIXED REALIZATION PRIORS', self.kwargs_realization_other)
+        for key in self.kwargs_realization_other.keys():
+            print(key+': ', self.kwargs_realization_other[key])
+        print('FIXED SUBSTRUCTURE REALIZATION: ', self.realization_class)
+        print('\n')
+        print('MACROMODEL PRIORS: ')
+        for key in self.kwargs_sample_macromodel.keys():
+            print(key+': ', self.kwargs_sample_macromodel[key])
+        print('MACROMODEL TYPE: ', self.lens_data_class.macromodel_type)
+        print('SOURCE MODEL TYPE: ', self.lens_data_class.sourcemodel_type)
+        print('\n')
+        print('SAVE REALIZATIONS: ', self.save_realizations)
+        print('IMPORTANCE WEIGHT FUNCTION: ', self.importance_weights_function)
+        print('READOUT MACROMODEL SAMPLES: ', self.readout_macromodel_samples)
+        print('n_macro: ', self.n_macro)
+
     def check_progress(self, output_path, n_cores_running=2000):
         """
         Prints thee number of accepted samples produced by the simulation
