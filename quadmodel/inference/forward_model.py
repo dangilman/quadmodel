@@ -143,7 +143,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                                                               realization_class, shift_background_realization)
         acceptance_rate_counter += 1
         # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
-        if acceptance_rate_counter == 25 or acceptance_rate_counter == 50:
+        if acceptance_rate_counter == 50:
             time_elapsed = time() - t0
             time_elapsed_minutes = time_elapsed / 60
             sampling_rate = time_elapsed_minutes / acceptance_rate_counter
