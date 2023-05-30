@@ -45,9 +45,11 @@ class ForwardModelSimulation(object):
         This function prints the fixed settings of the class (for example, the dataset, priors, etc.)
         :return:
         """
+        print('************* INFORMATION FOR PACKAGED SIMULATION *************')
         print('SIMULATION NAME: ', self.simulation_name)
         print('\n')
         print('LENS DATA: ', self.lens_data_class)
+        print('LENS/SOURCE REDSHIFTS: ', self.lens_data_class.zlens, self.lens_data_class.zsource)
         print('LENS DATA (image positions): ', self.lens_data_class.x, self.lens_data_class.y)
         print('LENS DATA (astrometric uncertainty): ', self.lens_data_class.delta_xy)
         print('LENS DATA (normalized magnifications): ', self.lens_data_class.m)
@@ -73,6 +75,8 @@ class ForwardModelSimulation(object):
         print('IMPORTANCE WEIGHT FUNCTION: ', self.importance_weights_function)
         print('READOUT MACROMODEL SAMPLES: ', self.readout_macromodel_samples)
         print('n_macro: ', self.n_macro)
+        print('\n')
+        print('\n')
 
     def check_progress(self, output_path, n_cores_running=2000):
         """
