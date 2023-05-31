@@ -12,8 +12,8 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
-    lensmodel, kwargs_lens_init = lens_system.get_lensmodel()
-    source_x, source_y = lensmodel.ray_shooting(x_image, y_image, kwargs_lens_init)
+    lensmodel, kwargs_lens_true = lens_system.get_lensmodel()
+    source_x, source_y = lensmodel.ray_shooting(x_image, y_image, kwargs_lens_true)
     source_x = np.mean(source_x)
     source_y = np.mean(source_y)
 
@@ -23,7 +23,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
     (nx, ny) = hst_data.image_data.shape
     coordinate_system = Coordinates(pix2angle, ra_at_x0, dec_at_x0)
     ra_coords, dec_coords = coordinate_system.coordinate_grid(nx, ny)
-    tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_init)
+    tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_true)
     lens_model_list_fit = ['TABULATED_DEFLECTIONS']
 
     if initialize_from_fit:
@@ -197,11 +197,10 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
                                   kwargs_constraints, kwargs_likelihood, kwargs_params)
     _ = fitting_seq.fit_sequence(fitting_kwargs_list)
     kwargs_result = fitting_seq.best_fit()
-    lens_model_list_true, lens_redshift_list_true, kwargs_lens_true, _ = lens_system._get_lenstronomy_args()
     astropy_class = lens_system.astropy
-    kwargs_model_true = {'lens_model_list': lens_model_list_true,
-                         'lens_redshift_list': lens_redshift_list_true,
-                         'z_source': lens_system.zsource,
+    kwargs_model_true = {'lens_model_list': lensmodel.lens_model_list,
+                         'lens_redshift_list': lensmodel.redshift_list,
+                         'z_source': lensmodel.z_source,
                          'multi_plane': True,
                          'cosmo': astropy_class,
                          'source_light_model_list': source_model_list,
