@@ -12,7 +12,7 @@ from quadmodel.Solvers.fit_mock import fit_mock
 
 
 def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, path_to_simulation_output, path_to_data,
-                     fitting_kwargs_list, initialize_from_fit=False, path_to_smooth_lens_fit=None, add_shapelets_source=False,
+                     initialize_from_fit=False, path_to_smooth_lens_fit=None, add_shapelets_source=False,
                      n_max_source=10, plot_results=False, overwrite=False, random_seed=None,
                      run_index_list=None, astrometric_uncertainty=0.005, delta_x_offset_init=None,
                      delta_y_offset_init=None):

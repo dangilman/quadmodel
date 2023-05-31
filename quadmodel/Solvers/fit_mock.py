@@ -213,7 +213,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
 
     kwargs_result_true = deepcopy(kwargs_result)
     kwargs_result_true['kwargs_lens'] = kwargs_lens_true
-    
+
     fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
                                                  kwargs_likelihood, kwargs_params, kwargs_result_true)
     return fitting_seq, fitting_kwargs_class
