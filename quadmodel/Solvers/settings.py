@@ -1,21 +1,19 @@
-class HierarchicalSettingsDefault(object):
+class HierarchicalSettings(object):
 
-    """
-    Good for dealing with dark matter halos between 10^5 - 10^10 M_sun
-    with small source sizes <10 pc
-    """
-
-    def __init__(self, log_mass_cut_global=7.0):
-
-        self.log_mass_cut_global = log_mass_cut_global
-        self.set_aperture_units('ANGLES')
-
-    def set_aperture_units(self, units):
-        self._aperture_units = units
-
-    @property
-    def aperture_units(self):
-        return self._aperture_units
+    def __init__(self, log_m_cut=7.0, aperture_size_small_front=0.3,
+                 aperture_size_small_back=0.2):
+        """
+        This class renders halos everywhere with m>10^log_m_cut,
+        and only generates halos smaller than this near a lensed image
+        :param log_m_cut:
+        """
+        self.mass_global_front = [log_m_cut, log_m_cut, log_m_cut]
+        self.mass_global_back = [12, log_m_cut, log_m_cut]
+        self.aperture_mass_list_front = [log_m_cut, -10, -10]
+        self.aperture_mass_list_back = [12, log_m_cut, -10]
+        self.aperture_sizes_front = [100, aperture_size_small_front, aperture_size_small_front]
+        self.aperture_sizes_back = [100, 100, aperture_size_small_back]
+        self.re_optimize_list = [True, True, True]
 
     @property
     def n_particles(self):
@@ -25,73 +23,21 @@ class HierarchicalSettingsDefault(object):
     def n_iterations(self):
         return 350
 
-    @property
-    def n_iterations_background(self):
-        return 2
+class HierarchicalSettingsNoSubstructure(object):
 
-    @property
-    def n_iterations_foreground(self):
-        return 2
-
-    @property
-    def foreground_settings(self):
-        # add this only within the window
-        aperture_masses = [self.log_mass_cut_global, -10.]
-        # add this everywhere
-        globalmin_masses = [self.log_mass_cut_global] * 2
-        # window size
-        window_sizes = [100, 0.2]
-        # controls starting points for re-optimizations
-        scale = [1, 0.1]
-        # determines whether to use PSO for re-optimizations
-        particle_swarm_reopt = [True, False]
-        # wheter to actually re-fit the lens model
-        optimize_iteration = [True, True]
-        # whether to re-optimize (aka start from a model very close to input model)
-        re_optimize_iteration = [False, True]
-
-        return aperture_masses, globalmin_masses, window_sizes, scale, optimize_iteration, particle_swarm_reopt, \
-               re_optimize_iteration, self.aperture_units
-
-    @property
-    def background_settings(self):
-        # add this only within the window
-        aperture_masses = [self.log_mass_cut_global, 0]
-        # add this everywhere
-        globalmin_masses = [self.log_mass_cut_global] * 2
-        # window size
-        window_sizes = [100, 0.2]
-        # controls starting points for re-optimizations
-        scale = [1, 0.5]
-        # determines whether to use PSO for re-optimizations
-        particle_swarm_reopt = [False, False]
-        # wheter to actually re-fit the lens model
-        optimize_iteration = [True, True]
-        # whether to re-optimize (aka start from a model very close to input model)
-        re_optimize_iteration = [True, True]
-
-        return aperture_masses, globalmin_masses, window_sizes, scale, optimize_iteration, particle_swarm_reopt, \
-               re_optimize_iteration, self.aperture_units
-
-class HierarchicalSettingsULDM(object):
-
-    """
-    Optimized for ULDM realizations with a large number of Gaussian flucutations in the main lens plane
-    """
-
-    def __init__(self):
-        self.set_aperture_units('ANGLES')
-
-    def set_aperture_units(self, units):
-        self._aperture_units = units
-
-    @property
-    def aperture_units(self):
-        return self._aperture_units
-
-    @property
-    def log_mass_cut_global(self):
-        return 7.
+    def __init__(self, *args, **kargs):
+        """
+        This class renders halos everywhere with m>10^log_m_cut,
+        and only generates halos smaller than this near a lensed image
+        :param log_m_cut:
+        """
+        self.mass_global_front = [100]
+        self.mass_global_back = [100]
+        self.aperture_mass_list_front = [100]
+        self.aperture_mass_list_back = [100]
+        self.aperture_sizes_front = [100]
+        self.aperture_sizes_back = [100]
+        self.re_optimize_list = [True]
 
     @property
     def n_particles(self):
@@ -99,103 +45,4 @@ class HierarchicalSettingsULDM(object):
 
     @property
     def n_iterations(self):
-        return 350
-
-    @property
-    def n_iterations_background(self):
-        return 2
-
-    @property
-    def n_iterations_foreground(self):
-        return 2
-
-    @property
-    def foreground_settings(self):
-        # add this only within the window
-        aperture_masses = [self.log_mass_cut_global, -10.0]
-        # add this everywhere
-        globalmin_masses = [self.log_mass_cut_global] * 2
-        # window size
-        window_sizes = [100, 0.3]
-        # controls starting points for re-optimizations
-        scale = [1, 0.1]
-        # determines whether to use PSO for re-optimizations
-        particle_swarm_reopt = [True, False]
-        # wheter to actually re-fit the lens model
-        optimize_iteration = [True, True]
-        # whether to re-optimize (aka start from a model very close to input model)
-        re_optimize_iteration = [False, True]
-
-        return aperture_masses, globalmin_masses, window_sizes, scale, optimize_iteration, particle_swarm_reopt, \
-               re_optimize_iteration, self.aperture_units
-
-    @property
-    def background_settings(self):
-        # add this only within the window
-        aperture_masses = [self.log_mass_cut_global, 1.0]
-        # add this everywhere
-        globalmin_masses = [self.log_mass_cut_global] * 2
-        # window size
-        window_sizes = [100, 0.3]
-        # controls starting points for re-optimizations
-        scale = [1, 0.5]
-        # determines whether to use PSO for re-optimizations
-        particle_swarm_reopt = [False, False]
-        # wheter to actually re-fit the lens model
-        optimize_iteration = [True, True]
-        # whether to re-optimize (aka start from a model very close to input model)
-        re_optimize_iteration = [True, True]
-
-        return aperture_masses, globalmin_masses, window_sizes, scale, optimize_iteration, particle_swarm_reopt, \
-               re_optimize_iteration, self.aperture_units
-
-class SettingsClass(object):
-
-    def __init__(self, foreground_kwargs, background_kwargs, n_particles=30, n_iterations=350, aperture_units='ANGLES'):
-
-        self._names = ['aperture_masses', 'globalmin_masses', 'window_sizes', 'scale', 'particle_swarm_reopt',
-                 'optimize_iteration', 're_optimize_iteration']
-
-        self.n_particles = n_particles
-        self.n_iterations = n_iterations
-
-        self.n_iterations_foreground = self._set_foreground(foreground_kwargs)
-        self.n_iterations_background = self._set_background(background_kwargs)
-
-        self.set_aperture_units(aperture_units)
-
-    def set_aperture_units(self, units):
-        self._aperture_units = units
-
-    @property
-    def aperture_units(self):
-        return self._aperture_units
-
-    @property
-    def foreground_settings(self):
-        out = self._foreground
-        return out[0], out[1], out[2], out[3], out[4], out[5], out[6], self.aperture_units
-
-    @property
-    def background_settings(self):
-        out = self._background
-        return out[0], out[1], out[2], out[3], out[4], out[5], out[6], self.aperture_units
-
-    def _set_foreground(self, kwargs):
-
-        self._check(kwargs)
-        self._foreground = [kwargs[name] for name in self._names]
-
-        return len(kwargs['aperture_masses'])
-
-    def _set_background(self, kwargs):
-
-        self._check(kwargs)
-        self._background = [kwargs[name] for name in self._names]
-        return len(kwargs['aperture_masses'])
-
-    def _check(self, kwargs):
-
-        L = len(kwargs['aperture_masses'])
-        for name in self._names:
-            assert L == len(kwargs[name])
+        return 50

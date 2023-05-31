@@ -25,6 +25,9 @@ def default_priors(param):
     elif param == 'CO11-10_Gaussian':
         source_fwhm_pc = np.random.uniform(5.0, 15.0)
         return source_fwhm_pc
+    elif param == 'EFFECTIVE_POINT_SOURCE':
+        source_fwhm_pc = np.random.uniform(0.01, 0.02)
+        return source_fwhm_pc
     elif param == 'DOUBLE_NL_Gaussian':
         source_fwhm_pc = np.random.uniform(25, 80)
         dx = np.random.uniform(1e-5, 1e-5)
@@ -311,7 +314,8 @@ class Quad(object):
 
     def generate_sourcemodel(self):
 
-        if self.sourcemodel_type in ['NARROW_LINE_Gaussian', 'midIR_Gaussian', 'CO11-10_Gaussian']:
+        if self.sourcemodel_type in ['NARROW_LINE_Gaussian', 'midIR_Gaussian', 'CO11-10_Gaussian',
+                                     'EFFECTIVE_POINT_SOURCE']:
 
             source_size_pc = default_priors(self.sourcemodel_type)
             kwargs_source_model = {'source_model': 'GAUSSIAN'}

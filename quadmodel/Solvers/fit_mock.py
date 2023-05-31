@@ -6,7 +6,7 @@ from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from copy import deepcopy
 
 
-def fit_mock(fitting_kwargs_list, hst_data, simulation_output, initialize_from_fit,
+def fit_mock(hst_data, simulation_output, initialize_from_fit,
                 path_to_smooth_lens_fit, add_shapelets_source, n_max_source, astrometric_uncertainty,
                 delta_x_offset_init, delta_y_offset_init):
 
@@ -41,8 +41,8 @@ def fit_mock(fitting_kwargs_list, hst_data, simulation_output, initialize_from_f
         print('USING RANDOM LIGHT MODELS')
         source_model_list = ['SERSIC_ELLIPSE']
         kwargs_source_init = [
-            {'amp': 1, 'R_sersic': 0.5,
-             'n_sersic': 5.0, 'e1': 0.001, 'e2': 0.01,
+            {'amp': 1, 'R_sersic': 0.2,
+             'n_sersic': 4.0, 'e1': 0.001, 'e2': 0.01,
              'center_x': source_x, 'center_y': source_x}]
         lens_light_model_list = ['SERSIC_ELLIPSE']
         kwargs_lens_light_init = [
@@ -63,7 +63,7 @@ def fit_mock(fitting_kwargs_list, hst_data, simulation_output, initialize_from_f
     if add_shapelets_source:
         source_model_list += ['SHAPELETS']
         kwargs_source_sigma_shapelets, kwargs_lower_source_shapelets, \
-        kwargs_upper_source_shapelets, kwargs_fixed_source_shapelets = source_params_shapelets(n_max_source, source_x,
+        kwargs_upper_source_shapelets, kwargs_fixed_source_shapelets = source_params_shapelets(1, source_x,
                                                                                                source_y)
         kwargs_source_sigma += kwargs_source_sigma_shapelets
         kwargs_lower_source += kwargs_lower_source_shapelets
@@ -157,7 +157,7 @@ def fit_mock(fitting_kwargs_list, hst_data, simulation_output, initialize_from_f
 
     source_remove_fixed = []
     for i in range(0, len(source_model_list)):
-        keys_remove_source = [key for key in source_params[0][i].keys() if key not in ['center_x', 'center_y']]
+        keys_remove_source = [key for key in source_params[0][i].keys() if key not in ['center_x', 'center_y', 'n_max']]
         remove_source = [i, keys_remove_source]
         source_remove_fixed.append(remove_source)
     lens_light_remove_fixed = []
@@ -166,17 +166,36 @@ def fit_mock(fitting_kwargs_list, hst_data, simulation_output, initialize_from_f
         remove_light = [i, keys_remove_lens_light]
         lens_light_remove_fixed.append(remove_light)
 
-    thread_count = fitting_kwargs_list[0][1]['threadCount']
-    fix_point_sources = [
-        ['PSO', {'sigma_scale': 1.0, 'n_particles': 50, 'n_iterations': 150, 'threadCount': thread_count}],
-        ['update_settings', {'source_remove_fixed': source_remove_fixed,
-                             'lens_light_remove_fixed': lens_light_remove_fixed}]
-    ]
+    update_settings = {'lens_light_remove_fixed': lens_light_remove_fixed,
+                       'source_remove_fixed': source_remove_fixed}
 
-    fitting_kwargs_list_run = fix_point_sources + fitting_kwargs_list
+    if add_shapelets_source:
+        n_run = 150
+        n_iterations = 150
+        update_settings['source_add_fixed'] = [
+            [1, ['n_max', 'center_x', 'center_y'], [int(n_max_source), source_x, source_y]]]
+        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': 50, 'threadCount': 1}],
+                               ['update_settings', update_settings],
+                               ['PSO', {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': n_iterations,
+                                 'threadCount': 1}],
+                               ['MCMC',  {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1,
+                                 'threadCount': 1}]
+                               ]
+
+    else:
+        n_run = 150
+        n_iterations = 100
+        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': 50, 'threadCount': 1}],
+                           ['update_settings', update_settings],
+                           ['PSO', {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': n_iterations,
+                             'threadCount': 1}],
+                           ['MCMC',
+                            {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1, 'threadCount': 1}]
+                           ]
+
     fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model_fit,
                                   kwargs_constraints, kwargs_likelihood, kwargs_params)
-    _ = fitting_seq.fit_sequence(fitting_kwargs_list_run)
+    _ = fitting_seq.fit_sequence(fitting_kwargs_list)
     kwargs_result = fitting_seq.best_fit()
     lens_model_list_true, lens_redshift_list_true, kwargs_lens_true, _ = lens_system._get_lenstronomy_args()
     astropy_class = lens_system.astropy
@@ -194,13 +213,7 @@ def fit_mock(fitting_kwargs_list, hst_data, simulation_output, initialize_from_f
 
     kwargs_result_true = deepcopy(kwargs_result)
     kwargs_result_true['kwargs_lens'] = kwargs_lens_true
-    #     # update the likelihood mask with the one tht cuts out images and parts far from the arc
-    #     print('log_L before new mask: ', fitting_seq.best_fit_likelihood)
-    #     kwargs_likelihood['image_likelihood_mask_list'] = [hst_data.custom_mask]
-    #     fitting_seq.kwargs_likelhood = kwargs_likelihood
-    #     print('log_L after new mask: ', fitting_seq.best_fit_likelihood)
-    #     a=input('continue')
-
+    
     fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
                                                  kwargs_likelihood, kwargs_params, kwargs_result_true)
     return fitting_seq, fitting_kwargs_class

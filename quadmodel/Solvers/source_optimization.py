@@ -52,7 +52,7 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
                                                                    delta_y_offset_init, add_shapelets_source, n_max_source)
 
         elif launch_fuction == 'MOCK':
-            fitting_seq, fitting_kwargs_class = fit_mock(fitting_kwargs_list, hst_data, simulation_output,
+            fitting_seq, fitting_kwargs_class = fit_mock(hst_data, simulation_output,
                                                         initialize_from_fit,
                                                         path_to_smooth_lens_fit, add_shapelets_source,
                                                         n_max_source, astrometric_uncertainty,
