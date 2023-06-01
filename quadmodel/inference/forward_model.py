@@ -289,7 +289,7 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
     magnifications = np.array(magnifications)
     _flux_ratios_data = magnifications[1:] / magnifications[0]
 
-    delta_x, delta_y = np.random.normal(0, astrometric_uncertainty), np.random.normal(0, astrometric_uncertainty)
+    delta_x, delta_y = np.random.normal(0, astrometric_uncertainty, 4), np.random.normal(0, astrometric_uncertainty, 4)
     lens_data_class_sampling = deepcopy(lens_data_class)
     lens_data_class_sampling.x += delta_x
     lens_data_class_sampling.y += delta_y
