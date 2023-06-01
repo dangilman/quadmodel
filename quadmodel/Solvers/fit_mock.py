@@ -7,8 +7,8 @@ from copy import deepcopy
 
 
 def fit_mock(hst_data, simulation_output, initialize_from_fit,
-                path_to_smooth_lens_fit, add_shapelets_source, n_max_source, astrometric_uncertainty,
-                delta_x_offset_init, delta_y_offset_init):
+             path_to_smooth_lens_fit, add_shapelets_source, n_max_source, astrometric_uncertainty,
+             delta_x_offset_init, delta_y_offset_init):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
@@ -16,6 +16,12 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
     source_x, source_y = lensmodel.ray_shooting(x_image, y_image, kwargs_lens_true)
     source_x = np.mean(source_x)
     source_y = np.mean(source_y)
+
+    for i, lens_model_name in enumerate(lensmodel.lens_model_list):
+        if lens_model_name in ['EPL', 'SHEAR', 'MULTIPOLE', 'SIS']:
+            print('kwargs '+lens_model_name+': ', kwargs_lens_true[i])
+        else:
+            break
 
     ra_at_x0 = hst_data.ra_at_xy_0
     dec_at_x0 = hst_data.dec_at_xy_0
@@ -117,15 +123,12 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
                          'force_no_add_image': True,
                          'source_marg': False,
                          'check_matched_source_position': False,
-                         'astrometric_likelihood': True,
-                         'image_position_uncertainty': astrometric_uncertainty,
                          'prior_lens': prior_lens,
                          'prior_lens_light': prior_lens_light,
                          'image_likelihood_mask_list': [hst_data.likelihood_mask]
                          }
 
     image_band = [kwargs_data, kwargs_psf, kwargs_numerics]
-
     multi_band_list = [image_band]
     kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': 'multi-linear'}
 
@@ -136,24 +139,27 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
                          kwargs_lower_lens_light, kwargs_upper_lens_light]
     point_source_params = [kwargs_ps_init, kwargs_ps_sigma, kwargs_ps_fixed, kwargs_ps_lower, kwargs_ps_upper]
 
-    if delta_x_offset_init is None or delta_y_offset_init is None:
-        special_init = {'delta_x_image': [0.0] * 4, 'delta_y_image': [0.0] * 4}
-    else:
-        special_init = {'delta_x_image': delta_x_offset_init, 'delta_y_image': delta_y_offset_init}
-    special_sigma = {'delta_x_image': [astrometric_uncertainty] * 4, 'delta_y_image': [astrometric_uncertainty] * 4}
-    special_lower = {'delta_x_image': [-5*astrometric_uncertainty] * 4,
-                     'delta_y_image': [-5*astrometric_uncertainty] * 4}
-    special_upper = {'delta_x_image': [5*astrometric_uncertainty] * 4,
-                     'delta_y_image': [5*astrometric_uncertainty] * 4}
-    special_fixed = [{}]
-    kwargs_special = [special_init, special_sigma, special_fixed, special_lower, special_upper]
-
     kwargs_params = {'lens_model': lens_params,
                      'source_model': source_params,
                      'lens_light_model': lens_light_params,
-                     'point_source_model': point_source_params,
-                     'special': kwargs_special
+                     'point_source_model': point_source_params
                      }
+
+    if astrometric_uncertainty > 0:
+        kwargs_likelihood['astrometric_likelihood'] = True
+        kwargs_likelihood['image_position_uncertainty'] = astrometric_uncertainty
+        if delta_x_offset_init is None or delta_y_offset_init is None:
+            special_init = {'delta_x_image': [0.0] * 4, 'delta_y_image': [0.0] * 4}
+        else:
+            special_init = {'delta_x_image': delta_x_offset_init, 'delta_y_image': delta_y_offset_init}
+        special_sigma = {'delta_x_image': [astrometric_uncertainty] * 4, 'delta_y_image': [astrometric_uncertainty] * 4}
+        special_lower = {'delta_x_image': [-5 * astrometric_uncertainty] * 4,
+                         'delta_y_image': [-5 * astrometric_uncertainty] * 4}
+        special_upper = {'delta_x_image': [5 * astrometric_uncertainty] * 4,
+                         'delta_y_image': [5 * astrometric_uncertainty] * 4}
+        special_fixed = [{}]
+        kwargs_special = [special_init, special_sigma, special_fixed, special_lower, special_upper]
+        kwargs_params['special'] = kwargs_special
 
     source_remove_fixed = []
     for i in range(0, len(source_model_list)):
@@ -170,28 +176,21 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
                        'source_remove_fixed': source_remove_fixed}
 
     if add_shapelets_source:
-        n_run = 150
-        n_iterations = 150
         update_settings['source_add_fixed'] = [
             [1, ['n_max', 'center_x', 'center_y'], [int(n_max_source), source_x, source_y]]]
-        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': 50, 'threadCount': 1}],
+        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 20, 'n_iterations': 50, 'threadCount': 1}],
                                ['update_settings', update_settings],
-                               ['PSO', {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': n_iterations,
-                                 'threadCount': 1}],
-                               ['MCMC',  {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1,
-                                 'threadCount': 1}]
+                               ['PSO', {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': 100,
+                                        'threadCount': 1}],
+                               ['MCMC', {'n_burn': 0, 'n_run': 200, 'walkerRatio': 4, 'sigma_scale': .1,
+                                         'threadCount': 1}]
                                ]
 
     else:
-        n_run = 150
-        n_iterations = 100
-        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': 50, 'threadCount': 1}],
-                           ['update_settings', update_settings],
-                           ['PSO', {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': n_iterations,
-                             'threadCount': 1}],
-                           ['MCMC',
-                            {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1, 'threadCount': 1}]
-                           ]
+        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 20, 'n_iterations': 50, 'threadCount': 1}],
+                    ['update_settings', update_settings],
+                    ['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': 100, 'threadCount': 1}],
+                    ['MCMC', {'n_burn': 0, 'n_run': 150, 'walkerRatio': 4, 'sigma_scale': .1, 'threadCount': 1}]]
 
     fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model_fit,
                                   kwargs_constraints, kwargs_likelihood, kwargs_params)
@@ -212,7 +211,9 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
 
     kwargs_result_true = deepcopy(kwargs_result)
     kwargs_result_true['kwargs_lens'] = kwargs_lens_true
-
+    #likelihood_mask_masked_images = mask_images(x_image, y_image, 5, hst_data.likelihood_mask, coordinate_system)
+    #kwargs_likelihood['image_likelihood_mask_list'] = [likelihood_mask_masked_images]
     fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
                                                  kwargs_likelihood, kwargs_params, kwargs_result_true)
+
     return fitting_seq, fitting_kwargs_class
