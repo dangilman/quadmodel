@@ -261,7 +261,7 @@ class Quad(object):
 
         elif self.macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE_34':
             optimization_routine = 'fixed_shear_powerlaw_multipole_34'
-            m3_orientation = np.random.uniform(0, 2*np.pi)
+            m3_orientation = np.random.uniform(0, np.pi/3)
             constrain_params = {'shear': shear_amplitude, 'delta_phi_m3': m3_orientation}
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole_34
             model = EPLShearMultipole_34(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4,
