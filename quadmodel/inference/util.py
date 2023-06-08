@@ -81,7 +81,8 @@ def delete_custom_logL(kwargs_fitting_seq):
     return kwargs_fitting_seq
 
 def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, keep_chi2=False,
-                   filename_suffix=None, keep_kwargs_fitting_seq=False, keep_macromodel_samples=False):
+                   filename_suffix=None, keep_kwargs_fitting_seq=False, keep_macromodel_samples=False,
+                   save_subset_kwargs_fitting_seq=False):
     """
     This function compiles output from multiple jobs with output stored in different folders
     :param output_path: the path to the directory where job_1, job_2, ... are located
@@ -92,6 +93,9 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     :param filename_suffix: a string that appends to the end of a filename
     :param keep_kwargs_fitting_seq: bool; keep the FittingSequenceKwargs class for each sample
     :param keep_macromodel_samples: bool; keep macromodel samples
+    :param save_subset_kwargs_fitting_seq: saves just 100 of the kwargs fitting sequence classes.
+    The first 25 are the best 25, the middle 50 are randomly selected, and the last 25 are the worst 25
+
     :return: an instance of FullSimulationContainer that contains the data for the simulation
     """
 
@@ -230,9 +234,30 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     if keep_chi2:
         assert len(chi2_imaging_data) == params.shape[0]
     if keep_kwargs_fitting_seq:
-        assert len(fitting_seq_kwargs) == params.shape[0]
-    container = FullSimulationContainer(realizations_and_lens_systems, params,
+        if save_subset_kwargs_fitting_seq:
+            idx_sort = np.argsort(chi2_imaging_data) # this is actually the log-likelihood even though it's called chi2
+            best_25 = idx_sort[0:25]
+            worst_25 = idx_sort[25:]
+            start_idx = 25
+            end_idx = len(fitting_seq_kwargs)-25
+            random_inds = np.random.randint(start_idx, end_idx, 50)
+            random_50 = idx_sort[random_inds]
+            fitting_seq_kwargs_out = []
+            for idx in best_25:
+                fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
+            for idx in random_50:
+                fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
+            for idx in worst_25:
+                fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
+            container = FullSimulationContainer(realizations_and_lens_systems, params,
+                                                fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
+        else:
+            assert len(fitting_seq_kwargs) == params.shape[0]
+            container = FullSimulationContainer(realizations_and_lens_systems, params,
                                         fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
+    else:
+        container = FullSimulationContainer(realizations_and_lens_systems, params,
+                                            fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
     return container
 
 
