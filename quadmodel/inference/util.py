@@ -236,11 +236,11 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     if keep_kwargs_fitting_seq:
         if save_subset_kwargs_fitting_seq:
             idx_sort = np.argsort(chi2_imaging_data) # this is actually the log-likelihood even though it's called chi2
-            best_25 = idx_sort[0:25]
-            worst_25 = idx_sort[25:]
-            start_idx = 25
-            end_idx = len(fitting_seq_kwargs)-25
-            random_inds = np.random.randint(start_idx, end_idx, 50)
+            n_keep_best_worst = 25
+            end_idx = len(fitting_seq_kwargs) - n_keep_best_worst
+            best_25 = idx_sort[0:n_keep_best_worst]
+            worst_25 = idx_sort[end_idx:]
+            random_inds = np.random.randint(n_keep_best_worst, end_idx, 50)
             random_50 = idx_sort[random_inds]
             fitting_seq_kwargs_out = []
             saved_inds = []
