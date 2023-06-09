@@ -243,18 +243,24 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             random_inds = np.random.randint(start_idx, end_idx, 50)
             random_50 = idx_sort[random_inds]
             fitting_seq_kwargs_out = []
+            saved_inds = []
             for idx in best_25:
                 fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
+                saved_inds.append(idx)
             for idx in random_50:
                 fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
+                saved_inds.append(idx)
             for idx in worst_25:
                 fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
+                saved_inds.append(idx)
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                                 fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
+            container.kwargs_fitting_seq_saved_inds = saved_inds
         else:
             assert len(fitting_seq_kwargs) == params.shape[0]
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                         fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
+            container.kwargs_fitting_seq_saved_inds = None
     else:
         container = FullSimulationContainer(realizations_and_lens_systems, params,
                                             fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
