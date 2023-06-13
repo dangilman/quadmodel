@@ -230,8 +230,12 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     assert params.shape[0] == fluxes.shape[0]
     if keep_macromodel_samples:
         assert macro_samples.shape[0] == params.shape[0]
+    else:
+        macro_samples = None
     if keep_chi2:
         assert len(chi2_imaging_data) == params.shape[0]
+    else:
+        chi2_imaging_data = None
     if keep_kwargs_fitting_seq:
         if save_subset_kwargs_fitting_seq:
             idx_sort = np.argsort(chi2_imaging_data) # this is actually the log-likelihood even though it's called chi2
