@@ -279,12 +279,11 @@ class ForwardModelSimulation(object):
                         print('could not find chi2 file ' + filename_chi2)
                         proceed = False
                         break
+                if len(_chi2) != num_realizations:
+                    print('chi2 file has wrong shape')
+                    proceed = False
 
             if proceed is False:
-                continue
-
-            if len(_chi2) != num_realizations:
-                print('chi2 file has wrong shape')
                 continue
 
             if keep_kwargs_fitting_seq:
@@ -365,18 +364,24 @@ class ForwardModelSimulation(object):
                 random_inds = np.random.randint(25, end_idx, 50)
                 random_50 = idx_sort[random_inds]
                 fitting_seq_kwargs_out = []
+                saved_inds = []
                 for idx in best_25:
                     fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
+                    saved_inds.append(idx)
                 for idx in random_50:
                     fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
+                    saved_inds.append(idx)
                 for idx in worst_25:
                     fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
+                    saved_inds.append(idx)
                 container = FullSimulationContainer(realizations_and_lens_systems, params,
                                                     fluxes, chi2_imaging_data, fitting_seq_kwargs_out, macro_samples)
+                container.kwargs_fitting_seq_saved_inds = saved_inds
             else:
                 assert len(fitting_seq_kwargs) == params.shape[0]
                 container = FullSimulationContainer(realizations_and_lens_systems, params,
                                                     fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
+                container.kwargs_fitting_seq_saved_inds = None
         else:
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                                 fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
