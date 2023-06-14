@@ -8,7 +8,7 @@ from copy import deepcopy
 
 def fit_mock(hst_data, simulation_output, initialize_from_fit,
              path_to_smooth_lens_fit, add_shapelets_source, n_max_source, astrometric_uncertainty,
-             delta_x_offset_init, delta_y_offset_init):
+             delta_x_offset_init, delta_y_offset_init, super_sample_factor):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
@@ -27,9 +27,11 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
     dec_at_x0 = hst_data.dec_at_xy_0
     pix2angle = hst_data.transform_pix2angle
     (nx, ny) = hst_data.image_data.shape
-    coordinate_system = Coordinates(pix2angle, ra_at_x0, dec_at_x0)
-    ra_coords, dec_coords = coordinate_system.coordinate_grid(nx, ny)
-    tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_true)
+    # coordinate_system = Coordinates(pix2angle, ra_at_x0, dec_at_x0)
+    # ra_coords, dec_coords = coordinate_system.coordinate_grid(nx, ny)
+    # tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_true)
+    tabulated_lens_model = FixedLensModelNew(nx, ny, pix2angle, ra_at_x0, dec_at_x0,
+                                             lensmodel, kwargs_lens_true, super_sample_factor)
     lens_model_list_fit = ['TABULATED_DEFLECTIONS']
 
     if initialize_from_fit:
@@ -109,7 +111,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
                         'fixed_magnification_list': [True],
                         'tabulated_deflection_angles': tabulated_lens_model}
 
-    kwargs_numerics = {'supersampling_factor': 1, 'supersampling_convolution': False}
+    kwargs_numerics = {'supersampling_factor': super_sampling_factor, 'supersampling_convolution': False}
     kwargs_constraints = {
         'num_point_source_list': [4],
         'point_source_offset': True
@@ -206,7 +208,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
 
     fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model_fit,
                                   kwargs_constraints, kwargs_likelihood, kwargs_params)
-    _ = fitting_seq.fit_sequence(fitting_kwargs_list)
+    chain_list = fitting_seq.fit_sequence(fitting_kwargs_list)
     kwargs_result = fitting_seq.best_fit()
     astropy_class = lens_system.astropy
     kwargs_model_true = {'lens_model_list': lensmodel.lens_model_list,
@@ -228,4 +230,4 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
     fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
                                                  kwargs_likelihood, kwargs_params, kwargs_result_true)
 
-    return fitting_seq, fitting_kwargs_class
+    return fitting_seq, fitting_kwargs_class, chain_list
