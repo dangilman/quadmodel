@@ -195,7 +195,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
     else:
         if initialize_from_fit:
             n_iterations = 50
-            n_run = 50
+            n_run = 100
         else:
             n_iterations = 100
             n_run = 150
