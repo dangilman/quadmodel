@@ -176,21 +176,33 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
                        'source_remove_fixed': source_remove_fixed}
 
     if add_shapelets_source:
+        if initialize_from_fit:
+            n_iterations = 50
+            n_run = 100
+        else:
+            n_iterations = 100
+            n_run = 200
         update_settings['source_add_fixed'] = [
             [1, ['n_max', 'center_x', 'center_y'], [int(n_max_source), source_x, source_y]]]
         fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 20, 'n_iterations': 50, 'threadCount': 1}],
                                ['update_settings', update_settings],
-                               ['PSO', {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': 100,
+                               ['PSO', {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': n_iterations,
                                         'threadCount': 1}],
-                               ['MCMC', {'n_burn': 0, 'n_run': 200, 'walkerRatio': 4, 'sigma_scale': .1,
+                               ['MCMC', {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1,
                                          'threadCount': 1}]
                                ]
 
     else:
+        if initialize_from_fit:
+            n_iterations = 50
+            n_run = 50
+        else:
+            n_iterations = 100
+            n_run = 150
         fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 20, 'n_iterations': 50, 'threadCount': 1}],
                     ['update_settings', update_settings],
-                    ['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': 100, 'threadCount': 1}],
-                    ['MCMC', {'n_burn': 0, 'n_run': 150, 'walkerRatio': 4, 'sigma_scale': .1, 'threadCount': 1}]]
+                    ['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': n_iterations, 'threadCount': 1}],
+                    ['MCMC', {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1, 'threadCount': 1}]]
 
     fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model_fit,
                                   kwargs_constraints, kwargs_likelihood, kwargs_params)
