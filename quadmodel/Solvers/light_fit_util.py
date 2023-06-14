@@ -3,7 +3,7 @@ import numpy as np
 from lenstronomy.Plots.model_plot import ModelPlot
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from scipy.interpolate import RegularGridInterpolator
-
+from lenstronomy.ImSim.Numerics.grid import RegularGrid
 __all__ = ['source_params_sersic_ellipse', 'lens_light_params_sersic_ellipse',
            'lensmodel_params', 'ps_params', 'mask_images',
            'source_params_shapelets', 'FittingSequenceKwargs', 'customized_mask', 'FixedLensModel', 'FixedLensModelNew']
@@ -174,7 +174,6 @@ class FixedLensModel(object):
 
         return alpha_x, alpha_y
 
-from lenstronomy.ImSim.Numerics.grid import RegularGrid
 class FixedLensModelNew(object):
 
     def __init__(self, nx, ny, transform_pix2angle, ra_at_xy_0, dec_at_xy_0,

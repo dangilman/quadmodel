@@ -22,7 +22,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
             print('kwargs '+lens_model_name+': ', kwargs_lens_true[i])
         else:
             break
-
+    print('super sampling: ', super_sample_factor)
     ra_at_x0 = hst_data.ra_at_xy_0
     dec_at_x0 = hst_data.dec_at_xy_0
     pix2angle = hst_data.transform_pix2angle
