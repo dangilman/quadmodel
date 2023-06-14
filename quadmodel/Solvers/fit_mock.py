@@ -111,7 +111,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
                         'fixed_magnification_list': [True],
                         'tabulated_deflection_angles': tabulated_lens_model}
 
-    kwargs_numerics = {'supersampling_factor': super_sampling_factor, 'supersampling_convolution': False}
+    kwargs_numerics = {'supersampling_factor': super_sample_factor, 'supersampling_convolution': False}
     kwargs_constraints = {
         'num_point_source_list': [4],
         'point_source_offset': True
