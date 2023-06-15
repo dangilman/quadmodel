@@ -82,7 +82,7 @@ def delete_custom_logL(kwargs_fitting_seq):
 
 def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, keep_chi2=False,
                    filename_suffix=None, keep_kwargs_fitting_seq=False, keep_macromodel_samples=False,
-                   save_subset_kwargs_fitting_seq=False, accept_partial_completion=False):
+                   save_subset_kwargs_fitting_seq=False):
     """
     This function compiles output from multiple jobs with output stored in different folders
     :param output_path: the path to the directory where job_1, job_2, ... are located
@@ -95,8 +95,6 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     :param keep_macromodel_samples: bool; keep macromodel samples
     :param save_subset_kwargs_fitting_seq: saves just 100 of the kwargs fitting sequence classes.
     The first 25 are the best 25, the middle 50 are randomly selected, and the last 25 are the worst 25
-    :param accept_partial_completion: bool; if False, only output folders where the number of chi2 files is equal to the
-    number of accepted samples. If True, N samples will be retained from each job, where N is the number of chi^2 files
     :return: an instance of FullSimulationContainer that contains the data for the simulation
     """
 
@@ -159,10 +157,11 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     print('could not find chi2 file '+filename_chi2)
                     proceed = False
                     break
-            if len(_chi2) != num_realizations:
-                if accept_partial_completion is False:
-                    print('chi2 file has wrong shape')
-                    proceed = False
+            if _chi2 is None:
+                proceed = False
+            elif len(_chi2) != num_realizations:
+                print('chi2 file has wrong shape')
+                proceed = False
 
         if proceed is False:
             continue
@@ -187,9 +186,8 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     proceed = False
                     break
             if len(_fitting_seq_kwargs) != num_realizations:
-                if accept_partial_completion is False:
-                    print('number of saved fitting sequence classes not right')
-                    proceed = False
+                print('number of saved fitting sequence classes not right')
+                proceed = False
 
         if proceed is False:
             continue
@@ -232,12 +230,6 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     print('compiled ' + str(params.shape[0]) + ' realizations')
     assert params.shape[0] == fluxes.shape[0]
     if keep_chi2:
-        if accept_partial_completion:
-            n_keep = len(chi2_imaging_data)
-            params = params[0:n_keep, :]
-            fluxes = fluxes[0:n_keep, :]
-            if keep_macromodel_samples:
-                macro_samples = macro_samples[0:n_keep, :]
         assert len(chi2_imaging_data) == params.shape[0]
     else:
         chi2_imaging_data = None
