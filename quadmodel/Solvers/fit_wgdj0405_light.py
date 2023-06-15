@@ -1,12 +1,13 @@
 import numpy as np
-from quadmodel.Solvers.light_fit_util import FixedLensModel, FittingSequenceKwargs
+from quadmodel.Solvers.light_fit_util import FixedLensModelNew, FittingSequenceKwargs
 from copy import deepcopy
 from lenstronomy.Data.coord_transforms import Coordinates
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 
 
 def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, delta_x_offset_init,
-                            delta_y_offset_init, add_shapelets_source=False, n_max_source=None):
+                            delta_y_offset_init, add_shapelets_source=False, n_max_source=None,
+                       super_sample_factor=1):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
@@ -14,13 +15,17 @@ def fit_wgdj0405_light(hst_data, simulation_output, astrometric_uncertainty, del
     source_x, source_y = lensmodel.ray_shooting(x_image, y_image, kwargs_lens_true)
     source_x = np.mean(source_x)
     source_y = np.mean(source_y)
+
+    print('super sampling: ', super_sample_factor)
     ra_at_x0 = hst_data.ra_at_xy_0
     dec_at_x0 = hst_data.dec_at_xy_0
     pix2angle = hst_data.transform_pix2angle
     (nx, ny) = hst_data.image_data.shape
-    coordinate_system = Coordinates(pix2angle, ra_at_x0, dec_at_x0)
-    ra_coords, dec_coords = coordinate_system.coordinate_grid(nx, ny)
-    tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_true)
+    # coordinate_system = Coordinates(pix2angle, ra_at_x0, dec_at_x0)
+    # ra_coords, dec_coords = coordinate_system.coordinate_grid(nx, ny)
+    # tabulated_lens_model = FixedLensModel(ra_coords, dec_coords, lensmodel, kwargs_lens_true)
+    tabulated_lens_model = FixedLensModelNew(nx, ny, pix2angle, ra_at_x0, dec_at_x0,
+                                             lensmodel, kwargs_lens_true, super_sample_factor)
     lens_model_list_fit = ['TABULATED_DEFLECTIONS']
 
     source_model_list = ['SERSIC_ELLIPSE']
