@@ -70,7 +70,7 @@ def fit_pg1115_light(hst_data, simulation_output, astrometric_uncertainty, delta
 
     if add_shapelets_source:
         source_model_list += ['SHAPELETS']
-        kwargs_source_init += [{'amp': 1.0, 'beta': 1e-2, 'n_max': 1.0, 'center_x': source_x, 'center_y': source_y}]
+        kwargs_source_init += [{'amp': 1.0, 'beta': 1e-2, 'n_max': 2, 'center_x': source_x, 'center_y': source_y}]
         kwargs_sigma_source += [{'amp': 1.0, 'beta': 0.1, 'n_max': 1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_source += [{'amp': 1e-9, 'beta': 1e-9, 'n_max': 1, 'center_x': -0.5, 'center_y': -0.5}]
         kwargs_upper_source += [{'amp': 1e9, 'beta': 1e9, 'n_max': 30, 'center_x': 0.5, 'center_y': 0.5}]
@@ -182,7 +182,6 @@ def fit_pg1115_light(hst_data, simulation_output, astrometric_uncertainty, delta
     if add_shapelets_source:
         n_run = 150
         n_iterations = 100
-        update_settings['source_add_fixed'] = [[1, ['n_max', 'center_x', 'center_y'], [int(n_max_source), source_x, source_y]]]
 
     fitting_kwargs_list = [
             ['PSO', {'sigma_scale': 1.0, 'n_particles': 50, 'n_iterations': n_iterations}],
