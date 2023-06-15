@@ -9,7 +9,6 @@ class PG1115(Quad):
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
         zlens = 0.31
-        self.zlens = zlens
         zsource = 1.72
         x = [0.947, 1.096, -0.722, -0.381]
         y = [-0.69, -0.232, -0.617, 1.344]
@@ -25,20 +24,21 @@ class PG1115(Quad):
         super(PG1115, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                     kwargs_macromodel, keep_flux_ratio_index, uncertainty_in_magnifications=False)
 
-    def satellite_galaxy(self, sample=True):
-        """
-        If the deflector system has no satellites, return an empty list of lens components (see macromodel class)
-        """
-        theta_E = 2.0
-        center_x = -9.205
-        center_y = -3.907
-        if sample:
-            theta_E = abs(np.random.normal(theta_E, 0.05))
-            center_x = np.random.normal(center_x, 0.05)
-            center_y = np.random.normal(center_y, 0.05)
-
-        kwargs_init = [{'theta_E': theta_E, 'center_x': center_x, 'center_y': center_y}]
-        satellite = SIS(self.zlens, kwargs_init)
-        params = np.array([theta_E, center_x, center_y])
-        param_names = ['theta_E', 'center_x', 'center_y']
-        return [satellite], params, param_names
+    # Omit the group as the imaging data seems to do better without it
+    # def satellite_galaxy(self, sample=True):
+    #     """
+    #     If the deflector system has no satellites, return an empty list of lens components (see macromodel class)
+    #     """
+    #     theta_E = 2.0
+    #     center_x = -9.205
+    #     center_y = -3.907
+    #     if sample:
+    #         theta_E = abs(np.random.normal(theta_E, 0.05))
+    #         center_x = np.random.normal(center_x, 0.05)
+    #         center_y = np.random.normal(center_y, 0.05)
+    #
+    #     kwargs_init = [{'theta_E': theta_E, 'center_x': center_x, 'center_y': center_y}]
+    #     satellite = SIS(self.zlens, kwargs_init)
+    #     params = np.array([theta_E, center_x, center_y])
+    #     param_names = ['theta_E', 'center_x', 'center_y']
+    #     return [satellite], params, param_names

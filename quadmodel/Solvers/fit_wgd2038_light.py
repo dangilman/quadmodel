@@ -238,4 +238,4 @@ def fit_wgd2038_light(hst_data, simulation_output, astrometric_uncertainty,
     fitting_kwargs_class = FittingSequenceKwargs(kwargs_data_joint, kwargs_model_true, kwargs_constraints,
                                                  kwargs_likelihood_compute_statistic, kwargs_params, kwargs_result_true)
 
-    return fitting_seq, fitting_kwargs_class
+    return fitting_seq, fitting_kwargs_class, chain_list

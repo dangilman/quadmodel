@@ -6,7 +6,7 @@ import numpy as np
 class WFI2033(Quad):
 
     def __init__(self, sourcemodel_type='NARROW_LINE_Gaussian',
-                 macromodel_type = 'EPL_FIXED_SHEAR_MULTIPOLE'):
+                 macromodel_type ='EPL_FIXED_SHEAR_MULTIPOLE'):
 
         zlens = 0.66
         zsource = 1.66
@@ -42,9 +42,14 @@ class WFI2033(Quad):
         params_1 = np.array([theta_E, center_x, center_y])
         param_names_1 = ['theta_E_1', 'center_x_1', 'center_y_1']
 
-        theta_E = 0.93
-        center_x = -3.36
-        center_y = -0.08
+        # from Gilman et al. (2020)
+        # theta_E = 0.93
+        # center_x = -3.36
+        # center_y = -0.08
+        # the following were computed from a full fit to the imaging data
+        theta_E = 0.9
+        center_x = -3.667
+        center_y = -0.102
         if sample:
             theta_E = abs(np.random.normal(theta_E, 0.05))
             center_x = np.random.normal(center_x, 0.05)
