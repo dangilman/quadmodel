@@ -160,8 +160,9 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     proceed = False
                     break
             if len(_chi2) != num_realizations:
-                print('chi2 file has wrong shape')
-                proceed = False
+                if accept_partial_completion is False:
+                    print('chi2 file has wrong shape')
+                    proceed = False
 
         if proceed is False:
             continue
@@ -186,8 +187,9 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     proceed = False
                     break
             if len(_fitting_seq_kwargs) != num_realizations:
-                print('number of saved fitting sequence classes not right')
-                proceed = False
+                if accept_partial_completion is False:
+                    print('number of saved fitting sequence classes not right')
+                    proceed = False
 
         if proceed is False:
             continue
