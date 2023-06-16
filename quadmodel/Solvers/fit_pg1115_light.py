@@ -70,7 +70,7 @@ def fit_pg1115_light(hst_data, simulation_output, astrometric_uncertainty, delta
 
     if add_shapelets_source:
         source_model_list += ['SHAPELETS']
-        kwargs_source_init += [{'amp': 1.0, 'beta': 1e-2, 'n_max': 2, 'center_x': source_x, 'center_y': source_y}]
+        kwargs_source_init += [{'amp': 0.0, 'beta': 1e-2, 'n_max': n_max_source, 'center_x': source_x, 'center_y': source_y}]
         kwargs_sigma_source += [{'amp': 1.0, 'beta': 0.1, 'n_max': 1, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_source += [{'amp': 1e-9, 'beta': 1e-9, 'n_max': 1, 'center_x': -0.5, 'center_y': -0.5}]
         kwargs_upper_source += [{'amp': 1e9, 'beta': 1e9, 'n_max': 30, 'center_x': 0.5, 'center_y': 0.5}]
@@ -116,9 +116,6 @@ def fit_pg1115_light(hst_data, simulation_output, astrometric_uncertainty, delta
     ############################### OPTIONAL PRIORS ############################
     prior_lens = None
     prior_lens_light = [[0, 'e1', 0.0, 0.25], [0, 'e2', 0.0, 0.25]]
-
-    # create an optional mask
-    likelihood_mask_for_statistic = hst_data.custom_mask
 
     ############################### OPTIONAL LIKELIHOOD MASK OVER IMAGES ############################
     kwargs_likelihood = {'check_bounds': True,
