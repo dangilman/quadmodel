@@ -22,7 +22,7 @@ class HE0435_version2020(Quad):
 
         kwargs_macromodel = {'shear_amplitude_min': 0.015, 'shear_amplitude_max': 0.15}
 
-        super(HE0435, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
+        super(HE0435_version2020, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                     kwargs_macromodel, keep_flux_ratio_index)
 
     def satellite_galaxy(self, sample=True):
