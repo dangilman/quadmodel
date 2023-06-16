@@ -2,6 +2,7 @@ from quadmodel.data.quad_base import Quad
 from quadmodel.deflector_models.sis import SIS
 import numpy as np
 
+
 class HE0435(Quad):
 
     def __init__(self, sourcemodel_type='NARROW_LINE_Gaussian',
@@ -9,8 +10,8 @@ class HE0435(Quad):
 
         zlens = 0.45
         zsource = 1.69
-        x = [-1.272, -0.306,  1.152,  0.384]
-        y = [-0.156,  1.092,  0.636, -1.026]
+        x = [1.272, 0.306, -1.152, -0.384]
+        y = [0.156, -1.092, -0.636, 1.026]
         m = [0.96, 0.976, 1.0, 0.65]
         delta_m = [0.05, 0.049, 0.048, 0.056]
         delta_xy = [0.005] * 4
@@ -29,10 +30,8 @@ class HE0435(Quad):
         If the deflector system has no satellites, return an empty list of lens components (see macromodel class)
         """
         theta_E = 0.37
-        center_x_observed = -2.6
-        center_y_observed = -3.65
-        center_x = -1.9663
-        center_y = -3.079
+        center_x = -2.27
+        center_y = 1.98
         if sample:
             theta_E = abs(np.random.normal(theta_E, 0.05))
             center_x = np.random.normal(center_x, 0.05)
