@@ -6,8 +6,8 @@ from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from lenstronomy.Util.param_util import ellipticity2phi_q
 
 
-def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
-                           delta_x_offset_init, delta_y_offset_init, add_shapelets_source, n_max=10,
+def fit_he0435_light(hst_data, simulation_output, astrometric_uncertainty,
+                           delta_x_offset_init, delta_y_offset_init, add_shapelets_source, n_max=6,
                       super_sample_factor=1):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
@@ -29,59 +29,37 @@ def fit_psj1606_light(hst_data, simulation_output, astrometric_uncertainty,
                                              lensmodel, kwargs_lens_true, super_sample_factor)
     lens_model_list_fit = ['TABULATED_DEFLECTIONS']
     source_model_list = ['SERSIC_ELLIPSE']
-    kwargs_source_init_sersic_ellipse = {'amp': 0.2720438489607409, 'R_sersic': 1.814920788163326,
-                                         'n_sersic': 4.248016497579749, 'e1': -0.3098009352674253,
-                                         'e2': -0.47874351842765434, 'center_x': source_x,
-                                         'center_y': source_y}
-    # kwargs_source_init_sersic = {'amp': 10000, 'R_sersic': 0.1,
-    #      'n_sersic': 5.0, 'center_x': source_x, 'center_y': source_y}
-    kwargs_source_init = [kwargs_source_init_sersic_ellipse,
-                          # kwargs_source_init_sersic
-                          ]
+    kwargs_source_init = [{'amp': 2.0, 'center_x': source_x, 'center_y': source_y, 'R_sersic': 0.6,
+                              'n_sersic': 5.5, 'e1': 0.25, 'e2': -0.2}]
     kwargs_sigma_source = [{'amp': 100, 'R_sersic': 0.1, 'n_sersic': 1.0, 'e1': 0.25,
-                            'e2': 0.25, 'center_x': 0.1, 'center_y': 0.1},
-                           # {'amp': 10000, 'R_sersic': 0.1, 'n_sersic': 2.0, 'center_x': 0.1, 'center_y': 0.1}
-                           ]
+                            'e2': 0.25, 'center_x': 0.1, 'center_y': 0.1}]
     kwargs_lower_source = [
-        {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10},
+        {'amp': 1e-9, 'R_sersic': 0.0001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10},
         ]
     kwargs_upper_source = [
         {'amp': 1e9, 'R_sersic': 100.0, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10},
         ]
 
-    lens_light_model_list = ['SERSIC_ELLIPSE', 'SERSIC',
-                             #'UNIFORM'
-                             ]
-    kwargs_lens_light_init = [{'amp': 35.97877654109787, 'R_sersic': 0.12991748696333505,
-                               'n_sersic': 3.95953211626326, 'e1': -0.11070035861608879,
-                               'e2': -0.09432940562626346, 'center_x': 0.027238985956765285,
-                               'center_y': -0.07877579459577577},
-                              {'amp': 5.562129013105065, 'R_sersic': 0.15004450953175746,
-                               'n_sersic': 3.0373454457513276,
-                               'center_x': -0.2795641867661612, 'center_y': -1.242240554102077},
-                              {'amp': 1.0}]
+    lens_light_model_list = ['SERSIC_ELLIPSE']
+    kwargs_lens_light_init = [{'amp': 35.97877654109787, 'R_sersic': 1.9,
+                               'n_sersic': 5.8, 'e1': -0.09,
+                               'e2': -0.05, 'center_x': 0.027238985956765285,
+                               'center_y': -0.07877579459577577}]
     kwargs_lens_light_sigma = [{'amp': 2000, 'R_sersic': 0.2, 'n_sersic': 1.0, 'e1': 0.25,
-                                'e2': 0.25, 'center_x': 0.1, 'center_y': 0.1},
-                               {'amp': 2000, 'R_sersic': 0.05, 'n_sersic': 1.0, 'center_x': 0.05, 'center_y': 0.05},
-                               {'amp': 1000}]
+                                'e2': 0.25, 'center_x': 0.1, 'center_y': 0.1}]
     kwargs_lower_lens_light = [
-        {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10},
-        {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'center_x': -0.307 - 0.25, 'center_y': -1.153 - 0.25},
-        {'amp': -10000}]
+        {'amp': 1e-9, 'R_sersic': 0.001, 'n_sersic': 1.0, 'e1': -0.4, 'e2': -0.4, 'center_x': -10, 'center_y': -10}]
     kwargs_upper_lens_light = [
-        {'amp': 1e9, 'R_sersic': 2.5, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10},
-        {'amp': 1e9, 'R_sersic': 1.0, 'n_sersic': 10.0, 'center_x': -0.307 + 0.25, 'center_y': -1.153 + 0.25},
-        {'amp': 10000}]
+        {'amp': 1e9, 'R_sersic': 2.5, 'n_sersic': 10.0, 'e1': 0.4, 'e2': 0.4, 'center_x': 10, 'center_y': 10}]
     kwargs_lens_init, kwargs_lens_sigma, kwargs_lower_lens, kwargs_upper_lens, kwargs_fixed_lens = [{}], [{}], [{}], [
         {}], [{}]
 
-    shapelets_init = {'amp': 1.0, 'beta': 1e-7, 'n_max': 1, 'center_x': source_x, 'center_y': source_y}
-    shapelets_sigma = {'amp': 0.5, 'beta': 0.2, 'n_max': 1.0, 'center_x': 0.1, 'center_y': 0.1}
-    shapelets_min = {'amp': 0.00001, 'beta': 1e-16, 'n_max': 1.0, 'center_x': -1.0, 'center_y': -1.0}
-    shapelets_max = {'amp': 1000.0, 'beta': 100.0, 'n_max': 10.0, 'center_x': 1.0, 'center_y': 1.0}
-
     if add_shapelets_source:
         source_model_list += ['SHAPELETS']
+        shapelets_init = {'amp': 1.0, 'beta': 1e-7, 'n_max': 1, 'center_x': source_x, 'center_y': source_y}
+        shapelets_sigma = {'amp': 0.5, 'beta': 0.2, 'n_max': 1.0, 'center_x': 0.1, 'center_y': 0.1}
+        shapelets_min = {'amp': 0.00001, 'beta': 1e-16, 'n_max': 1.0, 'center_x': -1.0, 'center_y': -1.0}
+        shapelets_max = {'amp': 1000.0, 'beta': 100.0, 'n_max': 10.0, 'center_x': 1.0, 'center_y': 1.0}
         kwargs_source_init += [shapelets_init]
         kwargs_sigma_source += [shapelets_sigma]
         kwargs_lower_source += [shapelets_min]

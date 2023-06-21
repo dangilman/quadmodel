@@ -108,7 +108,7 @@ def fit_pg1115_light(hst_data, simulation_output, astrometric_uncertainty, delta
                         'fixed_magnification_list': [True],
                         'tabulated_deflection_angles': tabulated_lens_model}
 
-    kwargs_numerics = {'supersampling_factor': 1, 'supersampling_convolution': False}
+    kwargs_numerics = {'supersampling_factor': super_sample_factor, 'supersampling_convolution': False}
     kwargs_constraints = {
         'num_point_source_list': [4],
         'point_source_offset': True

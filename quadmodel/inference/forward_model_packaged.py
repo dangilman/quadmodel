@@ -400,3 +400,5 @@ class ForwardModelSimulation(object):
                                                 fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
 
         return container
+
+#

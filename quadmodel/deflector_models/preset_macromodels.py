@@ -15,7 +15,7 @@ class MacroBase(object):
 
 class EPLShear(MacroBase):
 
-    def __init__(self, zlens, gamma_macro, shear_amplitude,
+    def __init__(self, zlens, gamma_macro, shear_amplitude=None,
                  theta_E=None, center_x=None, center_y=None, e1=None, e2=None, theta_shear=None):
 
         if shear_amplitude is None:

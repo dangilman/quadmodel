@@ -38,7 +38,7 @@ def fit_wgd2038_light(hst_data, simulation_output, astrometric_uncertainty,
     kwargs_source_init = [kwargs_source_init_sersic_ellipse,
                           # kwargs_source_init_sersic
                           ]
-    kwargs_sigma_source = [{'amp': 50000, 'R_sersic': 0.1, 'n_sersic': 1.0, 'e1': 0.25,
+    kwargs_sigma_source = [{'amp': 100, 'R_sersic': 0.1, 'n_sersic': 1.0, 'e1': 0.25,
                             'e2': 0.25, 'center_x': 0.1, 'center_y': 0.1},
                            # {'amp': 10000, 'R_sersic': 0.1, 'n_sersic': 2.0, 'center_x': 0.1, 'center_y': 0.1}
                            ]
@@ -119,7 +119,7 @@ def fit_wgd2038_light(hst_data, simulation_output, astrometric_uncertainty,
                         'additional_images_list': [False],
                         'fixed_magnification_list': [True],
                         'tabulated_deflection_angles': tabulated_lens_model}
-    kwargs_numerics = {'supersampling_factor': 1, 'supersampling_convolution': False}
+    kwargs_numerics = {'supersampling_factor': super_sample_factor, 'supersampling_convolution': False}
     kwargs_constraints = {
         'num_point_source_list': [4],
         'point_source_offset': True

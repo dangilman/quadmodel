@@ -38,7 +38,7 @@ else:
 path_to_smooth_lens_fit = path_to_smooth_lens_fits + initial_lens_fit_name
 
 overwrite = True
-plot_results = False
+plot_results = True
 save_fitting_seq_kwargs = True
 add_shapelets_source = False
 random_seed = None
@@ -58,4 +58,5 @@ fitting_kwargs_list = [
 print('fitting realization '+path_to_simulation_output+' ...')
 run_optimization(N_jobs, lens_data_name, filename_suffix, path_to_simulation_output, path_to_data,
                  fitting_kwargs_list, initialize_from_fit, path_to_smooth_lens_fit, add_shapelets_source, n_max_source,
-                     plot_results, overwrite, random_seed, npix_mask_images, run_index_list)
+                     plot_results, overwrite, random_seed, run_index_list,
+                 astrometric_uncertainty=0.05)
