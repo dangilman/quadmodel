@@ -87,8 +87,8 @@ def fit_he0435_light(hst_data, simulation_output, astrometric_uncertainty,
 
     ############################### SETUP THE PSF MODEL ######################################################
     kwargs_psf = {'psf_type': 'PIXEL',
-                  'kernel_point_source': hst_data.psf_estimate,
-                  'psf_error_map': hst_data.psf_error_map}
+                  'kernel_point_source': np.absolute(hst_data.psf_estimate),
+                  'psf_error_map': np.absolute(hst_data.psf_error_map)}
     kwargs_model_fit = {'lens_model_list': lens_model_list_fit,
                         'source_light_model_list': source_model_list,
                         'lens_light_model_list': lens_light_model_list,
