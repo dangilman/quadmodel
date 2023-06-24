@@ -157,11 +157,12 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     print('could not find chi2 file '+filename_chi2)
                     proceed = False
                     break
-            if _chi2 is None:
-                proceed = False
-            elif len(_chi2) != num_realizations:
-                print('chi2 file has wrong shape')
-                proceed = False
+            if proceed:
+                if _chi2 is None:
+                    proceed = False
+                elif len(_chi2) != num_realizations:
+                    print('chi2 file has wrong shape')
+                    proceed = False
 
         if proceed is False:
             continue
