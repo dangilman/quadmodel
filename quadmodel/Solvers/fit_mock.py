@@ -70,6 +70,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
 
     if add_shapelets_source:
         source_model_list += ['SHAPELETS']
+        kwargs_source_init += [{'beta': 0.01, 'amp': 0.0, 'n_max': 2.0, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_source_sigma_shapelets = [{'beta': 0.4, 'amp': 100.0, 'n_max': 1.0, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_source_shapelets = [{'beta': 1e-9, 'amp': 0.0, 'n_max': 1, 'center_x': -10, 'center_y': -10}]
         kwargs_upper_source_shapelets = [{'beta': 1e9, 'amp': 1e9, 'n_max': 1000, 'center_x': 10, 'center_y': 10}]
