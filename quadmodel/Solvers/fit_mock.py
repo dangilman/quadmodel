@@ -179,7 +179,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
 
     update_settings = {'lens_light_remove_fixed': lens_light_remove_fixed,
                        'source_remove_fixed': source_remove_fixed}
-    print(source_remove_fixed)
+    
     if add_shapelets_source:
         if initialize_from_fit:
             n_iterations = 50
