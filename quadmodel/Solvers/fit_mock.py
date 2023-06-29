@@ -74,7 +74,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
         kwargs_source_sigma_shapelets = [{'beta': 0.4, 'amp': 100.0, 'n_max': 1.0, 'center_x': 0.1, 'center_y': 0.1}]
         kwargs_lower_source_shapelets = [{'beta': 1e-9, 'amp': 0.0, 'n_max': 1, 'center_x': -10, 'center_y': -10}]
         kwargs_upper_source_shapelets = [{'beta': 1e9, 'amp': 1e9, 'n_max': 1000, 'center_x': 10, 'center_y': 10}]
-        kwargs_fixed_source_shapelets = [{'n_max': 2, 'center_x': source_x, 'center_y': source_y}]
+        kwargs_fixed_source_shapelets = [{'n_max': 2, 'center_x': source_x, 'center_y': source_y, 'beta': 0.01, 'amp': 0.0}]
         kwargs_source_sigma += kwargs_source_sigma_shapelets
         kwargs_lower_source += kwargs_lower_source_shapelets
         kwargs_upper_source += kwargs_upper_source_shapelets
@@ -166,8 +166,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
         kwargs_params['special'] = kwargs_special
 
     source_remove_fixed = []
-    print(source_model_list)
-    print(source_params[0])
+
     for i in range(0, len(source_model_list)):
         keys_remove_source = [key for key in source_params[0][i].keys() if key not in ['center_x', 'center_y', 'n_max']]
         remove_source = [i, keys_remove_source]
@@ -177,7 +176,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
         keys_remove_lens_light = [key for key in lens_light_params[0][i].keys()]
         remove_light = [i, keys_remove_lens_light]
         lens_light_remove_fixed.append(remove_light)
-    print(source_remove_fixed)
+    
     update_settings = {'lens_light_remove_fixed': lens_light_remove_fixed,
                        'source_remove_fixed': source_remove_fixed}
 
