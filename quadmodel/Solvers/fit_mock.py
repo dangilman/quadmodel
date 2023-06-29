@@ -176,10 +176,10 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
         keys_remove_lens_light = [key for key in lens_light_params[0][i].keys()]
         remove_light = [i, keys_remove_lens_light]
         lens_light_remove_fixed.append(remove_light)
-    
+
     update_settings = {'lens_light_remove_fixed': lens_light_remove_fixed,
                        'source_remove_fixed': source_remove_fixed}
-
+    print(source_remove_fixed)
     if add_shapelets_source:
         if initialize_from_fit:
             n_iterations = 50
