@@ -70,9 +70,10 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
 
     if add_shapelets_source:
         source_model_list += ['SHAPELETS']
-        kwargs_source_sigma_shapelets, kwargs_lower_source_shapelets, \
-        kwargs_upper_source_shapelets, kwargs_fixed_source_shapelets = source_params_shapelets(1, source_x,
-                                                                                               source_y)
+        kwargs_source_sigma_shapelets = [{'beta': 0.4, 'amp': 100.0, 'n_max': 1.0, 'center_x': 0.1, 'center_y': 0.1}]
+        kwargs_lower_source_shapelets = [{'beta': 1e-9, 'amp': 0.0, 'n_max': 1, 'center_x': -10, 'center_y': -10}]
+        kwargs_upper_source_shapelets = [{'beta': 1e9, 'amp': 1e9, 'n_max': 1000, 'center_x': 10, 'center_y': 10}]
+        kwargs_fixed_source_shapelets = [{'n_max': 2, 'center_x': source_x, 'center_y': source_y}]
         kwargs_source_sigma += kwargs_source_sigma_shapelets
         kwargs_lower_source += kwargs_lower_source_shapelets
         kwargs_upper_source += kwargs_upper_source_shapelets
@@ -173,7 +174,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
         keys_remove_lens_light = [key for key in lens_light_params[0][i].keys()]
         remove_light = [i, keys_remove_lens_light]
         lens_light_remove_fixed.append(remove_light)
-
+    print(source_remove_fixed)
     update_settings = {'lens_light_remove_fixed': lens_light_remove_fixed,
                        'source_remove_fixed': source_remove_fixed}
 
