@@ -182,11 +182,11 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
             n_iterations = 50
             n_run = 100
         else:
-            n_iterations = 100
-            n_run = 200
+            n_iterations = 120
+            n_run = 250
         update_settings['source_add_fixed'] = [
             [1, ['n_max', 'center_x', 'center_y'], [int(n_max_source), source_x, source_y]]]
-        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 20, 'n_iterations': 50, 'threadCount': 1}],
+        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 10, 'n_iterations': 30, 'threadCount': 1}],
                                ['update_settings', update_settings],
                                ['PSO', {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': n_iterations,
                                         'threadCount': 1}],
