@@ -167,7 +167,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
     source_remove_fixed = []
     print(source_model_list)
     for i in range(0, len(source_model_list)):
-        print(source_params[0], i)
+        print(source_params[0][i])
         keys_remove_source = [key for key in source_params[0][i].keys() if key not in ['center_x', 'center_y', 'n_max']]
         remove_source = [i, keys_remove_source]
         source_remove_fixed.append(remove_source)
