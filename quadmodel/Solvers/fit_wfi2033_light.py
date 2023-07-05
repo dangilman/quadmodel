@@ -170,15 +170,15 @@ def fit_wfi2033_light(hst_data, simulation_output, astrometric_uncertainty,
 
     update_settings = {'lens_light_remove_fixed': lens_light_remove_fixed,
                        'source_remove_fixed': source_remove_fixed}
-    n_run = 100
-    n_iterations = 100
+    n_run = 10
+    n_iterations = 10
     if add_shapelets_source:
         n_run = 250
         n_iterations = 150
         update_settings['source_add_fixed'] = [[1, ['n_max', 'center_x', 'center_y'], [int(n_max), source_x, source_y]]]
 
     nthreads = 1
-    fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': 50, 'threadCount': nthreads}],
+    fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 20, 'n_iterations': 20, 'threadCount': nthreads}],
                            ['update_settings', update_settings],
                            ['PSO',
                             {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': n_iterations, 'threadCount': nthreads}],
