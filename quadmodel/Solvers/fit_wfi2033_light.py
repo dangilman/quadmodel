@@ -170,8 +170,8 @@ def fit_wfi2033_light(hst_data, simulation_output, astrometric_uncertainty,
 
     update_settings = {'lens_light_remove_fixed': lens_light_remove_fixed,
                        'source_remove_fixed': source_remove_fixed}
-    n_run = 10
-    n_iterations = 10
+    n_run = 100
+    n_iterations = 100
     if add_shapelets_source:
         n_run = 250
         n_iterations = 150
