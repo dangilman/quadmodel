@@ -7,7 +7,7 @@ import os
 class FullSimulationContainer(object):
 
     def __init__(self, individual_simulations, parameters, magnifications,
-                 chi2_imaging_data=None, kwargs_fitting_seq=None, macromodel_samples=None):
+                 chi2_imaging_data=None, kwargs_fitting_seq=None, macromodel_samples=None, bic=None):
 
         """
         A storage class for individual simulation containers
@@ -16,6 +16,7 @@ class FullSimulationContainer(object):
         :param magnifications a numpy array containing the magnifications corresponding to a particular set of parameters
         :param chi2_imaging_data: a numpy array containing reduced chi2 of the lens and source light models given
         the imaging data
+        :param bic: the Bayesian information criterion computed for the fit
         """
         self.simulations = individual_simulations
         self.parameters = parameters
@@ -23,6 +24,7 @@ class FullSimulationContainer(object):
         self.chi2_imaging_data = chi2_imaging_data
         self.kwargs_fitting_seq = kwargs_fitting_seq
         self.macromodel_samples = macromodel_samples
+        self.bic = bic
 
     @classmethod
     def join(cls, sim1, sim2):
@@ -152,7 +154,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     if _chi2 is None:
                         _chi2 = new
                     else:
-                        _chi2 = np.append(_chi2, new)
+                        _chi2 = np.vstack((_chi2, new))
                 else:
                     print('could not find chi2 file '+filename_chi2)
                     proceed = False
@@ -160,7 +162,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             if proceed:
                 if _chi2 is None:
                     proceed = False
-                elif len(_chi2) != num_realizations:
+                elif _chi2.shape[0] != num_realizations:
                     print('chi2 file has wrong shape')
                     proceed = False
 
@@ -222,7 +224,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             params = np.vstack((params, _params))
             fluxes = np.vstack((fluxes, _fluxes))
             if keep_chi2:
-                chi2_imaging_data = np.append(chi2_imaging_data, _chi2)
+                chi2_imaging_data = np.vstack((chi2_imaging_data, _chi2))
             if keep_macromodel_samples:
                 macro_samples = np.vstack((macro_samples, _macro_samples))
             if keep_kwargs_fitting_seq:
@@ -231,7 +233,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     print('compiled ' + str(params.shape[0]) + ' realizations')
     assert params.shape[0] == fluxes.shape[0]
     if keep_chi2:
-        assert len(chi2_imaging_data) == params.shape[0]
+        assert chi2_imaging_data.shape[0] == params.shape[0]
     else:
         chi2_imaging_data = None
 
@@ -239,10 +241,10 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         assert macro_samples.shape[0] == params.shape[0]
     else:
         macro_samples = None
-
+    bic = chi2_imaging_data[:, 1]
     if keep_kwargs_fitting_seq:
         if save_subset_kwargs_fitting_seq:
-            idx_sort = np.argsort(chi2_imaging_data) # this is actually the log-likelihood even though it's called chi2
+            idx_sort = np.argsort(chi2_imaging_data[:,0]) # this is actually the log-likelihood even though it's called chi2
             n_keep_best_worst = 25
             end_idx = len(fitting_seq_kwargs) - n_keep_best_worst
             best_25 = idx_sort[0:n_keep_best_worst]
@@ -261,16 +263,19 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
                 saved_inds.append(idx)
             container = FullSimulationContainer(realizations_and_lens_systems, params,
-                                                fluxes, chi2_imaging_data, fitting_seq_kwargs_out, macro_samples)
+                                                fluxes, chi2_imaging_data[:,0],
+                                                fitting_seq_kwargs_out, macro_samples,
+                                                bic)
             container.kwargs_fitting_seq_saved_inds = saved_inds
         else:
             assert len(fitting_seq_kwargs) == params.shape[0]
             container = FullSimulationContainer(realizations_and_lens_systems, params,
-                                        fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
+                                        fluxes, chi2_imaging_data[:,0], fitting_seq_kwargs, macro_samples, bic)
             container.kwargs_fitting_seq_saved_inds = None
     else:
         container = FullSimulationContainer(realizations_and_lens_systems, params,
-                                            fluxes, chi2_imaging_data, fitting_seq_kwargs, macro_samples)
+                                            fluxes, chi2_imaging_data[:,0], fitting_seq_kwargs, macro_samples,
+                                            bic)
     return container
 
 

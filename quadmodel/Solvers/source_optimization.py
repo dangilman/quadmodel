@@ -107,11 +107,11 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
         neff = fitting_seq.likelihoodModule.effective_num_data_points(**kwargs_best)
         log_l = fitting_seq.best_fit_likelihood
         print('CHI2 FROM FIT: ', 2 * log_l / neff)
-
+        bic = fitting_seq.bic
         f = open(path_to_simulation_output + 'kwargs_fitting_sequence_' + str(idx) + filename_suffix, 'wb')
         dill.dump(fitting_kwargs_class, f)
         f.close()
-        np.savetxt(fname_chi2, X=np.atleast_1d(log_l))
+        np.savetxt(fname_chi2, X=np.array([log_l, bic]))
 
         if plot_results:
             print('plotting... ')
