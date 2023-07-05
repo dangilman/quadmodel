@@ -11,6 +11,7 @@ from quadmodel.Solvers.fit_wgdj0405_light import fit_wgdj0405_light
 from quadmodel.Solvers.fit_psj1606_light import fit_psj1606_light
 from quadmodel.Solvers.fit_pg1115_light import fit_pg1115_light
 from quadmodel.Solvers.fit_he0435_light import fit_he0435_light
+from quadmodel.Solvers.fit_wfi2033_light import fit_wfi2033_light
 from quadmodel.Solvers.fit_mock import fit_mock
 
 
@@ -54,6 +55,13 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
                                                                    astrometric_uncertainty, delta_x_offset_init,
                                                                    delta_y_offset_init, add_shapelets_source,
                                                                                n_max_source, super_sample_factor)
+        elif launch_fuction == 'WFI2033':
+            fitting_seq, fitting_kwargs_class, chain_list = fit_wfi2033_light(hst_data, simulation_output,
+                                                                             astrometric_uncertainty,
+                                                                             delta_x_offset_init,
+                                                                             delta_y_offset_init,
+                                                                             add_shapelets_source,
+                                                                             n_max_source, super_sample_factor)
         elif launch_fuction=='HE0435':
             fitting_seq, fitting_kwargs_class, chain_list = fit_he0435_light(hst_data, simulation_output,
                                                                              astrometric_uncertainty,
