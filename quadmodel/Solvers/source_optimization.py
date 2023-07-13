@@ -19,7 +19,7 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
                      initialize_from_fit=False, path_to_smooth_lens_fit=None, add_shapelets_source=False,
                      n_max_source=10, plot_results=False, overwrite=False, random_seed=None,
                      run_index_list=None, astrometric_uncertainty=0.005, delta_x_offset_init=None,
-                     delta_y_offset_init=None, super_sample_factor=1, num_theads=1):
+                     delta_y_offset_init=None, super_sample_factor=1, num_threads=1):
 
     if random_seed is not None:
         np.random.seed(random_seed)
@@ -55,54 +55,40 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
                                                                   astrometric_uncertainty, delta_x_offset_init,
                                                                   delta_y_offset_init, add_shapelets_source,
                                                                   n_max_source, super_sample_factor,
-                                                                              num_theads)
-        elif launch_fuction == 'WFI2033':
-            fitting_seq, fitting_kwargs_class, chain_list = fit_wfi2033_light(hst_data, simulation_output,
-                                                                  astrometric_uncertainty, delta_x_offset_init,
-                                                                  delta_y_offset_init, add_shapelets_source,
-                                                                  n_max_source, super_sample_factor,
-                                                                              num_theads)
-        elif launch_fuction=='HE0435':
-            fitting_seq, fitting_kwargs_class, chain_list = fit_he0435_light(hst_data, simulation_output,
-                                                                  astrometric_uncertainty, delta_x_offset_init,
-                                                                  delta_y_offset_init, add_shapelets_source,
-                                                                  n_max_source, super_sample_factor,
-                                                                              num_theads)
-
-        elif launch_fuction == 'PG1115':
-            fitting_seq, fitting_kwargs_class, chain_list = fit_pg1115_light(hst_data, simulation_output,
-                                                                  astrometric_uncertainty, delta_x_offset_init,
-                                                                  delta_y_offset_init, add_shapelets_source,
-                                                                  n_max_source, super_sample_factor,
-                                                                              num_theads)
+                                                                              num_threads)
 
         elif launch_fuction == 'MOCK':
             fitting_seq, fitting_kwargs_class, chain_list = fit_mock(hst_data, simulation_output,
-                                                        initialize_from_fit,
-                                                        path_to_smooth_lens_fit, add_shapelets_source,
-                                                        n_max_source, astrometric_uncertainty,
-                                                        delta_x_offset_init, delta_y_offset_init, super_sample_factor,
-                                                                     num_theads)
-        elif launch_fuction == 'WGDJ0405':
-            fitting_seq, fitting_kwargs_class, chain_list = fit_wgdj0405_light(hst_data, simulation_output,
-                                                                  astrometric_uncertainty, delta_x_offset_init,
-                                                                  delta_y_offset_init, add_shapelets_source,
-                                                                  n_max_source, super_sample_factor,
-                                                                              num_theads)
-        elif launch_fuction == 'PSJ1606':
-            fitting_seq, fitting_kwargs_class, chain_list = fit_psj1606_light(hst_data, simulation_output,
-                                                                  astrometric_uncertainty, delta_x_offset_init,
-                                                                  delta_y_offset_init, add_shapelets_source,
-                                                                  n_max_source, super_sample_factor,
-                                                                              num_theads)
-        elif launch_fuction == 'WGD2038':
-            fitting_seq, fitting_kwargs_class, chain_list = fit_wgd2038_light(hst_data, simulation_output,
-                                                                  astrometric_uncertainty, delta_x_offset_init,
-                                                                  delta_y_offset_init, add_shapelets_source,
-                                                                  n_max_source, super_sample_factor,
-                                                                              num_theads)
+                                                                     initialize_from_fit,
+                                                                     path_to_smooth_lens_fit, add_shapelets_source,
+                                                                     n_max_source, astrometric_uncertainty,
+                                                                     delta_x_offset_init, delta_y_offset_init,
+                                                                     super_sample_factor,
+                                                                     num_threads)
         else:
-            raise Exception('launch function not recognized')
+            if launch_fuction == 'WFI2033':
+                func = fit_wfi2033_light
+            elif launch_fuction == 'HE0435':
+                func = fit_he0435_light
+            elif launch_fuction == 'PG1115':
+                func = fit_pg1115_light
+            elif launch_fuction == 'WGDJ0405':
+                func = fit_wgdj0405_light
+            elif launch_fuction == 'PSJ1606':
+                func = fit_psj1606_light
+            elif launch_fuction == 'WGD2038':
+                func = fit_wgd2038_light
+            else:
+                raise Exception('launch function not recognized')
+
+            fitting_seq, fitting_kwargs_class, chain_list = func(hst_data, simulation_output,
+                                                                               astrometric_uncertainty,
+                                                                               delta_x_offset_init,
+                                                                               delta_y_offset_init,
+                                                                               add_shapelets_source,
+                                                                               n_max_source, super_sample_factor,
+                                                                               num_threads)
+        
         # modelPlot = ModelPlot(multi_band_list, kwargs_model,
         #                       kwargs_result, arrow_size=0.02, cmap_string="gist_heat")
         kwargs_best = fitting_seq.best_fit()
