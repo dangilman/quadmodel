@@ -8,7 +8,7 @@ from lenstronomy.Util.param_util import ellipticity2phi_q
 
 def fit_he0435_light(hst_data, simulation_output, astrometric_uncertainty,
                            delta_x_offset_init, delta_y_offset_init, add_shapelets_source, n_max=6,
-                      super_sample_factor=1):
+                      super_sample_factor=1, num_threads=1):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
@@ -169,14 +169,13 @@ def fit_he0435_light(hst_data, simulation_output, astrometric_uncertainty,
         n_iterations = 150
         update_settings['source_add_fixed'] = [[1, ['n_max', 'center_x', 'center_y'], [int(n_max), source_x, source_y]]]
 
-    nthreads = 1
-    fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': 50, 'threadCount': nthreads}],
+    fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': 50, 'threadCount': num_threads}],
                            ['update_settings', update_settings],
                            ['PSO',
-                            {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': n_iterations, 'threadCount': nthreads}],
+                            {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': n_iterations, 'threadCount': num_threads}],
                            ['psf_iteration', {'psf_symmetry': hst_data.psf_symmetry, 'keep_psf_error_map': True}],
                            ['MCMC',
-                            {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1, 'threadCount': nthreads}]
+                            {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1, 'threadCount': num_threads}]
                            ]
 
     fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model_fit,
