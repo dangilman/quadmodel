@@ -8,7 +8,7 @@ from copy import deepcopy
 
 def fit_mock(hst_data, simulation_output, initialize_from_fit,
              path_to_smooth_lens_fit, add_shapelets_source, n_max_source, astrometric_uncertainty,
-             delta_x_offset_init, delta_y_offset_init, super_sample_factor):
+             delta_x_offset_init, delta_y_offset_init, super_sample_factor, num_threads=1):
 
     x_image, y_image = simulation_output.data.x, simulation_output.data.y
     lens_system = simulation_output.lens_system
@@ -179,7 +179,7 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
 
     update_settings = {'lens_light_remove_fixed': lens_light_remove_fixed,
                        'source_remove_fixed': source_remove_fixed}
-    
+
     if add_shapelets_source:
         if initialize_from_fit:
             n_iterations = 50
@@ -189,12 +189,12 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
             n_run = 250
         update_settings['source_add_fixed'] = [
             [1, ['n_max', 'center_x', 'center_y'], [int(n_max_source), source_x, source_y]]]
-        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 10, 'n_iterations': 30, 'threadCount': 1}],
+        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 10, 'n_iterations': 30, 'threadCount': num_threads}],
                                ['update_settings', update_settings],
                                ['PSO', {'sigma_scale': 1., 'n_particles': 100, 'n_iterations': n_iterations,
-                                        'threadCount': 1}],
+                                        'threadCount': num_threads}],
                                ['MCMC', {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1,
-                                         'threadCount': 1}]
+                                         'threadCount': num_threads}]
                                ]
 
     else:
@@ -204,10 +204,10 @@ def fit_mock(hst_data, simulation_output, initialize_from_fit,
         else:
             n_iterations = 100
             n_run = 150
-        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 20, 'n_iterations': 50, 'threadCount': 1}],
+        fitting_kwargs_list = [['PSO', {'sigma_scale': 1., 'n_particles': 20, 'n_iterations': 50, 'threadCount': num_threads}],
                     ['update_settings', update_settings],
-                    ['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': n_iterations, 'threadCount': 1}],
-                    ['MCMC', {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1, 'threadCount': 1}]]
+                    ['PSO', {'sigma_scale': 1., 'n_particles': 50, 'n_iterations': n_iterations, 'threadCount': num_threads}],
+                    ['MCMC', {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 4, 'sigma_scale': .1, 'threadCount': num_threads}]]
 
     fitting_seq = FittingSequence(kwargs_data_joint, kwargs_model_fit,
                                   kwargs_constraints, kwargs_likelihood, kwargs_params)
