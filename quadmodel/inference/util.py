@@ -26,6 +26,74 @@ class FullSimulationContainer(object):
         self.macromodel_samples = macromodel_samples
         self.bic = bic
 
+    def cut_on_logL(self, percentile_cut):
+        """
+
+        :param percentile_cut:
+        :return:
+        """
+        logL = self.chi2_imaging_data
+        inds_sorted = np.argsort(logL)
+        idx_cut = int((100 - percentile_cut) / 100 * len(logL))
+        logL_cut = logL[inds_sorted[idx_cut]]
+        inds_keep = np.where(logL > logL_cut)[0]
+
+        if len(self.simulations) > 0:
+            simulations = []
+            for idx in inds_keep:
+                simulations.append(self.simulations[idx])
+        else:
+            simulations = []
+        parameters = self.parameters[inds_keep,:]
+        mags = self.magnifications[inds_keep,:]
+        if self.chi2_imaging_data is None:
+            chi2 = None
+        else:
+            chi2 = self.chi2_imaging_data[inds_keep,:]
+        if self.macromodel_samples is None:
+            macro_samples = None
+        else:
+            macro_samples = self.macromodel_samples[inds_keep,:]
+        if self.bic is None:
+            bic = None
+        else:
+            bic = np.array(self.bic)[inds_keep]
+        return FullSimulationContainer(simulations, parameters, mags, chi2, self.kwargs_fitting_seq,
+                                       macro_samples, bic)
+
+    def cut_on_S(self, percentile_cut, idx_s_statistic=-2):
+        """
+
+        :param percentile_cut:
+        :return:
+        """
+        sorted_inds = np.argsort(self.parameters[:, idx_s_statistic])
+        idxcut = int(self.parameters.shape[0] * percentile_cut/100)
+        inds_keep = sorted_inds[0:idxcut]
+        if len(self.simulations) > 0:
+            simulations = []
+            for idx in inds_keep:
+                simulations.append(self.simulations[idx])
+        else:
+            simulations = []
+        parameters = self.parameters[inds_keep,:]
+        mags = self.magnifications[inds_keep,:]
+        if self.chi2_imaging_data is None:
+            chi2 = None
+        else:
+            chi2 = self.chi2_imaging_data[inds_keep,:]
+        if self.macromodel_samples is None:
+            macro_samples = None
+        else:
+            macro_samples = self.macromodel_samples[inds_keep,:]
+        if self.bic is None:
+            bic = None
+        else:
+            bic = np.array(self.bic)[inds_keep]
+        return FullSimulationContainer(simulations, parameters, mags, chi2, self.kwargs_fitting_seq,
+                                       macro_samples, bic)
+
+
     @classmethod
     def join(cls, sim1, sim2):
         mags = np.vstack((sim1.magnifications, sim2.magnifications))
@@ -273,7 +341,12 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                                         fluxes, chi2_imaging_data[:,0], fitting_seq_kwargs, macro_samples, bic)
             container.kwargs_fitting_seq_saved_inds = None
     else:
-        container = FullSimulationContainer(realizations_and_lens_systems, params,
+        if chi2_imaging_data is None:
+            container = FullSimulationContainer(realizations_and_lens_systems, params,
+                                                fluxes, None, fitting_seq_kwargs, macro_samples,
+                                                bic)
+        else:
+            container = FullSimulationContainer(realizations_and_lens_systems, params,
                                             fluxes, chi2_imaging_data[:,0], fitting_seq_kwargs, macro_samples,
                                             bic)
     return container

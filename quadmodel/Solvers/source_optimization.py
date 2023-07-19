@@ -88,7 +88,7 @@ def run_optimization(launch_fuction, N_jobs, lens_data_name, filename_suffix, pa
                                                                                add_shapelets_source,
                                                                                n_max_source, super_sample_factor,
                                                                                num_threads)
-        
+
         # modelPlot = ModelPlot(multi_band_list, kwargs_model,
         #                       kwargs_result, arrow_size=0.02, cmap_string="gist_heat")
         kwargs_best = fitting_seq.best_fit()
