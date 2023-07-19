@@ -309,7 +309,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         assert macro_samples.shape[0] == params.shape[0]
     else:
         macro_samples = None
-    bic = chi2_imaging_data[:, 1]
+
     if keep_kwargs_fitting_seq:
         if save_subset_kwargs_fitting_seq:
             idx_sort = np.argsort(chi2_imaging_data[:,0]) # this is actually the log-likelihood even though it's called chi2
@@ -330,6 +330,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             for idx in worst_25:
                 fitting_seq_kwargs_out.append(fitting_seq_kwargs[idx])
                 saved_inds.append(idx)
+            bic = chi2_imaging_data[:, 1]
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                                 fluxes, chi2_imaging_data[:,0],
                                                 fitting_seq_kwargs_out, macro_samples,
@@ -344,8 +345,9 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         if chi2_imaging_data is None:
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                                 fluxes, None, fitting_seq_kwargs, macro_samples,
-                                                bic)
+                                                None)
         else:
+            bic = chi2_imaging_data[:, 1]
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                             fluxes, chi2_imaging_data[:,0], fitting_seq_kwargs, macro_samples,
                                             bic)
