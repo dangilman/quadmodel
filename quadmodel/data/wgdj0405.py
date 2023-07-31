@@ -13,14 +13,16 @@ class WGDJ0405(Quad):
         x = [0.708, -0.358, 0.363, -0.515]
         y = [-0.244, -0.567, 0.592, 0.454]
         m = [0.8, 0.52, 1.0, 0.94]
+
+        # m = [1.0, 0.7, 1.07, 1.28]
+
+
         delta_m = [0.04, 0.04/0.65, 0.03/1.25, 0.04/1.17]
         delta_xy = [0.005] * 4
         keep_flux_ratio_index = [0, 1, 2]
         self.log10_host_halo_mass = 13.3
         self.log10_host_halo_mass_sigma = 0.3
-
         kwargs_macromodel = {'shear_amplitude_min': 0.0025, 'shear_amplitude_max': 0.12}
-
         super(WGDJ0405, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                       kwargs_macromodel, keep_flux_ratio_index,
                                        sample_zlens_pdf=sample_zlens_pdf)

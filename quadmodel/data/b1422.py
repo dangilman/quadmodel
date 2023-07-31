@@ -6,7 +6,6 @@ class B1422(Quad):
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
         zlens = 0.34
-        self.zlens = zlens
         zsource = 3.62
         x = [-0.347, -0.734, -1.096, 0.207]
         y = [0.964, 0.649, -0.079, -0.148]

@@ -9,7 +9,6 @@ class MG0414(Quad):
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
         zlens = 0.96
-        self.zlens = zlens
         zsource = 2.64
 
         gx, gy = 0.482, -1.279
