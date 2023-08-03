@@ -265,6 +265,8 @@ class QuadLensSystem(object):
         from the source size
         :param normed: If True, normalizes the magnifications such that the brightest image has a magnification of 1
         """
+        if source_fwhm_pc == 0.0:
+            point_source = True
 
         if point_source:
             mags = lens_model.magnification(x, y, kwargs_lensmodel)

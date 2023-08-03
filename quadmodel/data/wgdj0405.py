@@ -26,3 +26,15 @@ class WGDJ0405(Quad):
         super(WGDJ0405, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                       kwargs_macromodel, keep_flux_ratio_index,
                                        sample_zlens_pdf=sample_zlens_pdf)
+
+class WGDJ0405_JWST(WGDJ0405):
+
+    def __init__(self, sourcemodel_type='midIR_Gaussian',
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE', sample_zlens_pdf=True):
+
+        super(WGDJ0405_JWST, self).__init__(sourcemodel_type, macromodel_type, sample_zlens_pdf)
+        # now replace the data with the JWST measurements
+        normalized_fluxes = [1.00, 0.70, 1.07, 1.28]
+        self.m = np.array(normalized_fluxes)
+        flux_uncertainties = [0.01] * 4  # percent uncertainty
+        self.delta_m = np.array(flux_uncertainties)

@@ -28,6 +28,9 @@ def default_priors(param):
     elif param == 'EFFECTIVE_POINT_SOURCE':
         source_fwhm_pc = np.random.uniform(0.01, 0.02)
         return source_fwhm_pc
+    elif param == 'POINT_SOURCE':
+        source_fwhm_pc = 0.0
+        return source_fwhm_pc
     elif param == 'DOUBLE_NL_Gaussian':
         source_fwhm_pc = np.random.uniform(25, 80)
         dx = np.random.uniform(1e-5, 1e-5)
