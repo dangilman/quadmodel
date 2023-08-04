@@ -14,9 +14,6 @@ class WGDJ0405(Quad):
         y = [-0.244, -0.567, 0.592, 0.454]
         m = [0.8, 0.52, 1.0, 0.94]
 
-        # m = [1.0, 0.7, 1.07, 1.28]
-
-
         delta_m = [0.04, 0.04/0.65, 0.03/1.25, 0.04/1.17]
         delta_xy = [0.005] * 4
         keep_flux_ratio_index = [0, 1, 2]
@@ -33,6 +30,7 @@ class WGDJ0405_JWST(WGDJ0405):
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE', sample_zlens_pdf=True):
 
         super(WGDJ0405_JWST, self).__init__(sourcemodel_type, macromodel_type, sample_zlens_pdf)
+
         # now replace the data with the JWST measurements
         normalized_fluxes = [1.00, 0.70, 1.07, 1.28]
         self.m = np.array(normalized_fluxes)

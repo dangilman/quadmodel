@@ -12,6 +12,8 @@ def fit_wfi2033_light(hst_data, simulation_output, astrometric_uncertainty,
     lens_system = simulation_output.lens_system
     lensmodel, kwargs_lens_true = lens_system.get_lensmodel()
     source_x, source_y = lensmodel.ray_shooting(x_image, y_image, kwargs_lens_true)
+    print('source_x: ', source_x, np.std(source_x))
+    print('source_y: ', source_y, np.std(source_y))
     source_x = np.mean(source_x)
     source_y = np.mean(source_y)
 
