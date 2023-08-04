@@ -90,3 +90,22 @@ class RXJ1131_Sugai(Quad):
         params = np.array([theta_E, center_x, center_y])
         param_names = ['theta_E', 'center_x', 'center_y']
         return [satellite], params, param_names
+
+
+
+class RXJ1131_JWST(RXJ1131):
+
+    def __init__(self, sourcemodel_type='midIR_Gaussian',
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE', sample_zlens_pdf=True):
+
+        super(RXJ1131_JWST, self).__init__(sourcemodel_type, macromodel_type, sample_zlens_pdf)
+        
+        # now replace the data with the JWST measurements
+        x = [-0.54388937, -0.99753444,  0.25821667,  1.28320714] 
+        y = [-2.21168049,  0.95854212,  0.90545154,  0.34768682]
+        self.x = x
+        self.y = y
+        normalized_fluxes = [1.00, 0.70, 1.07, 1.28]
+        self.m = np.array(normalized_fluxes)
+        flux_uncertainties = [0.01] * 4  # percent uncertainty
+        self.delta_m = np.array(flux_uncertainties)
