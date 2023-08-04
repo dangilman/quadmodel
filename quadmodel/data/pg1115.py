@@ -42,3 +42,20 @@ class PG1115(Quad):
     #     params = np.array([theta_E, center_x, center_y])
     #     param_names = ['theta_E', 'center_x', 'center_y']
     #     return [satellite], params, param_names
+    
+class PG1115p080_JWST(PG1115):
+
+    def __init__(self, sourcemodel_type='midIR_Gaussian',
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
+
+        super(RXJ1131_JWST, self).__init__(sourcemodel_type, macromodel_type, sample_zlens_pdf)
+        
+        # now replace the data with the JWST measurements
+        x = [-0.95171665,  0.92010584,  0.24710189, -0.21549107] 
+        y = [-0.56301239, -1.20018202,  0.83951884,  0.92367556]
+        self.x = x
+        self.y = y
+        normalized_fluxes = [1.00, 0.70, 1.07, 1.28]
+        self.m = np.array(normalized_fluxes)
+        flux_uncertainties = [0.01] * 4  # percent uncertainty
+        self.delta_m = np.array(flux_uncertainties)    
