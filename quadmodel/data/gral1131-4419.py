@@ -11,7 +11,6 @@ class GRAL1131m4419_JWST(Quad):
     def __init__(self, sourcemodel_type='midIR_Gaussian',
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
-        
         zsource = 
         zlense= 
         x = [-0.93397872,  0.00147215,  0.60869982,  0.32380675] 
@@ -24,6 +23,6 @@ class GRAL1131m4419_JWST(Quad):
         self.log10_host_halo_mass = 13.3
         self.log10_host_halo_mass_sigma = 0.3
         kwargs_macromodel = {'shear_amplitude_min': 0.0025, 'shear_amplitude_max': 0.12}
-        super(WGDJ0405, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
+        super(GRAL1131m4419_JWST, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                       kwargs_macromodel, keep_flux_ratio_index,
                                        sample_zlens_pdf=sample_zlens_pdf)
