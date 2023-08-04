@@ -33,3 +33,21 @@ class M1134(Quad):
 
         super(M1134, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                     kwargs_macromodel, keep_flux_ratio_index)
+
+
+class 2M1134m2103_JWST(M1134):
+
+    def __init__(self, sourcemodel_type='midIR_Gaussian',
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
+
+        super(PG1115p080_JWST, self).__init__(sourcemodel_type, macromodel_type)
+        
+        # now replace the data with the JWST measurements
+        x = [-0.93397872,  0.00147215,  0.60869982,  0.32380675] 
+        y = [ 0.10162072, -0.9665036,   0.2465785,4  0.61830434]
+        self.x = x
+        self.y = y
+        normalized_fluxes = [1.00, 0.70, 1.07, 1.28]
+        self.m = np.array(normalized_fluxes)
+        flux_uncertainties = [0.01] * 4  # percent uncertainty
+        self.delta_m = np.array(flux_uncertainties)    
