@@ -96,9 +96,9 @@ class RXJ1131_Sugai(Quad):
 class RXJ1131_JWST(RXJ1131):
 
     def __init__(self, sourcemodel_type='midIR_Gaussian',
-                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE', sample_zlens_pdf=True):
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
-        super(RXJ1131_JWST, self).__init__(sourcemodel_type, macromodel_type, sample_zlens_pdf)
+        super(RXJ1131_JWST, self).__init__(sourcemodel_type, macromodel_type)
         
         # now replace the data with the JWST measurements
         x = [-0.54388937, -0.99753444,  0.25821667,  1.28320714] 

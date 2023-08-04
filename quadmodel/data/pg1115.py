@@ -48,7 +48,7 @@ class PG1115p080_JWST(PG1115):
     def __init__(self, sourcemodel_type='midIR_Gaussian',
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
-        super(RXJ1131_JWST, self).__init__(sourcemodel_type, macromodel_type, sample_zlens_pdf)
+        super(PG1115p080_JWST, self).__init__(sourcemodel_type, macromodel_type)
         
         # now replace the data with the JWST measurements
         x = [-0.95171665,  0.92010584,  0.24710189, -0.21549107] 
