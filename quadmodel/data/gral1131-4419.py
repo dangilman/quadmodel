@@ -6,13 +6,16 @@ Created on Fri Aug  4 14:23:31 2023
 @author: ryankeeley
 """
 
+from quadmodel.data.quad_base import Quad
+
+
 class GRAL1131m4419_JWST(Quad):
 
     def __init__(self, sourcemodel_type='midIR_Gaussian',
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
-        zsource = 
-        zlense= 
+        zsource = 1.09 # 2206.04696, 1810.02624
+        zlens= 0.5#-0.9 plausible redshift range 1810.02624
         x = [-0.93397872,  0.00147215,  0.60869982,  0.32380675] 
         y = [ 0.10162072, -0.9665036,   0.24657854,  0.61830434]
         m = [0.8, 0.52, 1.0, 0.94]
@@ -24,5 +27,4 @@ class GRAL1131m4419_JWST(Quad):
         self.log10_host_halo_mass_sigma = 0.3
         kwargs_macromodel = {'shear_amplitude_min': 0.0025, 'shear_amplitude_max': 0.12}
         super(GRAL1131m4419_JWST, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
-                                      kwargs_macromodel, keep_flux_ratio_index,
-                                       sample_zlens_pdf=sample_zlens_pdf)
+                                      kwargs_macromodel, keep_flux_ratio_index)

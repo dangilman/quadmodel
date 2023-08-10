@@ -1,4 +1,6 @@
 from quadmodel.data.quad_base import Quad
+import numpy as np
+
 
 class M1134(Quad):
 
@@ -28,29 +30,17 @@ class M1134(Quad):
 
         self.log10_host_halo_mass = 13.4
         self.log10_host_halo_mass_sigma = 0.3
-
         kwargs_macromodel = {'shear_amplitude_min': 0.2, 'shear_amplitude_max': 0.45}
-
         super(M1134, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                     kwargs_macromodel, keep_flux_ratio_index)
 
 
-class 2M1134(M1134):
-    def __init__(self):
 
-
-
-
-
-print('test')
-
-class 2M1134m2103_JWST(M1134):
-
-    def __init__(self, sourcemodel_type='midIR_Gaussian',
+class M1134_JWST(M1134):
+    
+    def __init__(self,sourcemodel_type='midIR_Gaussian',
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
-
-        super(2M1134m2103_JWST, self).__init__(sourcemodel_type, macromodel_type)
-        
+        super(M1134_JWST, self).__init__(sourcemodel_type, macromodel_type)
         # now replace the data with the JWST measurements
         x = [-1.7102934,   0.52474735,  1.53467056, -0.3491245 ] 
         y = [-0.80380298, -0.8440081,   0.87923354,  0.76857754]
@@ -59,4 +49,4 @@ class 2M1134m2103_JWST(M1134):
         normalized_fluxes = [1.00, 0.70, 1.07, 1.28]
         self.m = np.array(normalized_fluxes)
         flux_uncertainties = [0.01] * 4  # percent uncertainty
-        self.delta_m = np.array(flux_uncertainties)    
+        self.delta_m = np.array(flux_uncertainties)            
