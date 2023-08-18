@@ -4,6 +4,10 @@ from lenstronomy.Plots.model_plot import ModelPlot
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from scipy.interpolate import RegularGridInterpolator
 from lenstronomy.ImSim.Numerics.grid import RegularGrid
+from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
+from tqdm import tqdm
+
+
 __all__ = ['source_params_sersic_ellipse', 'lens_light_params_sersic_ellipse',
            'lensmodel_params', 'ps_params', 'mask_images',
            'source_params_shapelets', 'FittingSequenceKwargs', 'customized_mask', 'FixedLensModel', 'FixedLensModelNew']
@@ -205,3 +209,115 @@ class FixedLensModelNew(object):
             alpha_y = np.squeeze(alpha_y)
 
         return alpha_x, alpha_y
+
+def extract_lens_models(simulation_output, index_max=None):
+
+    if index_max is None:
+        index_max = len(simulation_output.simulations)
+        assert  len(simulation_output.simulations) == simulation_output.parameters.shape[0]
+
+    lens_models = []
+    kwargs_lens_list = []
+    ximg_list = []
+    yimg_list = []
+    zd_list = []
+    for index_realization in tqdm(range(0, index_max), desc="Extracting lens models..."):
+        lens_model, kwargs_lens, ximg, yimg, zd = _extract_lens_model(simulation_output, index_realization)
+        lens_models.append(lens_model)
+        kwargs_lens_list.append(kwargs_lens)
+        ximg_list.append(ximg)
+        yimg_list.append(yimg)
+        zd_list.append(zd)
+    return lens_models, kwargs_lens_list, ximg_list, yimg_list, zd_list
+
+def curved_arc_statistics(lens_models, kwargs_lens_list, ximg_list, yimg_list, zd_list, index_image, diff=None):
+
+    index_max = len(lens_models)
+    radial_stretch = np.empty(index_max)
+    tangential_stretch = np.empty(index_max)
+    curvature = np.empty(index_max)
+    direction = np.empty(index_max)
+    dtan_dtan = np.empty(index_max)
+    for index_realization in tqdm(range(0, index_max), desc="Computing arc statistics..."):
+        rs, ts, c, d, dtdt = curved_arc_statistics_single(lens_models[index_realization],
+                                                    kwargs_lens_list[index_realization],
+                                                    ximg_list[index_realization][index_image],
+                                                     yimg_list[index_realization][index_image],
+                                                    zd_list[index_realization],
+                                                    diff)
+        radial_stretch[index_realization] = rs
+        tangential_stretch[index_realization] = ts
+        curvature[index_realization] = c
+        direction[index_realization] = d
+        dtan_dtan[index_realization] = dtdt
+    return radial_stretch, tangential_stretch, curvature, direction, dtan_dtan
+
+def curved_arc_statistics_single(lens_model, kwargs_lens, x_image, y_image, z_lens, diff=None):
+    ext = LensModelExtensions(lens_model)
+    d_c_lens = lens_model.cosmo.comoving_distance(z_lens).value
+    xi_comoving, yi_comoving, _, _ = lens_model.lens_model.ray_shooting_partial(
+        0.0, 0.0, x_image, y_image, 0.0, z_lens, kwargs_lens)
+    xi_lensed, yi_lensed = xi_comoving / d_c_lens, yi_comoving / d_c_lens
+    kwargs_arc = ext.curved_arc_estimate(xi_lensed, yi_lensed, kwargs_lens, smoothing=diff,
+                                         smoothing_3rd=diff, tan_diff=True)
+    radial_stretch = kwargs_arc['radial_stretch']
+    tangential_stretch = kwargs_arc['tangential_stretch']
+    curvature = kwargs_arc['curvature']
+    direction = kwargs_arc['direction']
+    dtan_dtan = kwargs_arc['dtan_dtan']
+    return radial_stretch, tangential_stretch, curvature, direction, dtan_dtan
+
+def _extract_lens_model(simulation_output, index):
+    lens_model, kwargs_lens = simulation_output.simulations[index].lens_system.get_lensmodel()
+    ximg = simulation_output.simulations[index].data.x
+    yimg = simulation_output.simulations[index].data.y
+    zd = simulation_output.simulations[index].lens_system.zlens
+    return lens_model, kwargs_lens, ximg, yimg, zd
+
+def load_arc_stats(fname):
+    x = np.loadtxt(fname).reshape(4,5,2)
+    medians = x[:, :, 0]
+    stdevs = x[:,:,1]
+    x = {}
+    x_stdev = {}
+    x['ts1'] = medians[0,0]
+    x['rs1'] = medians[0,1]
+    x['curv1'] = medians[0,2]
+    x['dir1'] = medians[0,3]
+    x['dtdt1'] = medians[0,4]
+    x['ts2'] = medians[1,0]
+    x['rs2'] = medians[1,1]
+    x['curv2'] = medians[1,2]
+    x['dir2'] = medians[1,3]
+    x['dtdt2'] = medians[1,4]
+    x['ts3'] = medians[2,0]
+    x['rs3'] = medians[2,1]
+    x['curv3'] = medians[2,2]
+    x['dir3'] = medians[2,3]
+    x['dtdt3'] = medians[2,4]
+    x['ts4'] = medians[3,0]
+    x['rs4'] = medians[3,1]
+    x['curv4'] = medians[3,2]
+    x['dir4'] = medians[3,3]
+    x['dtdt4'] = medians[3,4]
+    x_stdev['ts1'] = stdevs[0,0]
+    x_stdev['rs1'] = stdevs[0,1]
+    x_stdev['curv1'] = stdevs[0,2]
+    x_stdev['dir1'] = stdevs[0,3]
+    x_stdev['dtdt1'] = stdevs[0,4]
+    x_stdev['ts2'] = stdevs[1,0]
+    x_stdev['rs2'] = stdevs[1,1]
+    x_stdev['curv2'] = stdevs[1,2]
+    x_stdev['dir2'] = stdevs[1,3]
+    x_stdev['dtdt2'] = stdevs[1,4]
+    x_stdev['ts3'] = stdevs[2,0]
+    x_stdev['rs3'] = stdevs[2,1]
+    x_stdev['curv3'] = stdevs[2,2]
+    x_stdev['dir3'] = stdevs[2,3]
+    x_stdev['dtdt3'] = stdevs[2,4]
+    x_stdev['ts4'] = stdevs[3,0]
+    x_stdev['rs4'] = stdevs[3,1]
+    x_stdev['curv4'] = stdevs[3,2]
+    x_stdev['dir4'] = stdevs[3,3]
+    x_stdev['dtdt4'] = stdevs[3,4]
+    return x, x_stdev

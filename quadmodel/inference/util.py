@@ -264,19 +264,25 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             continue
 
         if keep_realizations:
+            proceed = True
+            # check that all the lens systmes exist
             for n in range(0, num_realizations):
-                try:
+                if os.path.exists(filename_realizations + 'simulation_output_' + str(n + 1)):
+                    pass
+                else:
+                    print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(n + 1))
+                    proceed = False
+
+            if proceed is True:
+                for n in range(0, num_realizations):
                     f = open(filename_realizations + 'simulation_output_' + str(n + 1), 'rb')
                     sim = pickle.load(f)
                     f.close()
                     realizations_and_lens_systems.append(sim)
-                except:
-                    print('could not find pickled class ' + filename_realizations + 'simulation_output_' + str(n + 1))
-                    proceed = False
-                    break
 
         if proceed is False:
             continue
+
         print('compiling output for job '+str(job_index)+'... ')
         if init:
             init = False
@@ -309,6 +315,9 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         assert macro_samples.shape[0] == params.shape[0]
     else:
         macro_samples = None
+
+    if keep_realizations:
+        assert len(realizations_and_lens_systems) == params.shape[0]
 
     if keep_kwargs_fitting_seq:
         if save_subset_kwargs_fitting_seq:
@@ -343,11 +352,13 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             container.kwargs_fitting_seq_saved_inds = None
     else:
         if chi2_imaging_data is None:
+
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                                 fluxes, None, fitting_seq_kwargs, macro_samples,
                                                 None)
         else:
             bic = chi2_imaging_data[:, 1]
+
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                             fluxes, chi2_imaging_data[:,0], fitting_seq_kwargs, macro_samples,
                                             bic)
