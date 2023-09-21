@@ -12,7 +12,6 @@ __all__ = ['source_params_sersic_ellipse', 'lens_light_params_sersic_ellipse',
            'lensmodel_params', 'ps_params', 'mask_images',
            'source_params_shapelets', 'FittingSequenceKwargs', 'customized_mask', 'FixedLensModel', 'FixedLensModelNew']
 
-
 def customized_mask(x_image, y_image, ra_grid, dec_grid, mask_image_arcsec, r_semi_major_arcsec, q, rotation,
                     thickness_arcsec, shift_x=0.0, shift_y=0.0):
 
@@ -267,6 +266,35 @@ def curved_arc_statistics_single(lens_model, kwargs_lens, x_image, y_image, z_le
     dtan_dtan = kwargs_arc['dtan_dtan']
     return radial_stretch, tangential_stretch, curvature, direction, dtan_dtan
 
+def kappa_gamma_statistics(lens_models, kwargs_lens_list, ximg_list, yimg_list, zd_list, index_image, diff=None):
+    index_max = len(lens_models)
+    kappa = np.empty(index_max)
+    g1 = np.empty(index_max)
+    g2 = np.empty(index_max)
+    for index_realization in tqdm(range(0, index_max), desc="Computing kappa/gamma statistics..."):
+        k, g_1, g_2 = kappa_gamma_single(lens_models[index_realization],
+                                                          kwargs_lens_list[index_realization],
+                                                          ximg_list[index_realization][index_image],
+                                                          yimg_list[index_realization][index_image],
+                                                          zd_list[index_realization],
+                                                          diff)
+        kappa[index_realization] = k
+        g1[index_realization] = g_1
+        g2[index_realization] = g_2
+    return kappa, g1, g2
+
+def kappa_gamma_single(lens_model, kwargs_lens, x_image, y_image, z_lens, diff=None):
+
+    d_c_lens = lens_model.cosmo.comoving_distance(z_lens).value
+    xi_comoving, yi_comoving, _, _ = lens_model.lens_model.ray_shooting_partial(
+        0.0, 0.0, x_image, y_image, 0.0, z_lens, kwargs_lens)
+    xi_lensed, yi_lensed = xi_comoving / d_c_lens, yi_comoving / d_c_lens
+    fxx, fxy, fyx, fyy = lens_model.hessian(xi_lensed, yi_lensed, kwargs_lens, diff=diff)
+    kappa = 1. / 2 * (fxx + fyy)
+    gamma1 = 1. / 2 * (fxx - fyy)
+    gamma2 = 1. / 2 * (fxy + fyx)
+    return kappa, gamma1, gamma2
+
 def _extract_lens_model(simulation_output, index):
     lens_model, kwargs_lens = simulation_output.simulations[index].lens_system.get_lensmodel()
     ximg = simulation_output.simulations[index].data.x
@@ -274,50 +302,168 @@ def _extract_lens_model(simulation_output, index):
     zd = simulation_output.simulations[index].lens_system.zlens
     return lens_model, kwargs_lens, ximg, yimg, zd
 
-def load_arc_stats(fname):
-    x = np.loadtxt(fname).reshape(4,5,2)
-    medians = x[:, :, 0]
-    stdevs = x[:,:,1]
-    x = {}
+
+def constrain_arc_params(param_list, stat_array, truths, truth_sigmas, sigma_scale=1.0):
+    column_index = {'rs1': 0, 'ts1': 1, 'curv1': 2, 'dir1': 3, 'dtdt1': 4,
+                    'rs2': 5, 'ts2': 6, 'curv2': 7, 'dir2': 8, 'dtdt2': 9,
+                    'rs3': 10, 'ts3': 11, 'curv3': 12, 'dir3': 13, 'dtdt3': 14,
+                    'rs4': 15, 'ts4': 16, 'curv4': 17, 'dir4': 18, 'dtdt4': 19}
+    N = len(stat_array[:, 0])
+    while True:
+        weight = 1.
+        for param in param_list:
+            index = column_index[param]
+            stat = stat_array[:, index]
+            weight *= np.exp(
+                -0.5 * (stat_array[:, index] - truths[param]) ** 2 / (sigma_scale * truth_sigmas[param]) ** 2)
+        weight *= np.max(weight) ** -1
+        effective_sample_size = np.sum(weight)
+        if effective_sample_size / N < 0.1:
+            sigma_scale += 0.01
+        else:
+            break
+    print('sigma scale:', sigma_scale)
+    return weight
+
+def constrain_kappagamma_params(param_list, stat_array, truths, truth_sigmas, sigma_scale=1.0):
+    column_index = {'kappa1': 0, 'gamma1_1': 1, 'gamma2_1': 2,
+                    'kappa2': 3, 'gamma1_2': 4, 'gamma2_2': 5,
+                    'kappa3': 6, 'gamma1_3': 7, 'gamma2_3': 8,
+                    'kappa4': 9, 'gamma1_4': 10, 'gamma2_4': 11}
+    N = len(stat_array[:, 0])
+    while True:
+        weight = 1.
+        for param in param_list:
+            index = column_index[param]
+            stat = stat_array[:, index]
+            dx = stat_array[:, index] - truths[param]
+            sig = sigma_scale * truth_sigmas[param]
+            exp_arg = (dx / sig) ** 2
+            weight *= np.exp(-0.5 * dx ** 2 / sig ** 2)
+        #             print(param, exp_arg)
+        #             a=input('continue')
+        weight *= np.max(weight) ** -1
+        effective_sample_size = np.sum(weight)
+        if effective_sample_size / N < 0.1:
+            sigma_scale += 0.01
+        else:
+            break
+    print('sigma scale:', sigma_scale)
+    return weight
+
+
+def load_kappagamma_stats(fname):
+    x = np.loadtxt(fname, unpack=False).reshape(4, 1000, 3)
+    x_med = {}
     x_stdev = {}
-    x['ts1'] = medians[0,0]
-    x['rs1'] = medians[0,1]
-    x['curv1'] = medians[0,2]
-    x['dir1'] = medians[0,3]
-    x['dtdt1'] = medians[0,4]
-    x['ts2'] = medians[1,0]
-    x['rs2'] = medians[1,1]
-    x['curv2'] = medians[1,2]
-    x['dir2'] = medians[1,3]
-    x['dtdt2'] = medians[1,4]
-    x['ts3'] = medians[2,0]
-    x['rs3'] = medians[2,1]
-    x['curv3'] = medians[2,2]
-    x['dir3'] = medians[2,3]
-    x['dtdt3'] = medians[2,4]
-    x['ts4'] = medians[3,0]
-    x['rs4'] = medians[3,1]
-    x['curv4'] = medians[3,2]
-    x['dir4'] = medians[3,3]
-    x['dtdt4'] = medians[3,4]
-    x_stdev['ts1'] = stdevs[0,0]
-    x_stdev['rs1'] = stdevs[0,1]
-    x_stdev['curv1'] = stdevs[0,2]
-    x_stdev['dir1'] = stdevs[0,3]
-    x_stdev['dtdt1'] = stdevs[0,4]
-    x_stdev['ts2'] = stdevs[1,0]
-    x_stdev['rs2'] = stdevs[1,1]
-    x_stdev['curv2'] = stdevs[1,2]
-    x_stdev['dir2'] = stdevs[1,3]
-    x_stdev['dtdt2'] = stdevs[1,4]
-    x_stdev['ts3'] = stdevs[2,0]
-    x_stdev['rs3'] = stdevs[2,1]
-    x_stdev['curv3'] = stdevs[2,2]
-    x_stdev['dir3'] = stdevs[2,3]
-    x_stdev['dtdt3'] = stdevs[2,4]
-    x_stdev['ts4'] = stdevs[3,0]
-    x_stdev['rs4'] = stdevs[3,1]
-    x_stdev['curv4'] = stdevs[3,2]
-    x_stdev['dir4'] = stdevs[3,3]
-    x_stdev['dtdt4'] = stdevs[3,4]
-    return x, x_stdev
+    x_med['kappa1'] = np.median(x[0, :, 0])
+    x_med['gamma1_1'] = np.median(x[0, :, 1])
+    x_med['gamma2_1'] = np.median(x[0, :, 2])
+    x_med['kappa2'] = np.median(x[1, :, 0])
+    x_med['gamma1_2'] = np.median(x[1, :, 1])
+    x_med['gamma2_2'] = np.median(x[1, :, 2])
+    x_med['kappa3'] = np.median(x[2, :, 0])
+    x_med['gamma1_3'] = np.median(x[2, :, 1])
+    x_med['gamma2_3'] = np.median(x[2, :, 2])
+    x_med['kappa4'] = np.median(x[3, :, 0])
+    x_med['gamma1_4'] = np.median(x[3, :, 1])
+    x_med['gamma2_4'] = np.median(x[3, :, 2])
+
+    x_stdev['kappa1'] = np.std(x[0, :, 0])
+    x_stdev['gamma1_1'] = np.std(x[0, :, 1])
+    x_stdev['gamma2_1'] = np.std(x[0, :, 2])
+    x_stdev['kappa2'] = np.std(x[1, :, 0])
+    x_stdev['gamma1_2'] = np.std(x[1, :, 1])
+    x_stdev['gamma2_2'] = np.std(x[1, :, 2])
+    x_stdev['kappa3'] = np.std(x[2, :, 0])
+    x_stdev['gamma1_3'] = np.std(x[2, :, 1])
+    x_stdev['gamma2_3'] = np.std(x[2, :, 2])
+    x_stdev['kappa4'] = np.std(x[3, :, 0])
+    x_stdev['gamma1_4'] = np.std(x[3, :, 1])
+    x_stdev['gamma2_4'] = np.std(x[3, :, 2])
+
+    x_dict = {}
+    x_dict['kappa1'] = x[0, :, 0]
+    x_dict['gamma1_1'] = x[0, :, 1]
+    x_dict['gamma2_1'] = x[0, :, 2]
+    x_dict['kappa2'] = x[1, :, 0]
+    x_dict['gamma1_2'] = x[1, :, 1]
+    x_dict['gamma2_2'] = x[1, :, 2]
+    x_dict['kappa3'] = x[2, :, 0]
+    x_dict['gamma1_3'] = x[2, :, 1]
+    x_dict['gamma2_3'] = x[2, :, 2]
+    x_dict['kappa4'] = x[3, :, 0]
+    x_dict['gamma1_4'] = x[3, :, 1]
+    x_dict['gamma2_4'] = x[3, :, 2]
+    return x_med, x_stdev, x_dict
+
+
+def load_arc_stats(fname):
+    x = np.loadtxt(fname, unpack=False).reshape(4, 1000, 5)
+    x_med = {}
+    x_stdev = {}
+    x_med['ts1'] = np.median(x[0, :, 0])
+    x_med['rs1'] = np.median(x[0, :, 1])
+    x_med['curv1'] = np.median(x[0, :, 2])
+    x_med['dir1'] = np.median(x[0, :, 3])
+    x_med['dtdt1'] = np.median(x[0, :, 4])
+    x_med['ts2'] = np.median(x[1, :, 0])
+    x_med['rs2'] = np.median(x[1, :, 1])
+    x_med['curv2'] = np.median(x[1, :, 2])
+    x_med['dir2'] = np.median(x[1, :, 3])
+    x_med['dtdt2'] = np.median(x[1, :, 4])
+    x_med['ts3'] = np.median(x[2, :, 0])
+    x_med['rs3'] = np.median(x[2, :, 1])
+    x_med['curv3'] = np.median(x[2, :, 2])
+    x_med['dir3'] = np.median(x[2, :, 3])
+    x_med['dtdt3'] = np.median(x[2, :, 4])
+    x_med['ts4'] = np.median(x[3, :, 0])
+    x_med['rs4'] = np.median(x[3, :, 1])
+    x_med['curv4'] = np.median(x[3, :, 2])
+    x_med['dir4'] = np.median(x[3, :, 3])
+    x_med['dtdt4'] = np.median(x[3, :, 4])
+
+    x_stdev['ts1'] = np.std(x[0, :, 0])
+    x_stdev['rs1'] = np.std(x[0, :, 1])
+    x_stdev['curv1'] = np.std(x[0, :, 2])
+    x_stdev['dir1'] = np.std(x[0, :, 3])
+    x_stdev['dtdt1'] = np.std(x[0, :, 4])
+    x_stdev['ts2'] = np.std(x[1, :, 0])
+    x_stdev['rs2'] = np.std(x[1, :, 1])
+    x_stdev['curv2'] = np.std(x[1, :, 2])
+    x_stdev['dir2'] = np.std(x[1, :, 3])
+    x_stdev['dtdt2'] = np.std(x[1, :, 4])
+    x_stdev['ts3'] = np.std(x[2, :, 0])
+    x_stdev['rs3'] = np.std(x[2, :, 1])
+    x_stdev['curv3'] = np.std(x[2, :, 2])
+    x_stdev['dir3'] = np.std(x[2, :, 3])
+    x_stdev['dtdt3'] = np.std(x[2, :, 4])
+    x_stdev['ts4'] = np.std(x[3, :, 0])
+    x_stdev['rs4'] = np.std(x[3, :, 1])
+    x_stdev['curv4'] = np.std(x[3, :, 2])
+    x_stdev['dir4'] = np.std(x[3, :, 3])
+    x_stdev['dtdt4'] = np.std(x[3, :, 4])
+
+    x_dict = {}
+    x_dict['ts1'] = x[0, :, 0]
+    x_dict['rs1'] = x[0, :, 1]
+    x_dict['curv1'] = x[0, :, 2]
+    x_dict['dir1'] = x[0, :, 3]
+    x_dict['dtdt1'] = x[0, :, 4]
+    x_dict['ts2'] = x[1, :, 0]
+    x_dict['rs2'] = x[1, :, 1]
+    x_dict['curv2'] = x[1, :, 2]
+    x_dict['dir2'] = x[1, :, 3]
+    x_dict['dtdt2'] = x[1, :, 4]
+    x_dict['ts3'] = x[2, :, 0]
+    x_dict['rs3'] = x[2, :, 1]
+    x_dict['curv3'] = x[2, :, 2]
+    x_dict['dir3'] = x[2, :, 3]
+    x_dict['dtdt3'] = x[2, :, 4]
+    x_dict['ts4'] = x[3, :, 0]
+    x_dict['rs4'] = x[3, :, 1]
+    x_dict['curv4'] = x[3, :, 2]
+    x_dict['dir4'] = x[3, :, 3]
+    x_dict['dtdt4'] = x[3, :, 4]
+
+    return x_med, x_stdev, x_dict

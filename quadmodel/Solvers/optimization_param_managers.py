@@ -168,6 +168,16 @@ class PowerLawFreeShearMultipole(PowerLawParamManager):
 
     """
 
+    def __init__(self, kwargs_lens_init):
+
+        """
+
+        :param kwargs_lens_init: the initial kwargs_lens before optimizing
+        """
+
+        self._a4a_init = kwargs_lens_init[2]['a_m']
+        super(PowerLawFreeShearMultipole, self).__init__(kwargs_lens_init)
+
     @property
     def to_vary_index(self):
 
@@ -199,8 +209,9 @@ class PowerLawFreeShearMultipole(PowerLawParamManager):
 
         self.kwargs_lens[2]['center_x'] = center_x
         self.kwargs_lens[2]['center_y'] = center_y
-        phi, _ = ellipticity2phi_q(e1, e2)
+        phi, q = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[2]['phi_m'] = phi
+        self.kwargs_lens[2]['a_m'] = self._a4a_init * self.kwargs_lens[0]['theta_E'] / np.sqrt(q)
 
         return self.kwargs_lens
 
@@ -211,6 +222,16 @@ class PowerLawFixedShearMultipole(PowerLawFixedShear):
     power law slope, shear strength, and multipole moment free to vary. The mass centroid and orientation of the
     multipole term are fixed to that of the EPL profile
     """
+
+    def __init__(self, kwargs_lens_init):
+
+        """
+
+        :param kwargs_lens_init: the initial kwargs_lens before optimizing
+        """
+
+        self._a4a_init = kwargs_lens_init[2]['a_m']
+        super(PowerLawFreeShearMultipole, self).__init__(kwargs_lens_init)
 
     @property
     def to_vary_index(self):
@@ -245,8 +266,9 @@ class PowerLawFixedShearMultipole(PowerLawFixedShear):
 
         self.kwargs_lens[2]['center_x'] = center_x
         self.kwargs_lens[2]['center_y'] = center_y
-        phi, _ = ellipticity2phi_q(e1, e2)
+        phi, q = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[2]['phi_m'] = phi
+        self.kwargs_lens[2]['a_m'] = self._a4a_init * self.kwargs_lens[0]['theta_E'] / np.sqrt(q)
 
         return self.kwargs_lens
 
@@ -284,6 +306,16 @@ class PowerLawFreeShearMultipole(PowerLawParamManager):
 
     """
 
+    def __init__(self, kwargs_lens_init):
+
+        """
+
+        :param kwargs_lens_init: the initial kwargs_lens before optimizing
+        """
+
+        self._a4a_init = kwargs_lens_init[2]['a_m']
+        super(PowerLawFreeShearMultipole, self).__init__(kwargs_lens_init)
+
     @property
     def to_vary_index(self):
 
@@ -315,9 +347,9 @@ class PowerLawFreeShearMultipole(PowerLawParamManager):
 
         self.kwargs_lens[2]['center_x'] = center_x
         self.kwargs_lens[2]['center_y'] = center_y
-        phi, _ = ellipticity2phi_q(e1, e2)
+        phi, q = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[2]['phi_m'] = phi
-
+        self.kwargs_lens[2]['a_m'] = self._a4a_init * self.kwargs_lens[0]['theta_E'] / np.sqrt(q)
         return self.kwargs_lens
 
 class PowerLawFixedShearMultipole_34(PowerLawFixedShear):
@@ -336,6 +368,9 @@ class PowerLawFixedShearMultipole_34(PowerLawFixedShear):
         :param shear_strength: the strenght of the external shear to be kept fixed
         :param delta_phi_m3: the orientation of the m=3 multipole relative to the EPL position angle
         """
+
+        self._a4a_init = kwargs_lens_init[2]['a_m']
+        self._a3a_init = kwargs_lens_init[3]['a_m']
         self._delta_phi_m3 = delta_phi_m3
         super(PowerLawFixedShearMultipole_34, self).__init__(kwargs_lens_init, shear_strength)
 
@@ -375,8 +410,10 @@ class PowerLawFixedShearMultipole_34(PowerLawFixedShear):
         self.kwargs_lens[2]['center_x'] = center_x
         self.kwargs_lens[2]['center_y'] = center_y
         # fix m=4 multipole orientation to EPL orientation
-        phi, _ = ellipticity2phi_q(e1, e2)
+        phi, q = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[2]['phi_m'] = phi
+        rescale_am_amplitude = self.kwargs_lens[0]['theta_E'] / np.sqrt(q)
+        self.kwargs_lens[2]['a_m'] = self._a4a_init * rescale_am_amplitude
 
         # fix m=3 multipole centroid to EPL centroid
         self.kwargs_lens[3]['center_x'] = center_x
@@ -384,6 +421,7 @@ class PowerLawFixedShearMultipole_34(PowerLawFixedShear):
         # fix m=3 multipole orientation to EPL orientation
         phi, _ = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[3]['phi_m'] = phi + self._delta_phi_m3
+        self.kwargs_lens[3]['a_m'] = self._a3a_init * rescale_am_amplitude
 
         return self.kwargs_lens
 
@@ -404,6 +442,9 @@ class PowerLawFreeShearMultipole_34(PowerLawParamManager):
         :param shear_strength: the strenght of the external shear to be kept fixed
         :param the orientation of the m=3 multipole relative to the EPL position angle
         """
+        
+        self._a4a_init = kwargs_lens_init[2]['a_m']
+        self._a3a_init = kwargs_lens_init[3]['a_m']
         self._delta_phi_m3 = delta_phi_m3
         super(PowerLawFreeShearMultipole_34, self).__init__(kwargs_lens_init)
 
@@ -440,14 +481,17 @@ class PowerLawFreeShearMultipole_34(PowerLawParamManager):
         self.kwargs_lens[2]['center_x'] = center_x
         self.kwargs_lens[2]['center_y'] = center_y
         # fix m=4 multipole orientation to EPL orientation
-        phi, _ = ellipticity2phi_q(e1, e2)
+        phi, q = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[2]['phi_m'] = phi
+        rescale_am_amplitude = self.kwargs_lens[0]['theta_E'] / np.sqrt(q)
+        self.kwargs_lens[2]['a_m'] = self._a4a_init * rescale_am_amplitude
 
         # fix m=3 multipole centroid to EPL centroid
         self.kwargs_lens[3]['center_x'] = center_x
         self.kwargs_lens[3]['center_y'] = center_y
-        # assign m=3 multipole orientation
+        # fix m=3 multipole orientation to EPL orientation
         phi, _ = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[3]['phi_m'] = phi + self._delta_phi_m3
+        self.kwargs_lens[3]['a_m'] = self._a3a_init * rescale_am_amplitude
 
         return self.kwargs_lens
