@@ -7,7 +7,8 @@ import os
 class FullSimulationContainer(object):
 
     def __init__(self, individual_simulations, parameters, magnifications,
-                 chi2_imaging_data=None, kwargs_fitting_seq=None, macromodel_samples=None, bic=None):
+                 chi2_imaging_data=None, kwargs_fitting_seq=None, macromodel_samples=None, bic=None,
+                 kappa_gamma_stats=None, curved_arc_stats=None):
 
         """
         A storage class for individual simulation containers
@@ -17,6 +18,8 @@ class FullSimulationContainer(object):
         :param chi2_imaging_data: a numpy array containing reduced chi2 of the lens and source light models given
         the imaging data
         :param bic: the Bayesian information criterion computed for the fit
+        :param kappa_gamma_stats: the convergence and shear at the image positions
+        :param curved_arc_stats: the curved arc properties at the image positions
         """
         self.simulations = individual_simulations
         self.parameters = parameters
@@ -25,6 +28,8 @@ class FullSimulationContainer(object):
         self.kwargs_fitting_seq = kwargs_fitting_seq
         self.macromodel_samples = macromodel_samples
         self.bic = bic
+        self.kappa_gamma_stats = kappa_gamma_stats
+        self.curved_arc_stats = curved_arc_stats
 
     def cut_on_logL(self, percentile_cut):
         """
@@ -154,7 +159,7 @@ def delete_custom_logL(kwargs_fitting_seq):
 
 def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, keep_chi2=False,
                    filename_suffix=None, keep_kwargs_fitting_seq=False, keep_macromodel_samples=False,
-                   save_subset_kwargs_fitting_seq=False):
+                   save_subset_kwargs_fitting_seq=False, keep_kappagamma_stats=False, keep_curvedarc_stats=False):
     """
     This function compiles output from multiple jobs with output stored in different folders
     :param output_path: the path to the directory where job_1, job_2, ... are located
@@ -168,6 +173,8 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     :param save_subset_kwargs_fitting_seq: saves just 100 of the kwargs fitting sequence classes.
     The first 25 are the best 25, the middle 50 are randomly selected, and the last 25 are the worst 25
     :return: an instance of FullSimulationContainer that contains the data for the simulation
+    :param keep_kappagamma_stats: bool; compile the convergence and shear values at image positions
+    :param keep_curvedarc_stats: bool; compiles the curved arc properties at image positions
     """
 
     if keep_realizations:
@@ -179,12 +186,13 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         fitting_seq_kwargs = []
     else:
         fitting_seq_kwargs = None
-
+    kappa_gamma_stats = None
+    curved_arc_stats = None
     init = True
     for job_index in range(job_index_min, job_index_max + 1):
         proceed = True
         filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, \
-        filename_macromodel_samples = filenames(output_path, job_index)
+        filename_macromodel_samples, filename_kappagamma_stats, filename_curvedarc_stats = filenames(output_path, job_index)
 
         try:
             _params = np.loadtxt(filename_parameters, skiprows=1)
@@ -200,7 +208,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             continue
 
         if _fluxes.shape[0] != num_realizations:
-            print('fluxes file has wrong shape')
+            print('fluxes file has wrong shape!')
             continue
 
         if keep_macromodel_samples:
@@ -210,7 +218,27 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 print('could not find file ' + filename_macromodel_samples)
                 continue
             if _macro_samples.shape[0] != num_realizations:
-                print('macromodel file has wrong shape')
+                print('macromodel file has wrong shape!')
+                continue
+
+        if keep_kappagamma_stats:
+            try:
+                _kappagammastatistics = np.loadtxt(filename_kappagamma_stats, skiprows=1)
+            except:
+                print('could not find file ' + filename_kappagamma_stats)
+                continue
+            if _kappagammastatistics.shape[0] != num_realizations:
+                print('kappa/gamma file has wrong shape!')
+                continue
+
+        if keep_curvedarc_stats:
+            try:
+                _curvedarcstatistics = np.loadtxt(filename_curvedarc_stats, skiprows=1)
+            except:
+                print('could not find file ' + filename_curvedarc_stats)
+                continue
+            if _curvedarcstatistics.shape[0] != num_realizations:
+                print('curved arc stats file has wrong shape!')
                 continue
 
         _chi2 = None
@@ -296,6 +324,10 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 macro_samples = deepcopy(_macro_samples)
             if keep_kwargs_fitting_seq:
                 fitting_seq_kwargs += _fitting_seq_kwargs
+            if keep_kappagamma_stats:
+                kappa_gamma_stats = deepcopy(_kappagammastatistics)
+            if keep_curvedarc_stats:
+                curved_arc_stats = deepcopy(_curvedarcstatistics)
         else:
             params = np.vstack((params, _params))
             fluxes = np.vstack((fluxes, _fluxes))
@@ -305,6 +337,10 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                 macro_samples = np.vstack((macro_samples, _macro_samples))
             if keep_kwargs_fitting_seq:
                 fitting_seq_kwargs += _fitting_seq_kwargs
+            if keep_kappagamma_stats:
+                kappa_gamma_stats = np.vstack((kappa_gamma_stats, _kappagammastatistics))
+            if keep_curvedarc_stats:
+                curved_arc_stats = np.vstack((curved_arc_stats, _curvedarcstatistics))
 
     print('compiled ' + str(params.shape[0]) + ' realizations')
     assert params.shape[0] == fluxes.shape[0]
@@ -357,13 +393,13 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
 
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                                 fluxes, None, fitting_seq_kwargs, macro_samples,
-                                                None)
+                                                None, kappa_gamma_stats, curved_arc_stats)
         else:
             bic = chi2_imaging_data[:, 1]
 
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                             fluxes, chi2_imaging_data[:,0], fitting_seq_kwargs, macro_samples,
-                                            bic)
+                                            bic, kappa_gamma_stats, curved_arc_stats)
     return container
 
 
