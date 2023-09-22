@@ -137,8 +137,10 @@ def filenames(output_path, job_index):
     filename_sampling_rate = output_path + 'job_' + str(job_index) + '/sampling_rate.txt'
     filename_acceptance_ratio = output_path + 'job_' + str(job_index) + '/acceptance_ratio.txt'
     filename_macromodel_samples = output_path + 'job_' + str(job_index) + '/macromodel_samples.txt'
+    filename_kappagamma_stats = output_path + 'job_' + str(job_index) + '/kappa_gamma_statistics.txt'
+    filename_curvedarc_stats = output_path + 'job_' + str(job_index) + '/curvedarc_statistics.txt'
     return filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, \
-           filename_macromodel_samples
+           filename_macromodel_samples, filename_kappagamma_stats, filename_curvedarc_stats
 
 def delete_custom_logL(kwargs_fitting_seq):
     """

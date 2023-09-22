@@ -393,4 +393,67 @@ class QuadLensSystem(object):
                     param_names.append(key)
         return np.array(kwargs_list), param_names
 
+    def kappa_gamma_statistics(self, x_image, y_image, diff_scale):
+        """
+        Computes the convergence and shear at positions x_image and y_image at angular scales set by diff_scale
+        """
+        lens_model, kwargs_lens = self.get_lensmodel()
+        if not isinstance(diff_scale, list):
+            diff_scale = [diff_scale]
+        kappa_list = []
+        g1_list = []
+        g2_list = []
+        param_names = []
+        for diff_counter, diff in enumerate(diff_scale):
+            for i in range(0, 4):
+                fxx, fxy, fyx, fyy = lens_model.hessian(x_image[i], y_image[i], kwargs_lens, diff=diff)
+                kap = 0.5 * (fxx + fyy)
+                g1 = 0.5 * (fxx - fyy)
+                g2 = 0.5 * (fxy + fyx)
+                kappa_list.append(kap)
+                g1_list.append(g1)
+                g2_list.append(g2)
+                param_name1 = 'kappa'+str(i+1)+'_'+str(diff)
+                param_name2 = 'g1' + str(i + 1) + '_' + str(diff)
+                param_name3 = 'g2' + str(i + 1) + '_' + str(diff)
+                param_names.append(param_name1)
+                param_names.append(param_name2)
+                param_names.append(param_name3)
+        kappagamma_stats = np.hstack((np.array(kappa_list), np.array(g1_list), np.array(g2_list)))
+        return kappagamma_stats, param_names
 
+    def curved_arc_statistics(self, x_image, y_image, diff_scale):
+        """
+        Computes the curved arc properties at positions x_image and y_image at angular scales set by diff_scale
+        """
+        lens_model, kwargs_lens = self.get_lensmodel()
+        if not isinstance(diff_scale, list):
+            diff_scale = [diff_scale]
+        rs = []
+        ts = []
+        curv = []
+        dir = []
+        dtan_dtan = []
+        param_names = []
+        ext = LensModelExtensions(lens_model)
+        for diff_counter, diff in enumerate(diff_scale):
+            for i in range(0, 4):
+                kwargs_arc = ext.curved_arc_estimate(x_image[i], y_image[i], kwargs_lens, smoothing=diff,
+                                                     smoothing_3rd=diff, tan_diff=True)
+                rs.append(kwargs_arc['radial_stretch'])
+                ts.append(kwargs_arc['tangential_stretch'])
+                curv.append(kwargs_arc['curvature'])
+                dir.append(kwargs_arc['direction'])
+                dtan_dtan.append(kwargs_arc['dtan_dtan'])
+                param_name1 = 'rs'+str(i+1)+'_'+str(diff)
+                param_name2 = 'ts' + str(i + 1) + '_' + str(diff)
+                param_name3 = 'curv' + str(i + 1) + '_' + str(diff)
+                param_name4 = 'dir' + str(i + 1) + '_' + str(diff)
+                param_name5 = 'dtandtan' + str(i + 1) + '_' + str(diff)
+                param_names.append(param_name1)
+                param_names.append(param_name2)
+                param_names.append(param_name3)
+                param_names.append(param_name4)
+                param_names.append(param_name5)
+        curvedarc_stats = np.hstack((np.array(rs), np.array(ts), np.array(curv), np.array(dir), np.array(dtan_dtan)))
+        return curvedarc_stats, param_names

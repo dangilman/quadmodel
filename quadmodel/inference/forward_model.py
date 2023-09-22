@@ -18,7 +18,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                   ray_tracing_optimization='default', test_mode=False,
                   save_realizations=False, crit_curves_in_test_mode=False, write_sampling_rate=False,
                   importance_weights_function=None, readout_macromodel_samples=False, n_macro=None,
-                  realization_class=None, shift_background_realization=True):
+                  realization_class=None, shift_background_realization=True, readout_kappagamma_statistics=False,
+                  readout_curvedarc_statistics=False, diff_scale_list=[0.0001, 0.025, 0.1]):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -64,12 +65,14 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     :param realization_class: a fixed instance of Realization in pyHalo to use for the simulation
     :param shift_background_realization: bool; whether or not to align halos with the center of the volume
     traversed by light
+    :param readout_kappagamma_statistics: bool; reads out text files with the convegence and shear evaluated at diff_scale
+    :param readout_curvedarc_statistics: bool; reads out text files with the curved arc parameters evaluated at diff_scale
+    :param diff_scale_list: the angular scale(s) at which to read out the convergence, shear, and curved arc parameters
     :return:
     """
 
     # set up the filenames and folders for writing output
-    filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, filename_macromodel_samples = \
-        filenames(output_path, job_index)
+    filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, filename_macromodel_samples, filename_kappagamma_stats, filename_curvedarc_stats = filenames(output_path, job_index)
 
     # if the required directories do not exist, create them
     if os.path.exists(output_path) is False:
@@ -92,11 +95,15 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
             n_kept = _m.shape[0]
         except:
             n_kept = 1
+        write_param_names_kappagamma_stats = False
+        write_param_names_curvedarc_stats = False
         write_param_names = False
         write_param_names_macromodel_samples = False
     else:
         n_kept = 0
         _m = None
+        write_param_names_kappagamma_stats = True
+        write_param_names_curvedarc_stats = True
         write_param_names = True
         write_param_names_macromodel_samples = True
 
@@ -104,11 +111,13 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         print('\nSIMULATION ALREADY FINISHED.')
         return
     if readout_macromodel_samples:
-        assert n_macro is not None
+        assert n_macro is not None, "If readout_macromodel_samples is True, you must specify a value for n_macro, the " \
+                                    "number of lens models corresponding to the macromodel"
 
     # Initialize stuff for the inference
     idx_init = deepcopy(n_kept)
     parameter_array = None
+    lens_model_statistics = None
     mags_out = None
     readout = False
     break_loop = False
@@ -241,6 +250,50 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                     for row in range(0, nrows):
                         for col in range(0, ncols):
                             f.write(str(np.round(macromodel_samples_array[row, col], 6)) + ' ')
+                        f.write('\n')
+
+            if readout_kappagamma_statistics:
+                kappagamma_stats = None
+                for l, system in enumerate(saved_lens_systems):
+                    xi, yi = lens_data_class_sampling_list[l].x, lens_data_class_sampling_list[l].y
+                    if kappagamma_stats is None:
+                        kappagamma_stats, param_names_kappagamma_statistics = system.kappa_gamma_statistics(xi, yi, diff_scale=diff_scale_list)
+                    else:
+                        new, _ = system.kappa_gamma_statistics(xi, yi, diff_scale=diff_scale_list)
+                        kappagamma_stats = np.vstack((kappagamma_stats, new))
+                nrows, ncols = int(kappagamma_stats.shape[0]), int(kappagamma_stats.shape[1])
+                with open(filename_kappagamma_stats, 'a') as f:
+                    if write_param_names_kappagamma_stats:
+                        param_name_string = ''
+                        for name in param_names_kappagamma_statistics:
+                            param_name_string += name + ' '
+                        f.write(param_name_string + '\n')
+                        write_param_names_kappagamma_stats = False
+                    for row in range(0, nrows):
+                        for col in range(0, ncols):
+                            f.write(str(np.round(kappagamma_stats[row, col], 6)) + ' ')
+                        f.write('\n')
+
+            if readout_curvedarc_statistics:
+                curvedarc_stats = None
+                for l, system in enumerate(saved_lens_systems):
+                    xi, yi = lens_data_class_sampling_list[l].x, lens_data_class_sampling_list[l].y
+                    if curvedarc_stats is None:
+                        curvedarc_stats, param_names_curvedarc_statistics = system.curved_arc_statistics(xi, yi, diff_scale=diff_scale_list)
+                    else:
+                        new, _ = system.curved_arc_statistics(xi, yi, diff_scale=diff_scale_list)
+                        curvedarc_stats = np.vstack((curvedarc_stats, new))
+                nrows, ncols = int(curvedarc_stats.shape[0]), int(curvedarc_stats.shape[1])
+                with open(filename_curvedarc_stats, 'a') as f:
+                    if write_param_names_curvedarc_stats:
+                        param_name_string = ''
+                        for name in param_names_curvedarc_statistics:
+                            param_name_string += name + ' '
+                        f.write(param_name_string + '\n')
+                        write_param_names_curvedarc_stats = False
+                    for row in range(0, nrows):
+                        for col in range(0, ncols):
+                            f.write(str(np.round(curvedarc_stats[row, col], 6)) + ' ')
                         f.write('\n')
 
             if save_realizations:
@@ -453,7 +506,7 @@ def _parameters_from_priors(lens_data_class_sampling, kwargs_sample_realization,
 
     while True:
         u = np.random.rand()
-        # Now, set up the source model, and ray trace to compute the image magnifications
+        # Now, set up the source model
         source_size_pc, kwargs_source_model, source_samples, param_names_source = \
             lens_data_class_sampling.generate_sourcemodel()
 
@@ -481,7 +534,7 @@ def _parameters_from_priors(lens_data_class_sampling, kwargs_sample_realization,
         if model_probability >= u:
             break
 
-    importance_weight = 1 / model_probability
+    importance_weight = 1.0 / model_probability
     if verbose:
         print('importance weight for sample: ', importance_weight)
         print('sample (from realization samples): ', realization_samples)
@@ -492,3 +545,4 @@ def _parameters_from_priors(lens_data_class_sampling, kwargs_sample_realization,
 
 def _flat_prior_importance_weights(*args, **kwargs):
     return 1.0
+
