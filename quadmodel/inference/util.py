@@ -66,15 +66,19 @@ class FullSimulationContainer(object):
         return FullSimulationContainer(simulations, parameters, mags, chi2, self.kwargs_fitting_seq,
                                        macro_samples, bic)
 
-    def cut_on_S(self, percentile_cut, idx_s_statistic=-2):
+    def cut_on_S(self, keep_best_N=None, percentile_cut=None, idx_s_statistic=-2):
         """
 
         :param percentile_cut:
         :return:
         """
         sorted_inds = np.argsort(self.parameters[:, idx_s_statistic])
-        idxcut = int(self.parameters.shape[0] * percentile_cut/100)
-        inds_keep = sorted_inds[0:idxcut]
+        if keep_best_N is None:
+            idxcut = int(self.parameters.shape[0] * percentile_cut/100)
+            inds_keep = sorted_inds[0:idxcut]
+        else:
+            inds_keep = sorted_inds[0:keep_best_N]
+
         if len(self.simulations) > 0:
             simulations = []
             for idx in inds_keep:
@@ -95,8 +99,16 @@ class FullSimulationContainer(object):
             bic = None
         else:
             bic = np.array(self.bic)[inds_keep]
+        if self.kappa_gamma_stats is None:
+            kappa_gamma_stats = None
+        else:
+            kappa_gamma_stats = self.kappa_gamma_stats[inds_keep, :]
+        if self.curved_arc_stats is None:
+            curved_arc_stats = None
+        else:
+            curved_arc_stats = self.curved_arc_stats[inds_keep, :]
         return FullSimulationContainer(simulations, parameters, mags, chi2, self.kwargs_fitting_seq,
-                                       macro_samples, bic)
+                                       macro_samples, bic, kappa_gamma_stats, curved_arc_stats)
 
 
     @classmethod
@@ -159,7 +171,8 @@ def delete_custom_logL(kwargs_fitting_seq):
 
 def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, keep_chi2=False,
                    filename_suffix=None, keep_kwargs_fitting_seq=False, keep_macromodel_samples=False,
-                   save_subset_kwargs_fitting_seq=False, keep_kappagamma_stats=False, keep_curvedarc_stats=False):
+                   save_subset_kwargs_fitting_seq=False, keep_kappagamma_stats=False, keep_curvedarc_stats=False,
+                   keep_best_N=None):
     """
     This function compiles output from multiple jobs with output stored in different folders
     :param output_path: the path to the directory where job_1, job_2, ... are located
@@ -175,6 +188,8 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     :return: an instance of FullSimulationContainer that contains the data for the simulation
     :param keep_kappagamma_stats: bool; compile the convergence and shear values at image positions
     :param keep_curvedarc_stats: bool; compiles the curved arc properties at image positions
+    :param keep_best_N: retains the top N samples as ranked by the summary statistic computed from the flux ratios;
+    the default setting keeps all samples
     """
 
     if keep_realizations:
@@ -400,6 +415,10 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                             fluxes, chi2_imaging_data[:,0], fitting_seq_kwargs, macro_samples,
                                             bic, kappa_gamma_stats, curved_arc_stats)
+
+    if keep_best_N is not None:
+        container = container.cut_on_S(keep_best_N)
+
     return container
 
 
