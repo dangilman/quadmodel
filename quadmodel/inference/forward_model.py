@@ -134,6 +134,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         print('starting with '+str(n_kept)+' samples accepted, '+str(n_keep - n_kept)+' remain')
         print('existing magnifications: ', _m)
         print('samples remaining: ', n_keep - n_kept)
+        print('running simulation with a summary statistic tolerance of: ', tolerance)
     # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
     if importance_weights_function is None:
         importance_weights_function = _flat_prior_importance_weights
