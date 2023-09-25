@@ -192,12 +192,16 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         # readout if either of these conditions are met
         if accepted_realizations_counter == readout_steps:
             readout = True
+            if verbose:
+                print('reading out data on this iteration.')
             accepted_realizations_counter = 0
             iteration_counter = 0
         # break loop if we have collected n_keep samples
         if n_kept == n_keep:
             readout = True
             break_loop = True
+            if verbose:
+                print('final data readout...')
         if readout_sampling_rate and write_sampling_rate:
             with open(filename_sampling_rate, 'a') as f:
                 f.write(str(np.round(sampling_rate, 2)) + ' ')
@@ -206,11 +210,11 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         if readout:
             # Now write stuff to file
             readout = False
-
             with open(filename_acceptance_ratio, 'a') as f:
                 f.write(str(np.round(acceptance_ratio, 8)) + ' ')
                 f.write('\n')
-
+            if verbose:
+                print('writing parameter output to '+filename_parameters)
             with open(filename_parameters, 'a') as f:
                 if write_param_names:
                     param_name_string = ''
@@ -224,7 +228,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                     for col in range(0, ncols):
                         f.write(str(np.round(parameter_array[row, col], 6)) + ' ')
                     f.write('\n')
-
+            if verbose:
+                print('writing flux ratio output to '+filename_mags)
             with open(filename_mags, 'a') as f:
                 nrows, ncols = int(mags_out.shape[0]), int(mags_out.shape[1])
                 for row in range(0, nrows):
@@ -233,6 +238,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                     f.write('\n')
 
             if readout_macromodel_samples:
+                if verbose:
+                    print('writing macromodel samples to ' + filename_macromodel_samples)
                 macromodel_samples_array = None
                 for l, system in enumerate(saved_lens_systems):
                     if macromodel_samples_array is None:
@@ -253,6 +260,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                         f.write('\n')
 
             if readout_kappagamma_statistics:
+                if verbose:
+                    print('writing kappa/gamma statistics to ' + filename_kappagamma_stats)
                 kappagamma_stats = None
                 for l, system in enumerate(saved_lens_systems):
                     xi, yi = lens_data_class_sampling_list[l].x, lens_data_class_sampling_list[l].y
@@ -275,6 +284,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                         f.write('\n')
 
             if readout_curvedarc_statistics:
+                if verbose:
+                    print('writing curved arc statistics to ' + filename_curvedarc_stats)
                 curvedarc_stats = None
                 for l, system in enumerate(saved_lens_systems):
                     xi, yi = lens_data_class_sampling_list[l].x, lens_data_class_sampling_list[l].y
@@ -297,6 +308,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                         f.write('\n')
 
             if save_realizations:
+                if verbose:
+                    print('writing curved arc statistics to ' + filename_curvedarc_stats)
                 for idx_system, system_with_pyhalo in enumerate(saved_lens_systems):
                     zd, zs = system_with_pyhalo.zlens, system_with_pyhalo.zsource
                     ximg = lens_data_class_sampling_list[idx_system].x
