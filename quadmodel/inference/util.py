@@ -79,7 +79,7 @@ class FullSimulationContainer(object):
         else:
             inds_keep = sorted_inds[0:keep_best_N]
 
-        if len(self.simulations) > 0:
+        if self.simulations is not None and len(self.simulations) > 0:
             simulations = []
             for idx in inds_keep:
                 simulations.append(self.simulations[idx])
