@@ -20,17 +20,27 @@ class PowerLawParamManager(object):
 
         self.kwargs_lens = kwargs_lens_init
 
+    # @staticmethod
+    # def am_measured_to_physical(a_m_measured, theta_E, q):
+    #     """
+    #     Computes the scaling factor for the multipole moments to implement the "shape distortion" convention.
+    #
+    #     Priors are specified on a3_a and a4_a, the MEASURED shapes of ellipitical galaxies. These quantities are
+    #     transformed in the PHYSICAL amplitudes of the multipole moments using the relation:
+    #
+    #     a4_a_measured = a4_a_physical * lambda
+    #
+    #     where lambda = theta_E / sqrt(q).
+    #     """
+    #     lam = theta_E / np.sqrt(q)
+    #     a_m_phys = a_m_measured * lam
+    #     return a_m_phys
+
     @staticmethod
-    def rescale_multipole_moment(a_m, theta_E, q):
-        """
-        Computes the scaling factor for the multipole moments to implement the "shape distortion" convention, rather
-        than a physical multipole amplitude convention
-        """
-        am_a = a_m * theta_E / q ** 0.5
-        return am_a
+    def am_measured_to_physical(a_m_measured, theta_E, q):
+        return a_m_measured
 
     def param_chi_square_penalty(self, args):
-
         return 0.
 
     @property
@@ -126,7 +136,6 @@ class PowerLawFreeShear(PowerLawParamManager):
 
         return self.kwargs_lens
 
-
 class PowerLawFixedShear(PowerLawParamManager):
 
     """
@@ -221,7 +230,7 @@ class PowerLawFreeShearMultipole(PowerLawParamManager):
         self.kwargs_lens[2]['center_x'] = center_x
         self.kwargs_lens[2]['center_y'] = center_y
         phi, q = ellipticity2phi_q(e1, e2)
-        self.kwargs_lens[2]['a_m'] = self.rescale_multipole_moment(self._a4a_init, thetaE, q)
+        self.kwargs_lens[2]['a_m'] = self.am_measured_to_physical(self._a4a_init, thetaE, q)
         self.kwargs_lens[2]['phi_m'] = phi
 
         return self.kwargs_lens
@@ -279,7 +288,7 @@ class PowerLawFixedShearMultipole(PowerLawFixedShear):
         self.kwargs_lens[2]['center_y'] = center_y
         phi, q = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[2]['phi_m'] = phi
-        self.kwargs_lens[2]['a_m'] = self.rescale_multipole_moment(self._a4a_init, thetaE, q)
+        self.kwargs_lens[2]['a_m'] = self.am_measured_to_physical(self._a4a_init, thetaE, q)
         return self.kwargs_lens
 
 
@@ -359,7 +368,7 @@ class PowerLawFreeShearMultipole(PowerLawParamManager):
         self.kwargs_lens[2]['center_y'] = center_y
         phi, q = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[2]['phi_m'] = phi
-        self.kwargs_lens[2]['a_m'] = self._a4a_init * self.kwargs_lens[0]['theta_E'] / np.sqrt(q)
+        self.kwargs_lens[2]['a_m'] = self.am_measured_to_physical(self._a4a_init)
         return self.kwargs_lens
 
 class PowerLawFixedShearMultipole_34(PowerLawFixedShear):
@@ -422,7 +431,7 @@ class PowerLawFixedShearMultipole_34(PowerLawFixedShear):
         # fix m=4 multipole orientation to EPL orientation
         phi, q = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[2]['phi_m'] = phi
-        self.kwargs_lens[2]['a_m'] = self.rescale_multipole_moment(self._a4a_init, thetaE, q)
+        self.kwargs_lens[2]['a_m'] = self.am_measured_to_physical(self._a4a_init, thetaE, q)
 
         # fix m=3 multipole centroid to EPL centroid
         self.kwargs_lens[3]['center_x'] = center_x
@@ -430,7 +439,7 @@ class PowerLawFixedShearMultipole_34(PowerLawFixedShear):
 
         phi, _ = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[3]['phi_m'] = phi + self._delta_phi_m3
-        self.kwargs_lens[3]['a_m'] = self.rescale_multipole_moment(self._a3a_init, thetaE, q)
+        self.kwargs_lens[3]['a_m'] = self.am_measured_to_physical(self._a3a_init, thetaE, q)
 
         return self.kwargs_lens
 
@@ -492,7 +501,7 @@ class PowerLawFreeShearMultipole_34(PowerLawParamManager):
         # fix m=4 multipole orientation to EPL orientation
         phi, q = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[2]['phi_m'] = phi
-        self.kwargs_lens[2]['a_m'] = self.rescale_multipole_moment(self._a4a_init, thetaE, q)
+        self.kwargs_lens[2]['a_m'] = self.am_measured_to_physical(self._a4a_init, thetaE, q)
 
         # fix m=3 multipole centroid to EPL centroid
         self.kwargs_lens[3]['center_x'] = center_x
@@ -500,6 +509,6 @@ class PowerLawFreeShearMultipole_34(PowerLawParamManager):
 
         phi, _ = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[3]['phi_m'] = phi + self._delta_phi_m3
-        self.kwargs_lens[3]['a_m'] = self.rescale_multipole_moment(self._a3a_init, thetaE, q)
+        self.kwargs_lens[3]['a_m'] = self.am_measured_to_physical(self._a3a_init, thetaE, q)
 
         return self.kwargs_lens

@@ -378,10 +378,10 @@ class QuadLensSystem(object):
             for key in kw.keys():
                 if key=='a_m':
                     if kw['m']==4:
-                        param_names.append('a_m_4')
+                        param_names.append('a4_physical')
                         kwargs_list.append(kw[key])
                     elif kw['m']==3:
-                        param_names.append('a_m_3')
+                        param_names.append('a3_physical')
                         kwargs_list.append(kw[key])
                     else:
                         raise Exception('if multipole is in lens model, must have m=3 or m=4')
