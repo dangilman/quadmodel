@@ -351,7 +351,6 @@ def constrain_kappagamma_params(param_list, stat_array, truths, truth_sigmas, si
     print('sigma scale:', sigma_scale)
     return weight
 
-
 def load_kappagamma_stats(fname):
     x = np.loadtxt(fname, unpack=False).reshape(4, 1000, 3)
     x_med = {}
