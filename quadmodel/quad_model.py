@@ -407,7 +407,7 @@ class QuadLensSystem(object):
         param_names = []
         for diff_counter, diff in enumerate(diff_scale):
             for i in range(0, 4):
-                kap, g1, g2 = kappa_gamma_single(lens_model, kwargs_lens, x_image, y_image, self.zlens,
+                kap, g1, g2 = kappa_gamma_single(lens_model, kwargs_lens, x_image[i], y_image[i], self.zlens,
                                                  diff)
                 kappa_list.append(kap)
                 g1_list.append(g1)
@@ -438,14 +438,14 @@ class QuadLensSystem(object):
         for diff_counter, diff in enumerate(diff_scale):
             for i in range(0, 4):
                 radial_stretch, tangential_stretch, curvature, \
-                direction, dtan_dtan = curved_arc_statistics_single(lens_model, kwargs_lens,
-                                                                    x_image, y_image, self.zlens, diff=diff)
+                direction, dtdt = curved_arc_statistics_single(lens_model, kwargs_lens,
+                                                                    x_image[i], y_image[i], self.zlens, diff=diff)
 
                 rs.append(radial_stretch)
                 ts.append(tangential_stretch)
                 curv.append(curvature)
                 dir.append(direction)
-                dtan_dtan.append(dtan_dtan)
+                dtan_dtan.append(dtdt)
                 param_name1 = 'rs'+str(i+1)+'_'+str(diff)
                 param_name2 = 'ts' + str(i + 1) + '_' + str(diff)
                 param_name3 = 'curv' + str(i + 1) + '_' + str(diff)
