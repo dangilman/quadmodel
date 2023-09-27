@@ -7,6 +7,7 @@ from lenstronomy.LensModel.Solver.lens_equation_solver import LensEquationSolver
 import numpy as np
 from scipy.interpolate import interp1d
 from quadmodel.util import interpolate_ray_paths_system
+from quadmodel.Solvers.light_fit_util import kappa_gamma_single, curved_arc_statistics_single
 
 class QuadLensSystem(object):
 
@@ -406,10 +407,8 @@ class QuadLensSystem(object):
         param_names = []
         for diff_counter, diff in enumerate(diff_scale):
             for i in range(0, 4):
-                fxx, fxy, fyx, fyy = lens_model.hessian(x_image[i], y_image[i], kwargs_lens, diff=diff)
-                kap = 0.5 * (fxx + fyy)
-                g1 = 0.5 * (fxx - fyy)
-                g2 = 0.5 * (fxy + fyx)
+                kap, g1, g2 = kappa_gamma_single(lens_model, kwargs_lens, x_image, y_image, self.zlens,
+                                                 diff)
                 kappa_list.append(kap)
                 g1_list.append(g1)
                 g2_list.append(g2)
@@ -438,13 +437,15 @@ class QuadLensSystem(object):
         ext = LensModelExtensions(lens_model)
         for diff_counter, diff in enumerate(diff_scale):
             for i in range(0, 4):
-                kwargs_arc = ext.curved_arc_estimate(x_image[i], y_image[i], kwargs_lens, smoothing=diff,
-                                                     smoothing_3rd=diff, tan_diff=True)
-                rs.append(kwargs_arc['radial_stretch'])
-                ts.append(kwargs_arc['tangential_stretch'])
-                curv.append(kwargs_arc['curvature'])
-                dir.append(kwargs_arc['direction'])
-                dtan_dtan.append(kwargs_arc['dtan_dtan'])
+                radial_stretch, tangential_stretch, curvature, \
+                direction, dtan_dtan = curved_arc_statistics_single(lens_model, kwargs_lens,
+                                                                    x_image, y_image, self.zlens, diff=diff)
+
+                rs.append(radial_stretch)
+                ts.append(tangential_stretch)
+                curv.append(curvature)
+                dir.append(direction)
+                dtan_dtan.append(dtan_dtan)
                 param_name1 = 'rs'+str(i+1)+'_'+str(diff)
                 param_name2 = 'ts' + str(i + 1) + '_' + str(diff)
                 param_name3 = 'curv' + str(i + 1) + '_' + str(diff)

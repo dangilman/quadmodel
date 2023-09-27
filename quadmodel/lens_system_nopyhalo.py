@@ -22,3 +22,13 @@ class LensSystem(object):
         kwargs_lens_model['cosmo'] = self.astropy
         lens_model = LensModel(**self.kwargs_lens_model)
         return lens_model, self.kwargs_lens
+
+    def get_macro_lensmodel(self, n_macro):
+
+        kwargs_lens_model = deepcopy(self.kwargs_lens_model)
+        kwargs_lens_model['cosmo'] = self.astropy
+        lens_model_list = self.kwargs_lens_model['lens_model_list'][0:n_macro]
+        lens_redshift_list = self.kwargs_lens_model['lens_redshift_list'][0:n_macro]
+        lens_model = LensModel(lens_model_list, lens_redshift_list=lens_redshift_list,
+                               multi_plane=True, z_source=self.zsource, cosmo=kwargs_lens_model['cosmo'])
+        return lens_model, self.kwargs_lens[0:n_macro]

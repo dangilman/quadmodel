@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.interpolate import interp1d
+from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
+from quadmodel.Solvers.light_fit_util import kappa_gamma_single, curved_arc_statistics_single
 
 def approx_theta_E(ximg,yimg):
 
@@ -107,3 +109,64 @@ def interpolate_ray_paths_system(x_image, y_image, lens_system,
 
     return interpolate_ray_paths(x_image, y_image, lens_model, kwargs_lens, zsource,
                                  terminate_at_source, source_x, source_y)
+
+def kappa_gamma_statistics(lens_model, kwargs_lens, x_image, y_image, diff_scale, z_lens):
+    """
+    Computes the convergence and shear at positions x_image and y_image at angular scales set by diff_scale
+    """
+    if not isinstance(diff_scale, list):
+        diff_scale = [diff_scale]
+    kappa_list = []
+    g1_list = []
+    g2_list = []
+    param_names = []
+    for diff_counter, diff in enumerate(diff_scale):
+        for i in range(0, 4):
+            kap, g1, g2 = kappa_gamma_single(lens_model, kwargs_lens, x_image[i], y_image[i], z_lens, diff=diff)
+            kappa_list.append(kap)
+            g1_list.append(g1)
+            g2_list.append(g2)
+            param_name1 = 'kappa'+str(i+1)+'_'+str(diff)
+            param_name2 = 'g1' + str(i + 1) + '_' + str(diff)
+            param_name3 = 'g2' + str(i + 1) + '_' + str(diff)
+            param_names.append(param_name1)
+            param_names.append(param_name2)
+            param_names.append(param_name3)
+    kappagamma_stats = np.hstack((np.array(kappa_list), np.array(g1_list), np.array(g2_list)))
+    return kappagamma_stats, param_names
+
+def curved_arc_statistics(lens_model, kwargs_lens, x_image, y_image, diff_scale, z_lens):
+    """
+    Computes the curved arc properties at positions x_image and y_image at angular scales set by diff_scale
+    """
+    if not isinstance(diff_scale, list):
+        diff_scale = [diff_scale]
+    rs = []
+    ts = []
+    curv = []
+    dir = []
+    dtan_dtan = []
+    param_names = []
+    ext = LensModelExtensions(lens_model)
+    for diff_counter, diff in enumerate(diff_scale):
+        for i in range(0, 4):
+            radial_stretch, tangential_stretch, curvature, \
+            direction, dtdt = curved_arc_statistics_single(lens_model, kwargs_lens,
+                                                                x_image[i], y_image[i], z_lens, diff=diff)
+            rs.append(radial_stretch)
+            ts.append(tangential_stretch)
+            curv.append(curvature)
+            dir.append(direction)
+            dtan_dtan.append(dtdt)
+            param_name1 = 'rs'+str(i+1)+'_'+str(diff)
+            param_name2 = 'ts' + str(i + 1) + '_' + str(diff)
+            param_name3 = 'curv' + str(i + 1) + '_' + str(diff)
+            param_name4 = 'dir' + str(i + 1) + '_' + str(diff)
+            param_name5 = 'dtandtan' + str(i + 1) + '_' + str(diff)
+            param_names.append(param_name1)
+            param_names.append(param_name2)
+            param_names.append(param_name3)
+            param_names.append(param_name4)
+            param_names.append(param_name5)
+    curvedarc_stats = np.hstack((np.array(rs), np.array(ts), np.array(curv), np.array(dir), np.array(dtan_dtan)))
+    return curvedarc_stats, param_names

@@ -396,12 +396,13 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
             container = FullSimulationContainer(realizations_and_lens_systems, params,
                                                 fluxes, chi2_imaging_data[:,0],
                                                 fitting_seq_kwargs_out, macro_samples,
-                                                bic)
+                                                bic, kappa_gamma_stats, curved_arc_stats)
             container.kwargs_fitting_seq_saved_inds = saved_inds
         else:
             assert len(fitting_seq_kwargs) == params.shape[0]
             container = FullSimulationContainer(realizations_and_lens_systems, params,
-                                        fluxes, chi2_imaging_data[:,0], fitting_seq_kwargs, macro_samples, bic)
+                                        fluxes, chi2_imaging_data[:,0], fitting_seq_kwargs, macro_samples, bic,
+                                                 kappa_gamma_stats, curved_arc_stats)
             container.kwargs_fitting_seq_saved_inds = None
     else:
         if chi2_imaging_data is None:
