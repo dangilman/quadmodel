@@ -326,6 +326,7 @@ class QuadLensSystem(object):
                              grid_rmax=None,
                              grid_resolution=None,
                              grid_resolution_rescale=1,
+                                grid_size_rescale=1.0,
                              source_model='GAUSSIAN', **kwargs_magnification_finite):
 
         source_x, source_y = self.source_centroid_x, self.source_centroid_y
@@ -337,7 +338,7 @@ class QuadLensSystem(object):
             from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution
             grid_resolution = auto_raytracing_grid_resolution(source_fwhm_pc)
         grid_resolution *= grid_resolution_rescale
-
+        grid_rmax *= grid_size_rescale
         if source_model == 'GAUSSIAN':
             plot_quasar_images(lens_model, x, y, source_x, source_y, kwargs_lensmodel,
                                                                      source_fwhm_pc,

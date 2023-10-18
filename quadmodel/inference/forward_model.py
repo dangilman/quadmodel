@@ -19,8 +19,9 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                   save_realizations=False, crit_curves_in_test_mode=False, write_sampling_rate=False,
                   importance_weights_function=None, readout_macromodel_samples=False, n_macro=None,
                   realization_class=None, shift_background_realization=True, readout_kappagamma_statistics=False,
-                  readout_curvedarc_statistics=False, diff_scale_list=[0.0001, 0.025, 0.1],
-                  subtract_exact_mass_sheets=False, log_mlow_mass_sheet=None, random_seed=None):
+                  readout_curvedarc_statistics=False, diff_scale_list=[0.0001, 0.05, 0.2],
+                  subtract_exact_mass_sheets=False, log_mlow_mass_sheet=None, random_seed=None, rescale_grid_size=1.0,
+                  rescale_grid_resolution=2.0):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -73,6 +74,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     substructure at each lens plane
     :param log_mlow_mass_sheet: the minimum halo mass used to compute the negative convergence added along the LOS.
     Note: if subtract_exact_mass_sheets is True, then this argument has no effect
+    :param rescale_grid_size: rescales the size of the ray-tracing grid
+    :param rescale_grid_resolution: rescales the resolution (arcsec/pixel) of the ray-tracing grid
     :return:
     """
 
@@ -159,7 +162,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                                                                 verbose, crit_curves_in_test_mode,
                                                               importance_weights_function, reoptimize_initial_fit,
                                                               realization_class, shift_background_realization,
-                                                              subtract_exact_mass_sheets, log_mlow_mass_sheet)
+                                                              subtract_exact_mass_sheets, log_mlow_mass_sheet,
+                                                              rescale_grid_size, rescale_grid_resolution)
         acceptance_rate_counter += 1
         # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
         if acceptance_rate_counter == 50:
@@ -356,7 +360,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
 def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
                     kwargs_sample_macromodel, ray_tracing_optimization, test_mode, verbose, crit_curves_in_test_mode,
                     importance_weights_function, reoptimize_initial_fit, realization_class,
-                    shift_background_realization, subtract_exact_mass_sheets, log_mlow_mass_sheet):
+                    shift_background_realization, subtract_exact_mass_sheets, log_mlow_mass_sheet,
+                    rescale_grid_size, rescale_grid_resolution):
 
     # add astrometric uncertainties to image positions
     magnifications, magnification_uncertainties, astrometric_uncertainty = \
@@ -437,7 +442,9 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
         lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, source_size_pc,
                                 lens_model_full,
                                 kwargs_lens_final,
-                                grid_resolution_rescale=2.,
+                                grid_size_rescale=rescale_grid_size,
+                                grid_resolution_rescale=2,
+
                                 **kwargs_source_model)
         plt.show()
         _r = np.linspace(-2.0 * R_ein_approx, 2.0 * R_ein_approx, 200)
@@ -471,14 +478,16 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
         mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
                                                 lens_data_class_sampling.y, source_size_pc, lens_model=lens_model_full,
                                                 kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=0.5,
-                                                grid_resolution_rescale=2., **kwargs_source_model)
+                                                grid_resolution_rescale=rescale_grid_resolution,
+                                                grid_size_rescale=rescale_grid_size, **kwargs_source_model)
     except:
         print('SINGULAR HESSIAN MATRIX; RETRY WITH CIRCULAR APERTURE')
         mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
                                                 lens_data_class_sampling.y, source_size_pc,
                                                 lens_model=lens_model_full,
                                                 kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=1,
-                                                grid_resolution_rescale=2., **kwargs_source_model)
+                                                grid_size_rescale=rescale_grid_size,
+                                                grid_resolution_rescale=rescale_grid_resolution, **kwargs_source_model)
 
     # Now we account for uncertainties in the image magnifications. These uncertainties are sometimes quoted for
     # individual image fluxes, or the flux ratios.
