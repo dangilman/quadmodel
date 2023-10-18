@@ -135,6 +135,25 @@ def kappa_gamma_statistics(lens_model, kwargs_lens, x_image, y_image, diff_scale
     kappagamma_stats = np.hstack((np.array(kappa_list), np.array(g1_list), np.array(g2_list)))
     return kappagamma_stats, param_names
 
+def curved_arc_statistics_parallel(lens_model, kwargs_lens, x_coord_list, y_coord_list,
+                                   z_lens, diff=None, nproc=10):
+    """
+    Computes the curved arc properties at different image positions in parallel
+    """
+    args = []
+    for (xi, yi) in zip(x_coord_list, y_coord_list):
+        new = (lens_model, kwargs_lens, xi, yi, z_lens, diff)
+        args.append(new)
+
+    from multiprocessing.pool import Pool
+    pool = Pool(nproc)
+    results = pool.starmap(curved_arc_statistics_single, args)
+    pool.close()
+    result_array = np.empty((len(results), 5))
+    for i, result in enumerate(results):
+        result_array[i,:] = np.array(result)
+    return result_array
+
 def curved_arc_statistics(lens_model, kwargs_lens, x_image, y_image, diff_scale, z_lens):
     """
     Computes the curved arc properties at positions x_image and y_image at angular scales set by diff_scale

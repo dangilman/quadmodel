@@ -19,7 +19,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                   save_realizations=False, crit_curves_in_test_mode=False, write_sampling_rate=False,
                   importance_weights_function=None, readout_macromodel_samples=False, n_macro=None,
                   realization_class=None, shift_background_realization=True, readout_kappagamma_statistics=False,
-                  readout_curvedarc_statistics=False, diff_scale_list=[0.0001, 0.025, 0.1]):
+                  readout_curvedarc_statistics=False, diff_scale_list=[0.0001, 0.025, 0.1],
+                  subtract_exact_mass_sheets=False, log_mlow_mass_sheet=None, random_seed=None):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -68,12 +69,16 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     :param readout_kappagamma_statistics: bool; reads out text files with the convegence and shear evaluated at diff_scale
     :param readout_curvedarc_statistics: bool; reads out text files with the curved arc parameters evaluated at diff_scale
     :param diff_scale_list: the angular scale(s) at which to read out the convergence, shear, and curved arc parameters
+    :param subtract_exact_mass_sheets: bool; if True, then pyHalo will subtract the exact amount of mass added in
+    substructure at each lens plane
+    :param log_mlow_mass_sheet: the minimum halo mass used to compute the negative convergence added along the LOS.
+    Note: if subtract_exact_mass_sheets is True, then this argument has no effect
     :return:
     """
 
     # set up the filenames and folders for writing output
-    filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, filename_macromodel_samples, filename_kappagamma_stats, filename_curvedarc_stats = filenames(output_path, job_index)
-
+    filename_parameters, filename_mags, filename_realizations, filename_sampling_rate, filename_acceptance_ratio, \
+    filename_macromodel_samples, filename_kappagamma_stats, filename_curvedarc_stats = filenames(output_path, job_index)
     # if the required directories do not exist, create them
     if os.path.exists(output_path) is False:
         proc = subprocess.Popen(['mkdir', output_path])
@@ -143,6 +148,9 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     else:
         reoptimize_initial_fit = False
 
+    if random_seed is not None:
+        np.random.seed(random_seed)
+
     while True:
 
         stat, realization_samples, source_samples, macromodel_samples, param_names_realization, \
@@ -150,7 +158,8 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                                                                 kwargs_sample_macromodel, ray_tracing_optimization, test_mode,
                                                                 verbose, crit_curves_in_test_mode,
                                                               importance_weights_function, reoptimize_initial_fit,
-                                                              realization_class, shift_background_realization)
+                                                              realization_class, shift_background_realization,
+                                                              subtract_exact_mass_sheets, log_mlow_mass_sheet)
         acceptance_rate_counter += 1
         # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
         if acceptance_rate_counter == 50:
@@ -347,7 +356,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
 def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
                     kwargs_sample_macromodel, ray_tracing_optimization, test_mode, verbose, crit_curves_in_test_mode,
                     importance_weights_function, reoptimize_initial_fit, realization_class,
-                    shift_background_realization):
+                    shift_background_realization, subtract_exact_mass_sheets, log_mlow_mass_sheet):
 
     # add astrometric uncertainties to image positions
     magnifications, magnification_uncertainties, astrometric_uncertainty = \
@@ -413,9 +422,14 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
     # observed image coordinates to common source position in the presence of all the dark matter halos along the
     # line of sight and in the main lens plane.
     optimizer = HierarchicalOptimization(lens_system, settings_class=ray_tracing_optimization)
+    if log_mlow_mass_sheet is None:
+        # set this to the value specified in the settings class unless it is explicitely set by the user
+        log_mlow_mass_sheet = optimizer.settings.log_mlow_mass_sheet
     kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class_sampling,
                                                                            constrain_params=constrain_params_macro,
                                                                            param_class_name=optimization_routine,
+                                                                           log_mlow_mass_sheet=log_mlow_mass_sheet,
+                                                                           subtract_exact_mass_sheets=subtract_exact_mass_sheets,
                                                                            verbose=verbose)
 
     if test_mode:

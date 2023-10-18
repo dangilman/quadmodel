@@ -168,7 +168,7 @@ class Quad(object):
 
     def _generate_macromodel_main(self, m3_amplitude_prior=None, m4_amplitude_prior=None, gamma_macro_prior=None,
                                   shear_strength_prior=None, kwargs_lens_macro_init=None, center_x_prior=None,
-                                  center_y_prior=None, e1_prior=None, e2_prior=None):
+                                  center_y_prior=None, e1_prior=None, e2_prior=None, m3_orientation_prior=None):
         """
         Used only if lens-specific data class has no satellite galaxies; for systems with satellites, add them in the
         lens-specific data class and override this method
@@ -264,7 +264,10 @@ class Quad(object):
 
         elif self.macromodel_type == 'EPL_FIXED_SHEAR_MULTIPOLE_34':
             optimization_routine = 'fixed_shear_powerlaw_multipole_34'
-            m3_orientation = np.random.uniform(0, np.pi/3)
+            if m3_orientation_prior is None:
+                m3_orientation = np.random.uniform(0, np.pi/3)
+            else:
+                m3_orientation = m3_orientation_prior[0](m3_orientation_prior[1], m3_orientation_prior[2])
             constrain_params = {'shear': shear_amplitude, 'delta_phi_m3': m3_orientation}
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole_34
             model = EPLShearMultipole_34(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4,
@@ -294,7 +297,10 @@ class Quad(object):
 
         elif self.macromodel_type == 'EPL_FREE_SHEAR_MULTIPOLE_34':
             optimization_routine = 'free_shear_powerlaw_multipole_34'
-            m3_orientation = np.random.uniform(0, np.pi/3)
+            if m3_orientation_prior is None:
+                m3_orientation = np.random.uniform(0, np.pi / 3)
+            else:
+                m3_orientation = m3_orientation_prior[0](m3_orientation_prior[1], m3_orientation_prior[2])
             constrain_params = {'delta_phi_m3': m3_orientation}
             from quadmodel.deflector_models.preset_macromodels import EPLShearMultipole_34
             model = EPLShearMultipole_34(self.zlens, gamma_macro, shear_amplitude, multipole_amplitude_m4,
@@ -336,7 +342,7 @@ class Quad(object):
             return source_size_pc, kwargs_source_model, source_samples, param_names_source
 
         else:
-            raise Exception('other macromodels not yet implemented.')
+            raise Exception('other source models not yet implemented.')
 
     def set_zlens(self, reset=False):
 

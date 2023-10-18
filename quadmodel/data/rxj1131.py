@@ -44,6 +44,29 @@ class RXJ1131(Quad):
         param_names = ['theta_E', 'center_x', 'center_y']
         return [satellite], params, param_names
 
+class RXJ1131_NoSatellite(Quad):
+
+    def __init__(self, sourcemodel_type='midIR_Gaussian',
+                 macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
+        zlens = 0.3
+        zsource = 0.66
+        m = [1.63, 1.0, 1.19, 0.2]
+        x = [-2.137, -2.076, -1.68, 1.074]
+        y = [-0.27, 1.012, -1.352, 0.236]
+        delta_m = [0.03] * np.array(m)
+        delta_xy = [0.005] * 4
+        keep_flux_ratio_index = [0, 1, 2]
+        self.log10_host_halo_mass = 13.9
+        self.log10_host_halo_mass_sigma = 0.3
+        kwargs_source_model = {}
+
+        kwargs_macromodel = {'shear_amplitude_min': 0.06, 'shear_amplitude_max': 0.28}
+
+        super(RXJ1131_NoSatellite, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, kwargs_source_model,
+                                      macromodel_type, kwargs_macromodel, keep_flux_ratio_index,
+                                      uncertainty_in_magnifications=False)
+
+
 
 class RXJ1131_Sugai(Quad):
     """
@@ -91,20 +114,20 @@ class RXJ1131_Sugai(Quad):
         param_names = ['theta_E', 'center_x', 'center_y']
         return [satellite], params, param_names
 
-
-
 class RXJ1131_JWST(RXJ1131):
 
     def __init__(self, sourcemodel_type='midIR_Gaussian',
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
         super(RXJ1131_JWST, self).__init__(sourcemodel_type, macromodel_type)
-        
+
         # now replace the data with the JWST measurements
-        x = [-0.54388937, -0.99753444,  0.25821667,  1.28320714] 
+        x0 = -0.4321
+        y0 = -1.7094
+        x = [-0.54388937, -0.99753444,  0.25821667,  1.28320714]
         y = [-2.21168049,  0.95854212,  0.90545154,  0.34768682]
-        self.x = x
-        self.y = y
+        self.x = np.array(x) - x0
+        self.y = np.array(y) - y0
         normalized_fluxes = [1.00, 0.70, 1.07, 1.28]
         self.m = np.array(normalized_fluxes)
         flux_uncertainties = [0.01] * 4  # percent uncertainty

@@ -14,9 +14,9 @@ class J0608(Quad):
     def __init__(self, sourcemodel_type='midIR_Gaussian',
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
 
-        zlens = 
+        zlens = 0.6
         zsource = 2.346
-        x = [-0.10151357,  0.62373664, -0.07702691, -0.44519615] 
+        x = [-0.10151357,  0.62373664, -0.07702691, -0.44519615]
         y = [-0.48321348, -0.03697901,  0.76274544, -0.24255295]
         m = [1.0] * 4
         delta_m = [0.01] * 4

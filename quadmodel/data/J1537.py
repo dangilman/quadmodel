@@ -34,21 +34,26 @@ class J1537(Quad):
 
         super(J1537, self).__init__(zlens, zsource, x, y, m, delta_m, delta_xy, sourcemodel_type, {}, macromodel_type,
                                     kwargs_macromodel, keep_flux_ratio_index)
-        
+
 class J1537_JWST(J1537):
     def __init__(self, sourcemodel_type='midIR_Gaussian',
                  macromodel_type='EPL_FIXED_SHEAR_MULTIPOLE'):
         super(J1537_JWST, self).__init__(sourcemodel_type, macromodel_type)
-        
+
         # now replace the data with the JWST measurements
-        x = [ 0.20448753,  1.22923212, -0.27489248, -1.15882718] 
+        x = [ 0.20448753,  1.22923212, -0.27489248, -1.15882718]
         y = [-1.56949733,  0.15095658,  1.65685658, -0.23831582]
+        x0 = 0.0
+        y0 = 0.0
+        x = np.array(x) - y0
+        y = np.array(y) - x0
         self.x = x
         self.y = y
         normalized_fluxes = [1.00, 0.70, 1.07, 1.28]
         self.m = np.array(normalized_fluxes)
         flux_uncertainties = [0.01] * 4  # percent uncertainty
-        self.delta_m = np.array(flux_uncertainties)    
-        
-        
+        self.delta_m = np.array(flux_uncertainties)
+
+
+
 

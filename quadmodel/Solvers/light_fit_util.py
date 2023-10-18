@@ -253,10 +253,13 @@ def curved_arc_statistics(lens_models, kwargs_lens_list, ximg_list, yimg_list, z
 
 def curved_arc_statistics_single(lens_model, kwargs_lens, x_image, y_image, z_lens, diff=None):
     ext = LensModelExtensions(lens_model)
-    d_c_lens = lens_model.cosmo.comoving_distance(z_lens).value
-    xi_comoving, yi_comoving, _, _ = lens_model.lens_model.ray_shooting_partial(
-        0.0, 0.0, x_image, y_image, 0.0, z_lens, kwargs_lens)
-    xi_lensed, yi_lensed = xi_comoving / d_c_lens, yi_comoving / d_c_lens
+    if lens_model.multi_plane:
+        d_c_lens = lens_model.cosmo.comoving_distance(z_lens).value
+        xi_comoving, yi_comoving, _, _ = lens_model.lens_model.ray_shooting_partial(
+            0.0, 0.0, x_image, y_image, 0.0, z_lens, kwargs_lens)
+        xi_lensed, yi_lensed = xi_comoving / d_c_lens, yi_comoving / d_c_lens
+    else:
+        xi_lensed, yi_lensed = x_image, y_image
     kwargs_arc = ext.curved_arc_estimate(xi_lensed, yi_lensed, kwargs_lens, smoothing=diff,
                                          smoothing_3rd=diff, tan_diff=True)
     radial_stretch = kwargs_arc['radial_stretch']
@@ -582,19 +585,21 @@ def chi2_curved_arc_statistics_single_image(stats, rs_true, ts_true, curv_true, 
     w3 = np.exp(-d_curv**2 / 2 / curv_sigma**2)
     w4 = np.exp(-d_dir**2 / 2 / direction_sigma**2)
     w5 = np.exp(-d_dtandtan**2 / 2 / dtan_dtan_sigma**2)
+    prod = w1 * w2 * w3 * w4 * w5
     return w1 * w2 * w3 * w4 * w5
 
 def compute_weights_imaging_data(simulation_container, truths, include_images,
-                                 statistic='KAPPA_GAMMA', sigmas={}, normalize_weights=True):
+                                 statistic='KAPPA_GAMMA', sigmas={}, normalize_weights=True,
+                                 keep_scale=3):
 
     if statistic == 'KAPPA_GAMMA':
         weights_image_1, weights_image_2, weights_image_3, weights_image_4 = \
             weights_from_kappa_gamma_statistics(simulation_container, truths,
-                                                include_images, sigmas)
+                                                include_images, sigmas, keep_scale)
     elif statistic == 'CURVED_ARC':
         weights_image_1, weights_image_2, weights_image_3, weights_image_4 = \
             weights_from_curvedarc_statistics(simulation_container, truths,
-                                                include_images, sigmas)
+                                                include_images, sigmas, keep_scale)
 
     weights_imaging_data = 1.0
     if 0 in include_images:
@@ -610,44 +615,121 @@ def compute_weights_imaging_data(simulation_container, truths, include_images,
     return weights_imaging_data
 
 def weights_from_kappa_gamma_statistics(simulation_container, truths_kappa_gamma,
-                                        include_images, sigmas):
+                                        include_images, sigmas, keep_scale=1):
 
-    img1, img2, img3, img4 = split_kappa_gamma_params(truths_kappa_gamma, oneD=True)
-    truths_image1 = {'kappa1': img1[0],
-                     'g11': img1[1],
-                     'g21': img1[2]}
-    truths_image2 = {'kappa2': img2[0],
-                     'g12': img2[1],
-                     'g22': img2[2]}
-    truths_image3 = {'kappa3': img3[0],
-                     'g13': img3[1],
-                     'g23': img3[2]}
-    truths_image4 = {'kappa4': img4[0],
-                     'g14': img4[1],
-                     'g24': img4[2]}
-
+    [truths_image1, truths_image2, truths_image3, truths_image4] = split_truths_convergence_shear(truths_kappa_gamma, keep_scale)
     kappa_gamma_stats = simulation_container.kappa_gamma_stats
     stats_image1_scale1, stats_image2_scale1, stats_image3_scale1, \
         stats_image4_scale1 = split_kappa_gamma_params(kappa_gamma_stats)
 
     weights_image_1 = chi2_kappa_gamma_statistics_single_image(stats_image1_scale1,
-                                                               truths_image1['kappa1'], truths_image1['g11'],
-                                                               truths_image1['g21'], **sigmas)
+                                                               truths_image1['kappa1'], truths_image1['gamma11'],
+                                                               truths_image1['gamma12'], **sigmas)
     weights_image_2 = chi2_kappa_gamma_statistics_single_image(stats_image2_scale1,
-                                                               truths_image2['kappa2'], truths_image2['g12'],
-                                                               truths_image2['g22'], **sigmas)
+                                                               truths_image2['kappa2'], truths_image2['gamma12'],
+                                                               truths_image2['gamma22'], **sigmas)
     weights_image_3 = chi2_kappa_gamma_statistics_single_image(stats_image3_scale1,
-                                                               truths_image3['kappa3'], truths_image3['g13'],
-                                                               truths_image3['g23'], **sigmas)
+                                                               truths_image3['kappa3'], truths_image3['gamma13'],
+                                                               truths_image3['gamma23'], **sigmas)
     weights_image_4 = chi2_kappa_gamma_statistics_single_image(stats_image4_scale1,
-                                                               truths_image4['kappa4'], truths_image4['g14'],
-                                                               truths_image4['g24'], **sigmas)
+                                                               truths_image4['kappa4'], truths_image4['gamma14'],
+                                                               truths_image4['gamma24'], **sigmas)
     return weights_image_1, weights_image_2, weights_image_3, weights_image_4
 
 def weights_from_curvedarc_statistics(simulation_container, truths_curvedarc,
-                                        include_images, sigmas):
+                                        include_images, sigmas_list, keep_scale=3):
 
-    img1, img2, img3, img4 = split_curved_arc_params(truths_curvedarc, oneD=True)
+    truth_list = split_truths_curved_arc(truths_curvedarc, keep_scale)
+    curved_arc_stats = simulation_container.curved_arc_stats
+    stats_image1, stats_image2, stats_image3, \
+    stats_image4 = split_curved_arc_params(curved_arc_stats, keep_scale)
+    weight_list = []
+    stats_list = [stats_image1, stats_image2, stats_image3, stats_image4]
+    for idx in [1,2,3,4]:
+        truth = truth_list[idx-1]
+        sigmas = sigmas_list[idx-1]
+        w = chi2_curved_arc_statistics_single_image(stats_list[idx-1],
+                                                              truth['rs'+str(idx)], truth['ts'+str(idx)],
+                                                              truth['curv'+str(idx)], truth['dir'+str(idx)],
+                                                              truth['dtandtan'+str(idx)],
+                                                              rs_sigma=sigmas['rs'+str(idx)], ts_sigma=sigmas['ts'+str(idx)],
+                                                              curv_sigma=sigmas['curv'+str(idx)],
+                                                            direction_sigma=sigmas['dir'+str(idx)],
+                                                              dtan_dtan_sigma=sigmas['dtandtan'+str(idx)])
+        weight_list.append(w)
+    return weight_list[0], weight_list[1], weight_list[2], weight_list[3]
+
+def extract_arcstatistics_lensmodeling(fname):
+    arc_statistics_lensmodeling = np.loadtxt(fname)
+    rs, ts, curv, direc, dtdt = [], [], [], [], []
+    for img_index in [0,1,2,3]:
+        _rs = arc_statistics_lensmodeling[:,img_index]
+        _ts = arc_statistics_lensmodeling[:,img_index+4]
+        _curv = arc_statistics_lensmodeling[:,img_index+8]
+        _direc = arc_statistics_lensmodeling[:,img_index+12]
+        _dtdt = arc_statistics_lensmodeling[:,img_index+16]
+        rs.append(_rs)
+        ts.append(_ts)
+        curv.append(_curv)
+        direc.append(_direc)
+        dtdt.append(_dtdt)
+    return rs, ts, curv, direc, dtdt
+
+def arcstats_truths_from_lens_modeling(fname):
+
+    rs, ts, curv, direction, dtdt = extract_arcstatistics_lensmodeling(fname)
+    sigmas_list = []
+    truth_list = []
+    for image_index in [0,1,2,3]:
+        t = {'rs'+str(image_index+1): np.median(rs[image_index]),
+             'ts' + str(image_index + 1): np.median(ts[image_index]),
+             'curv' + str(image_index + 1): np.median(curv[image_index]),
+             'dir' + str(image_index + 1): np.median(direction[image_index]),
+             'dtandtan'+str(image_index+1): np.median(dtdt[image_index])}
+        s = {'rs'+str(image_index+1): np.std(rs[image_index]),
+             'ts' + str(image_index + 1): np.std(ts[image_index]),
+             'curv' + str(image_index + 1): np.std(curv[image_index]),
+             'dir' + str(image_index + 1): np.std(direction[image_index]),
+             'dtandtan'+str(image_index+1): np.std(dtdt[image_index])}
+        truth_list.append(t)
+        sigmas_list.append(s)
+    return truth_list, sigmas_list
+
+def extract_kappagammastatistics_lensmodeling(fname):
+    kappa_gamma_stats_lensmodeling = np.loadtxt(fname)
+    kappa, gamma1, gamma2 = [], [], []
+    for img_index in [0,1,2,3]:
+        _kap = kappa_gamma_stats_lensmodeling[:,img_index]
+        _g1 = kappa_gamma_stats_lensmodeling[:,img_index+3]
+        _g2 = kappa_gamma_stats_lensmodeling[:,img_index+6]
+        kappa.append(_kap)
+        gamma1.append(_g1)
+        gamma2.append(_g2)
+    return kappa, gamma1, gamma2
+
+def kappagammastats_truths_from_lens_modeling(fname):
+
+    kappa, gamma1, gamma2 = extract_kappagammastatistics_lensmodeling(fname)
+    sigmas_list = []
+    truth_list = []
+    for image_index in [0,1,2,3]:
+        t = {'kappa'+str(image_index+1): np.median(kappa[image_index]),
+             'gamma1' + str(image_index + 1): np.median(gamma1[image_index]),
+             'gamma2' + str(image_index + 1): np.median(gamma2[image_index])}
+        s = {'kappa'+str(image_index+1): np.std(kappa[image_index]),
+             'gamma1' + str(image_index + 1): np.std(gamma1[image_index]),
+             'gamma2' + str(image_index + 1): np.std(gamma2[image_index])}
+        truth_list.append(t)
+        sigmas_list.append(s)
+    return truth_list, sigmas_list
+
+def split_truths_curved_arc(truths_curvedarc, keep_scale=1):
+
+    if isinstance(truths_curvedarc, list) and isinstance(truths_curvedarc[0], dict):
+        return truths_curvedarc
+
+    img1, img2, img3, img4 = split_curved_arc_params(truths_curvedarc,
+                                                     keep_scale=keep_scale, oneD=True)
     truths_image1 = {'rs1': img1[0],
                      'ts1': img1[1],
                      'curv1': img1[2],
@@ -668,25 +750,25 @@ def weights_from_curvedarc_statistics(simulation_container, truths_curvedarc,
                      'curv4': img4[2],
                      'dir4': img4[3],
                      'dtandtan4': img4[4]}
+    return [truths_image1, truths_image2, truths_image3, truths_image4]
 
-    curved_arc_stats = simulation_container.curved_arc_stats
-    stats_image1_scale1, stats_image2_scale1, stats_image3_scale1, \
-    stats_image4_scale1 = split_curved_arc_params(curved_arc_stats)
+def split_truths_convergence_shear(truths_kappa_gamma, keep_scale=1):
 
-    weights_image_1 = chi2_curved_arc_statistics_single_image(stats_image1_scale1,
-                                                              truths_image1['rs1'], truths_image1['ts1'],
-                                                              truths_image1['curv1'], truths_image1['dir1'],
-                                                              truths_image1['dtandtan1'], **sigmas)
-    weights_image_2 = chi2_curved_arc_statistics_single_image(stats_image2_scale1,
-                                                              truths_image2['rs2'], truths_image2['ts2'],
-                                                              truths_image2['curv2'], truths_image2['dir2'],
-                                                              truths_image2['dtandtan2'], **sigmas)
-    weights_image_3 = chi2_curved_arc_statistics_single_image(stats_image3_scale1,
-                                                              truths_image3['rs3'], truths_image3['ts3'],
-                                                              truths_image3['curv3'], truths_image3['dir3'],
-                                                              truths_image3['dtandtan3'], **sigmas)
-    weights_image_4 = chi2_curved_arc_statistics_single_image(stats_image4_scale1,
-                                                              truths_image4['rs4'], truths_image4['ts4'],
-                                                              truths_image4['curv4'], truths_image4['dir4'],
-                                                              truths_image4['dtandtan4'], **sigmas)
-    return weights_image_1, weights_image_2, weights_image_3, weights_image_4
+    if isinstance(truths_kappa_gamma, list) and isinstance(truths_kappa_gamma[0], dict):
+        return truths_kappa_gamma
+
+    img1, img2, img3, img4 = split_kappa_gamma_params(truths_kappa_gamma, keep_scale=keep_scale,
+                                                      oneD=True)
+    truths_image1 = {'kappa1': img1[0],
+                     'gamma11': img1[1],
+                     'gamma21': img1[2]}
+    truths_image2 = {'kappa2': img2[0],
+                     'gamma12': img2[1],
+                     'gamma22': img2[2]}
+    truths_image3 = {'kappa3': img3[0],
+                     'gamma13': img3[1],
+                     'gamma23': img3[2]}
+    truths_image4 = {'kappa4': img4[0],
+                     'gamma14': img4[1],
+                     'gamma24': img4[2]}
+    return [truths_image1, truths_image2, truths_image3, truths_image4]

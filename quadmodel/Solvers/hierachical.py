@@ -24,7 +24,8 @@ class HierarchicalOptimization(BruteOptimization):
 
         super(HierarchicalOptimization, self).__init__(lens_system, n_particles, simplex_n_iter)
 
-    def optimize(self, data_to_fit, param_class_name, constrain_params, verbose=False):
+    def optimize(self, data_to_fit, param_class_name, constrain_params, log_mlow_mass_sheet=7.0,
+                 subtract_exact_mass_sheets=False, verbose=False):
 
         _realization_iteration = None
         lens_model_full, kwargs_lens_final = self.lens_system.get_lensmodel(include_substructure=False)
@@ -98,7 +99,9 @@ class HierarchicalOptimization(BruteOptimization):
                                                                                     re_optimize=re_optimize,
                                                                                     re_optimize_scale=1.0,
                                                                                     particle_swarm=use_pso,
-                                                                                    z_mass_sheet_max=self.lens_system.zsource)
+                                                                                    z_mass_sheet_max=self.lens_system.zsource,
+                                                                                    log_mlow_mass_sheet=log_mlow_mass_sheet,
+                                                                                    subtract_exact_mass_sheets=subtract_exact_mass_sheets)
 
 
             self.lens_system.clear_static_lensmodel()

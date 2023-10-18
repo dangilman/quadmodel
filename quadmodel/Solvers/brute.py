@@ -31,9 +31,7 @@ class BruteOptimization(OptimizationBase):
 
         self.n_particles = n_particles
         self.n_iterations = simplex_n_iter
-
         self.realization_initial = lens_system.realization
-
         super(BruteOptimization, self).__init__(lens_system)
 
     def optimize(self, data_to_fit, param_class, constrain_params, verbose=False,
@@ -73,7 +71,7 @@ class BruteOptimization(OptimizationBase):
     def fit(self, data_to_fit, param_class, constrain_params, verbose=False,
                  include_substructure=True, realization=None, re_optimize=False,
             re_optimize_scale=1., particle_swarm=True, n_particles=None, pso_convergence_mean=80000,
-            threadCount=1, z_mass_sheet_max=None):
+            threadCount=1, z_mass_sheet_max=None, log_mlow_mass_sheet=7.0, subtract_exact_mass_sheets=False):
 
         if n_particles is None:
             n_particles = self.n_particles
@@ -88,12 +86,14 @@ class BruteOptimization(OptimizationBase):
 
         kwargs_lens_final, ray_shooting_class, source = self._fit(run_kwargs, param_class, args_param_class,
                                     include_substructure, n_particles, realization, verbose, threadCount,
-                                                                  z_mass_sheet_max)
+                                                                  z_mass_sheet_max, log_mlow_mass_sheet,
+                                                                  subtract_exact_mass_sheets)
 
         return kwargs_lens_final, ray_shooting_class, source
 
     def _fit(self, run_kwargs, param_class, args_param_class, include_substructure, nparticles,
-            realization, verbose, threadCount=1, z_mass_sheet_max=None):
+            realization, verbose, threadCount=1, z_mass_sheet_max=None, log_mlow_mass_sheet=7.0,
+             subtract_exact_mass_sheets=False):
 
         """
         run_kwargs: {'optimizer_routine', 'constrain_params', 'simplex_n_iter'}
@@ -101,7 +101,9 @@ class BruteOptimization(OptimizationBase):
         """
 
         lens_model_list, redshift_list, kwargs_lens, numerical_alpha_class = \
-            self.lens_system._get_lenstronomy_args(include_substructure, realization=realization)
+            self.lens_system._get_lenstronomy_args(include_substructure, realization=realization,
+                                                   log_mlow_mass_sheet=log_mlow_mass_sheet,
+                                                   subtract_exact_mass_sheets=subtract_exact_mass_sheets)
 
         if args_param_class is None:
             param_class = param_class(kwargs_lens)

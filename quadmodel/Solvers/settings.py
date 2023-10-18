@@ -14,6 +14,7 @@ class HierarchicalSettings(object):
         self.aperture_sizes_front = [100, aperture_size_small_front, aperture_size_small_front]
         self.aperture_sizes_back = [100, 100, aperture_size_small_back]
         self.re_optimize_list = [True, True, True]
+        self.log_mlow_mass_sheet = log_m_cut
 
     @property
     def n_particles(self):
@@ -38,6 +39,7 @@ class HierarchicalSettingsNoSubstructure(object):
         self.aperture_sizes_front = [100]
         self.aperture_sizes_back = [100]
         self.re_optimize_list = [True]
+        self.log_mlow_mass_sheet = 9.0
 
     @property
     def n_particles(self):

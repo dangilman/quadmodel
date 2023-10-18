@@ -66,18 +66,24 @@ class FullSimulationContainer(object):
         return FullSimulationContainer(simulations, parameters, mags, chi2, self.kwargs_fitting_seq,
                                        macro_samples, bic)
 
-    def cut_on_S(self, keep_best_N=None, percentile_cut=None, idx_s_statistic=-2):
+    def cut_on_S(self, keep_best_N=None, percentile_cut=None, S_statistic_cut=None,
+                 idx_s_statistic=-2):
         """
 
         :param percentile_cut:
         :return:
         """
         sorted_inds = np.argsort(self.parameters[:, idx_s_statistic])
-        if keep_best_N is None:
+
+        if keep_best_N is not None:
+            assert percentile_cut is None and S_statistic_cut is None
+            inds_keep = sorted_inds[0:keep_best_N]
+        elif percentile_cut is not None:
+            assert S_statistic_cut is None
             idxcut = int(self.parameters.shape[0] * percentile_cut/100)
             inds_keep = sorted_inds[0:idxcut]
-        else:
-            inds_keep = sorted_inds[0:keep_best_N]
+        if S_statistic_cut is not None:
+            inds_keep = np.where(self.parameters[:, idx_s_statistic]<=S_statistic_cut)[0]
 
         if self.simulations is not None and len(self.simulations) > 0:
             simulations = []
@@ -90,7 +96,7 @@ class FullSimulationContainer(object):
         if self.chi2_imaging_data is None:
             chi2 = None
         else:
-            chi2 = self.chi2_imaging_data[inds_keep,:]
+            chi2 = self.chi2_imaging_data[inds_keep]
         if self.macromodel_samples is None:
             macro_samples = None
         else:
@@ -423,5 +429,20 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     return container
 
 
+def compute_joint_weights(S_statistic, weights_other=1.0, n_keep=500, name=''):
+    if not isinstance(weights_other, float) and np.sum(weights_other) < n_keep:
+        tol, tol_increment = np.inf, 0.001
+    else:
+        tol, tol_increment = 0.01, 0.001
+    summary_stat_weights = np.zeros_like(S_statistic)
+    joint_weight = summary_stat_weights * weights_other
+    neff = np.sum(joint_weight)
+    while neff < n_keep:
+        tol += tol_increment
+        summary_stat_weights[np.where(S_statistic < tol)[0]] = 1.0
+        joint_weight = summary_stat_weights * weights_other
+        neff = np.sum(joint_weight)
 
-
+    print('EFFECTIVE SAMPLE SIZE ' + name + ' (with tol ' + str(np.round(tol, 3)) + '): ',
+          np.round(np.sum(joint_weight)))
+    return joint_weight

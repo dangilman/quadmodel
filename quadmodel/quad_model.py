@@ -161,7 +161,8 @@ class QuadLensSystem(object):
 
         return smooth_lens
 
-    def get_lensmodel(self, include_substructure=True, substructure_realization=None, include_macromodel=True):
+    def get_lensmodel(self, include_substructure=True, substructure_realization=None,
+                      include_macromodel=True, log_mlow_mass_sheet=7.0, subtract_exact_mass_sheets=False):
 
         if self._static_lensmodel and include_substructure is True:
 
@@ -173,7 +174,7 @@ class QuadLensSystem(object):
             return self._lensmodel_static, self._kwargs_static
 
         names, redshifts, kwargs, numercial_alpha_class = self._get_lenstronomy_args(
-            include_substructure, substructure_realization)
+            include_substructure, substructure_realization, log_mlow_mass_sheet, subtract_exact_mass_sheets)
 
         if include_macromodel is False:
             n_macro = self.macromodel.n_lens_models
@@ -187,7 +188,8 @@ class QuadLensSystem(object):
                               multi_plane=True, numerical_alpha_class=numercial_alpha_class, cosmo=self.astropy)
         return lensModel, kwargs
 
-    def _get_lenstronomy_args(self, include_substructure=True, realization=None):
+    def _get_lenstronomy_args(self, include_substructure=True, realization=None, log_mlow_mass_sheet=7.0,
+                              subtract_exact_mass_sheets=False):
 
         lens_model_names, macro_redshifts, macro_kwargs = \
             self.macromodel.get_lenstronomy_args()
@@ -196,9 +198,9 @@ class QuadLensSystem(object):
             realization = self.realization
 
         if realization is not None and include_substructure:
-
+            kwargs_mass_sheet = {'log_mlow_sheets': log_mlow_mass_sheet, 'subtract_exact_sheets': subtract_exact_mass_sheets}
             halo_names, halo_redshifts, kwargs_halos, numerical_alpha_class = \
-                realization.lensing_quantities()
+                realization.lensing_quantities(kwargs_mass_sheet=kwargs_mass_sheet)
 
         else:
             halo_names, halo_redshifts, kwargs_halos, numerical_alpha_class = [], [], [], None
@@ -249,8 +251,9 @@ class QuadLensSystem(object):
                              kwargs_lensmodel, point_source=False,
                              grid_axis_ratio=0.5, grid_rmax=None,
                              grid_resolution=None,
-                             normed=True, grid_resolution_rescale=1,
-                             source_model='GAUSSIAN', **kwargs_magnification_finite):
+                             normed=True, grid_resolution_rescale=1.0,
+                             source_model='GAUSSIAN', grid_size_rescale=1.0,
+                             **kwargs_magnification_finite):
 
         """
         Computes the magnifications (or flux ratios if normed=True)
@@ -282,6 +285,7 @@ class QuadLensSystem(object):
                 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution
                 grid_resolution = auto_raytracing_grid_resolution(source_fwhm_pc)
 
+            grid_rmax *= grid_size_rescale
             grid_resolution *= grid_resolution_rescale
             extension = LensModelExtensions(lens_model)
             source_x, source_y = self.source_centroid_x, self.source_centroid_y
