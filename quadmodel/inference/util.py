@@ -178,7 +178,7 @@ def delete_custom_logL(kwargs_fitting_seq):
 def compile_output(output_path, job_index_min, job_index_max, keep_realizations=False, keep_chi2=False,
                    filename_suffix=None, keep_kwargs_fitting_seq=False, keep_macromodel_samples=False,
                    save_subset_kwargs_fitting_seq=False, keep_kappagamma_stats=False, keep_curvedarc_stats=False,
-                   keep_best_N=None):
+                   keep_best_N=None, keep_n=None):
     """
     This function compiles output from multiple jobs with output stored in different folders
     :param output_path: the path to the directory where job_1, job_2, ... are located
@@ -196,6 +196,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
     :param keep_curvedarc_stats: bool; compiles the curved arc properties at image positions
     :param keep_best_N: retains the top N samples as ranked by the summary statistic computed from the flux ratios;
     the default setting keeps all samples
+    :param keep_n: selects only the first n parameters/flux ratios/chi2 values in each output folder
     """
 
     if keep_realizations:
@@ -220,10 +221,14 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         except:
             print('could not find file ' + filename_parameters)
             continue
+        if keep_n is None:
+            keep_n = _params.shape[0]
+        else:
+            _params = _params[0:keep_n,:]
         num_realizations = int(_params.shape[0])
 
         try:
-            _fluxes = np.loadtxt(filename_mags)
+            _fluxes = np.loadtxt(filename_mags)[0:keep_n,:]
         except:
             print('could not find file ' + filename_mags)
             continue
@@ -234,7 +239,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
 
         if keep_macromodel_samples:
             try:
-                _macro_samples = np.loadtxt(filename_macromodel_samples, skiprows=1)
+                _macro_samples = np.loadtxt(filename_macromodel_samples, skiprows=1)[0:keep_n,:]
             except:
                 print('could not find file ' + filename_macromodel_samples)
                 continue
@@ -244,7 +249,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
 
         if keep_kappagamma_stats:
             try:
-                _kappagammastatistics = np.loadtxt(filename_kappagamma_stats, skiprows=1)
+                _kappagammastatistics = np.loadtxt(filename_kappagamma_stats, skiprows=1)[0:keep_n,:]
             except:
                 print('could not find file ' + filename_kappagamma_stats)
                 continue
@@ -254,7 +259,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
 
         if keep_curvedarc_stats:
             try:
-                _curvedarcstatistics = np.loadtxt(filename_curvedarc_stats, skiprows=1)
+                _curvedarcstatistics = np.loadtxt(filename_curvedarc_stats, skiprows=1)[0:keep_n,:]
             except:
                 print('could not find file ' + filename_curvedarc_stats)
                 continue
@@ -265,7 +270,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
         _chi2 = None
         if keep_chi2:
             proceed = True
-            for n in range(1, 1+int(_params.shape[0])):
+            for n in range(1, 1+num_realizations):
                 filename_chi2 = output_path + 'job_' + str(job_index) + \
                                 '/chi2_image_data' + filename_suffix + '_' + str(n) + '.txt'
                 if os.path.exists(filename_chi2):
@@ -278,6 +283,7 @@ def compile_output(output_path, job_index_min, job_index_max, keep_realizations=
                     print('could not find chi2 file '+filename_chi2)
                     proceed = False
                     break
+            
             if proceed:
                 if _chi2 is None:
                     proceed = False
