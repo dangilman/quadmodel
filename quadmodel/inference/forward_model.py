@@ -1,10 +1,7 @@
-from quadmodel.quad_model import QuadLensSystem
-from quadmodel.Solvers.hierachical import HierarchicalOptimization
+from quadmodel.inference.forward_model_util import _evaluate_model
 import os
 import subprocess
 from time import time
-from quadmodel.inference.realization_setup import *
-from quadmodel.macromodel import MacroLensModel
 from quadmodel.inference.util import filenames, SimulationOutputContainer
 from quadmodel.lens_system_nopyhalo import LensSystem
 import numpy as np
@@ -21,7 +18,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                   realization_class=None, shift_background_realization=True, readout_kappagamma_statistics=False,
                   readout_curvedarc_statistics=False, diff_scale_list=[0.0001, 0.05, 0.2],
                   subtract_exact_mass_sheets=False, log_mlow_mass_sheet=None, random_seed=None, rescale_grid_size=1.0,
-                  rescale_grid_resolution=2.0):
+                  rescale_grid_resolution=2.0, index_lens_split=None):
 
     """
     This function generates samples from a posterior distribution p(q | d) where q is a set of parameters and d
@@ -76,6 +73,7 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     Note: if subtract_exact_mass_sheets is True, then this argument has no effect
     :param rescale_grid_size: rescales the size of the ray-tracing grid
     :param rescale_grid_resolution: rescales the resolution (arcsec/pixel) of the ray-tracing grid
+    :param index_lens_split: for use with decoupled multi-plane model, see docs in lenstronomy
     :return:
     """
 
@@ -125,7 +123,6 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     # Initialize stuff for the inference
     idx_init = deepcopy(n_kept)
     parameter_array = None
-    lens_model_statistics = None
     mags_out = None
     readout = False
     break_loop = False
@@ -146,24 +143,19 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
     # start the simulation, the while loop will execute until one has obtained n_keep samples from the posterior
     if importance_weights_function is None:
         importance_weights_function = _flat_prior_importance_weights
-    if 'kwargs_lens_macro_init' in kwargs_sample_macromodel.keys():
-        reoptimize_initial_fit = True
-    else:
-        reoptimize_initial_fit = False
-
-    if random_seed is not None:
-        np.random.seed(random_seed)
 
     while True:
 
         stat, realization_samples, source_samples, macromodel_samples, param_names_realization, \
-        param_names_source, param_names_macro, lens_system, lens_data_class_sampling, importance_weight, model_mags = _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
-                                                                kwargs_sample_macromodel, ray_tracing_optimization, test_mode,
-                                                                verbose, crit_curves_in_test_mode,
-                                                              importance_weights_function, reoptimize_initial_fit,
-                                                              realization_class, shift_background_realization,
-                                                              subtract_exact_mass_sheets, log_mlow_mass_sheet,
-                                                              rescale_grid_size, rescale_grid_resolution)
+        param_names_source, param_names_macro, lens_system, lens_data_class_sampling, importance_weight, model_mags, \
+        kwargs_multiplane_model = _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
+                                                  kwargs_sample_macromodel, ray_tracing_optimization, test_mode,
+                                                  verbose, crit_curves_in_test_mode,
+                                                  importance_weights_function,
+                                                  realization_class, shift_background_realization,
+                                                  subtract_exact_mass_sheets, log_mlow_mass_sheet,
+                                                  rescale_grid_size, rescale_grid_resolution, index_lens_split,
+                                                  random_seed)
         acceptance_rate_counter += 1
         # Once we have computed a couple realizations, keep a log of the time it takes to run per realization
         if acceptance_rate_counter == 50:
@@ -333,10 +325,16 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
                     num_alpha_class = None
                     if hasattr(system_with_pyhalo, '_numerical_alpha_class'):
                         num_alpha_class = system_with_pyhalo._numerical_alpha_class
+                    if kwargs_multiplane_model is None:
+                        decouple_multi_plane = False
+                    else:
+                        decouple_multi_plane = True
                     kwargs_lens_model = {'lens_model_list': lm.lens_model_list,
                                          'lens_redshift_list': lm.redshift_list,
                                          'z_source': zs, 'z_lens': zd, 'multi_plane': True,
-                                         'numerical_alpha_class': num_alpha_class}
+                                         'numerical_alpha_class': num_alpha_class,
+                                         'decouple_multi_plane': decouple_multi_plane,
+                                         'kwargs_multi_plane_model': kwargs_multiplane_model}
                     system = LensSystem(zd, zs,
                                         ximg, yimg,
                                         kwargs_lens_model, kwargs_lens_save, astropy_class)
@@ -356,229 +354,6 @@ def forward_model(output_path, job_index, lens_data_class, n_keep, kwargs_sample
         if break_loop:
             print('\nSIMULATION FINISHED')
             break
-
-def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
-                    kwargs_sample_macromodel, ray_tracing_optimization, test_mode, verbose, crit_curves_in_test_mode,
-                    importance_weights_function, reoptimize_initial_fit, realization_class,
-                    shift_background_realization, subtract_exact_mass_sheets, log_mlow_mass_sheet,
-                    rescale_grid_size, rescale_grid_resolution):
-
-    # add astrometric uncertainties to image positions
-    magnifications, magnification_uncertainties, astrometric_uncertainty = \
-        lens_data_class.m, lens_data_class.delta_m, \
-        lens_data_class.delta_xy
-    magnifications = np.array(magnifications)
-    _flux_ratios_data = magnifications[1:] / magnifications[0]
-
-    delta_x, delta_y = np.random.normal(0, astrometric_uncertainty, 4), np.random.normal(0, astrometric_uncertainty, 4)
-    lens_data_class_sampling = deepcopy(lens_data_class)
-    lens_data_class_sampling.x += delta_x
-    lens_data_class_sampling.y += delta_y
-
-    # get the lens redshift, for some deflectors with photometrically-estimated redshifts, we have to sample a PDF
-    lens_data_class_sampling.set_zlens(reset=True)
-    zlens = lens_data_class_sampling.zlens
-    zsource = lens_data_class.zsource
-
-    source_size_pc, kwargs_source_model, source_samples, param_names_source, realization_samples, \
-    preset_model, kwargs_preset_model, param_names_realization, model, constrain_params_macro, \
-    optimization_routine, macromodel_samples, param_names_macro, importance_weight = _parameters_from_priors(lens_data_class_sampling,
-                                                                                          kwargs_sample_realization,
-                                                                                          kwargs_realization_other,
-                                                                                          kwargs_sample_macromodel,
-                                                                                          importance_weights_function,
-                                                                                          verbose)
-    macromodel = MacroLensModel(model.component_list)
-    R_ein_approx = lens_data_class.approx_einstein_radius
-    if realization_class is None:
-        # create the realization
-        if 'cone_opening_angle_arcsec' not in kwargs_preset_model.keys():
-            # we set the cone opening angle to 6 times the Einstein radius to get all the halos near images
-            kwargs_preset_model['cone_opening_angle_arcsec'] = 6 * R_ein_approx
-        realization = preset_model(zlens, zsource, **kwargs_preset_model)
-    else:
-        realization_samples = np.array([])
-        param_names_realization = []
-        realization = deepcopy(realization_class)
-        if verbose: print('using fixed realization instance')
-
-    if shift_background_realization is False:
-        realization._has_been_shifted = True
-    if verbose:
-        print('realization contains ' + str(len(realization.halos)) + ' halos.')
-        print(param_names_realization)
-        print('realization hyper-parameters: ', realization_samples)
-        print(param_names_source)
-        print('source/lens parameters: ', source_samples)
-        print(param_names_macro)
-        print('macromodel samples: ', macromodel_samples)
-        print('\n')
-        print('keyword arguments for realization: ')
-        print('preset model function: ', preset_model)
-        print('kwargs preset model: ', kwargs_preset_model)
-
-    # This sets up a baseline lens macromodel and aligns the dark matter halos to follow the path taken by the
-    # light rays. This is important if the source is significantly offset from the lens centroid
-    lens_system = QuadLensSystem.shift_background_auto(lens_data_class_sampling,
-                                                       macromodel, zsource,
-                                                       realization, re_optimize=reoptimize_initial_fit)
-
-    # Now we set up the optimization routine, which will solve for a set of macromodel parameters that map the
-    # observed image coordinates to common source position in the presence of all the dark matter halos along the
-    # line of sight and in the main lens plane.
-    optimizer = HierarchicalOptimization(lens_system, settings_class=ray_tracing_optimization)
-    if log_mlow_mass_sheet is None:
-        # set this to the value specified in the settings class unless it is explicitely set by the user
-        log_mlow_mass_sheet = optimizer.settings.log_mlow_mass_sheet
-    kwargs_lens_final, lens_model_full, return_kwargs = optimizer.optimize(lens_data_class_sampling,
-                                                                           constrain_params=constrain_params_macro,
-                                                                           param_class_name=optimization_routine,
-                                                                           log_mlow_mass_sheet=log_mlow_mass_sheet,
-                                                                           subtract_exact_mass_sheets=subtract_exact_mass_sheets,
-                                                                           verbose=verbose)
-
-    if test_mode:
-        import matplotlib.pyplot as plt
-        lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, source_size_pc,
-                                lens_model_full,
-                                kwargs_lens_final,
-                                grid_size_rescale=rescale_grid_size,
-                                grid_resolution_rescale=2,
-
-                                **kwargs_source_model)
-        plt.show()
-        _r = np.linspace(-2.0 * R_ein_approx, 2.0 * R_ein_approx, 200)
-        xx, yy = np.meshgrid(_r, _r)
-        shape0 = xx.shape
-        fxx, fxy, fyx, fyy = lens_model_full.hessian(xx.ravel(), yy.ravel(), kwargs_lens_final)
-        kappa = 0.5 * (fxx + fyy)
-        det_A = (1 - fxx) * (1 - fyy) - fxy * fyx
-        magnification_surface = 1. / det_A
-        lensmodel_macro, kwargs_macro = lens_system.get_lensmodel(include_substructure=False)
-        kappa_macro = lensmodel_macro.kappa(xx.ravel(), yy.ravel(), kwargs_macro).reshape(shape0)
-        extent = [-2 * R_ein_approx, 2 * R_ein_approx, -2 * R_ein_approx, 2 * R_ein_approx]
-        plt.imshow(kappa.reshape(shape0) - kappa_macro, origin='lower', vmin=-0.05, vmax=0.05, cmap='bwr', extent=extent)
-        plt.scatter(lens_data_class_sampling.x, lens_data_class_sampling.y, color='k')
-        if crit_curves_in_test_mode:
-            from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
-            ext = LensModelExtensions(lens_model_full)
-            ra_crit_list, dec_crit_list, _, _ = ext.critical_curve_caustics(kwargs_lens_final,
-                                                                            compute_window=4 * R_ein_approx,
-                                                                            grid_scale=0.05)
-            for i in range(0, len(ra_crit_list)):
-                plt.plot(ra_crit_list[i], dec_crit_list[i], color='k', lw=2)
-
-        plt.show()
-        plt.imshow(magnification_surface.reshape(shape0), vmin=-10, vmax=10,
-        origin='lower', extent=extent, cmap='gist_heat')
-        plt.show()
-        _ = input('continue')
-
-    try:
-        mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
-                                                lens_data_class_sampling.y, source_size_pc, lens_model=lens_model_full,
-                                                kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=0.5,
-                                                grid_resolution_rescale=rescale_grid_resolution,
-                                                grid_size_rescale=rescale_grid_size, **kwargs_source_model)
-    except:
-        print('SINGULAR HESSIAN MATRIX; RETRY WITH CIRCULAR APERTURE')
-        mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
-                                                lens_data_class_sampling.y, source_size_pc,
-                                                lens_model=lens_model_full,
-                                                kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=1,
-                                                grid_size_rescale=rescale_grid_size,
-                                                grid_resolution_rescale=rescale_grid_resolution, **kwargs_source_model)
-
-    # Now we account for uncertainties in the image magnifications. These uncertainties are sometimes quoted for
-    # individual image fluxes, or the flux ratios.
-    if lens_data_class.uncertainty_in_magnifications:
-        mags_with_uncertainties = []
-        for j, mag in enumerate(mags):
-            if magnification_uncertainties[j] is None:
-                m = np.nan
-            else:
-                delta_m = np.random.normal(0.0, magnification_uncertainties[j] * mag)
-                m = mag + delta_m
-            mags_with_uncertainties.append(m)
-        mags_with_uncertainties = np.array(mags_with_uncertainties)
-        _flux_ratios = mags_with_uncertainties[1:] / mags_with_uncertainties[0]
-
-    else:
-        # If uncertainties are quoted for image flux ratios, we first compute the flux ratios, and then add
-        # the uncertainties
-        flux_ratios = mags[1:] / mags[0]
-        fluxratios_with_uncertainties = []
-        for k, fr in enumerate(flux_ratios):
-            if magnification_uncertainties[k] is None:
-                new_fr = np.nan
-            else:
-                df = np.random.normal(0, fr * magnification_uncertainties[k])
-                new_fr = fr + df
-            fluxratios_with_uncertainties.append(new_fr)
-        _flux_ratios = np.array(fluxratios_with_uncertainties)
-
-    flux_ratios_data = []
-    flux_ratios = []
-    for idx in lens_data_class_sampling.keep_flux_ratio_index:
-        flux_ratios.append(_flux_ratios[idx])
-        flux_ratios_data.append(_flux_ratios_data[idx])
-
-    # Now we compute the summary statistic
-    stat = 0
-    for f_i_data, f_i_model in zip(flux_ratios_data, flux_ratios):
-        stat += (f_i_data - f_i_model) ** 2
-    stat = np.sqrt(stat)
-
-    if verbose:
-        print('flux ratios data: ', flux_ratios_data)
-        print('flux ratios model: ', flux_ratios)
-        print('statistic: ', stat)
-
-    return stat, realization_samples, source_samples, macromodel_samples, param_names_realization, \
-        param_names_source, param_names_macro, lens_system, lens_data_class_sampling, importance_weight, mags
-
-def _parameters_from_priors(lens_data_class_sampling, kwargs_sample_realization,
-                            kwargs_realization_other, kwargs_sample_macromodel, importance_weights_function,
-                            verbose):
-
-    while True:
-        u = np.random.rand()
-        # Now, set up the source model
-        source_size_pc, kwargs_source_model, source_samples, param_names_source = \
-            lens_data_class_sampling.generate_sourcemodel()
-
-        # parse the input dictionaries into arrays with parameters drawn from their respective priors
-        realization_samples, preset_model, kwargs_preset_model, param_names_realization = setup_realization(
-            kwargs_sample_realization,
-            kwargs_realization_other,
-            lens_data_class_sampling.x,
-            lens_data_class_sampling.y,
-            source_size_pc)
-
-        model, constrain_params_macro, optimization_routine, \
-        macromodel_samples, param_names_macro = lens_data_class_sampling.generate_macromodel(**kwargs_sample_macromodel)
-        # print(realization_samples)
-        # print(param_names_realization)
-        # print(macromodel_samples)
-        # print(param_names_macro)
-        # print(source_samples)
-        # print(param_names_source)
-        model_probability = importance_weights_function(realization_samples, param_names_realization,
-                                                        macromodel_samples, param_names_macro,
-                                                        source_samples, param_names_source,
-                                                        verbose)
-
-        if model_probability >= u:
-            break
-
-    importance_weight = 1.0 / model_probability
-    if verbose:
-        print('importance weight for sample: ', importance_weight)
-        print('sample (from realization samples): ', realization_samples)
-
-    return source_size_pc, kwargs_source_model, source_samples, param_names_source, realization_samples, \
-           preset_model, kwargs_preset_model, param_names_realization, model, constrain_params_macro, \
-           optimization_routine, macromodel_samples, param_names_macro, importance_weight
 
 def _flat_prior_importance_weights(*args, **kwargs):
     return 1.0

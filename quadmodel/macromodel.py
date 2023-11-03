@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 class MacroLensModel(object):
 
     def __init__(self, components):
@@ -19,6 +21,21 @@ class MacroLensModel(object):
             components = [components]
         self.components = components
         self.n_lens_models = self._count_models(components)
+
+    def split(self, index_lens_split):
+
+        n_split = len(index_lens_split)
+        n = 0
+        for i, component in enumerate(self.components):
+            n += component.n_models
+            if n == n_split:
+                i += 1
+                break
+        else:
+            raise Exception('the number of lens models specified by index_lens_split exceeds the number of macromodel'
+                            'components')
+        new_components = self.components[0:i]
+        return MacroLensModel(new_components)
 
     def add_component(self, new_component):
 
@@ -44,9 +61,9 @@ class MacroLensModel(object):
             raise Exception('New and existing keyword arguments must be the same length.')
 
         count = 0
-        for model in self.components:
+        for idx, model in enumerate(self.components):
             n = model.n_models
-            new = new_kwargs[count:(count+n)]
+            new = new_kwargs[count:(count + n)]
             model.update_kwargs(new)
             count += n
 

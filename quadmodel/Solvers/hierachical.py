@@ -3,6 +3,7 @@ from quadmodel.Solvers.brute import BruteOptimization
 import numpy as np
 from quadmodel.util import interpolate_ray_paths_system
 
+
 class HierarchicalOptimization(BruteOptimization):
 
     def __init__(self, lens_system, n_particles=None, simplex_n_iter=None, settings_class='default',
@@ -39,7 +40,7 @@ class HierarchicalOptimization(BruteOptimization):
         aperture_sizes_back = self.settings.aperture_sizes_back
         re_optimize_list = self.settings.re_optimize_list
         reoptimized_realizations = []
-
+        index_max = self.lens_system.macromodel.n_lens_models
         for run in range(0, len(aperture_mass_list_back)):
 
             re_optimize = re_optimize_list[run]
@@ -103,11 +104,12 @@ class HierarchicalOptimization(BruteOptimization):
                                                                                     log_mlow_mass_sheet=log_mlow_mass_sheet,
                                                                                     subtract_exact_mass_sheets=subtract_exact_mass_sheets)
 
-
             self.lens_system.clear_static_lensmodel()
             self.lens_system.update_realization(_realization_iteration)
             self.lens_system.set_lensmodel_static(lens_model_full, kwargs_lens_final)
-            self.lens_system.update_kwargs_macro(kwargs_lens_final)
+            self.lens_system.update_kwargs_macro(
+                kwargs_lens_final[0:index_max]
+            )
             reoptimized_realizations.append(_realization_iteration)
 
         kwargs_return = {'reoptimized_realizations': reoptimized_realizations}

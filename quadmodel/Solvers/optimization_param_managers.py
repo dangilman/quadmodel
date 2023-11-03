@@ -111,7 +111,6 @@ class PowerLawParamManager(object):
         args = (thetaE, center_x, center_y, e1, e2, g1, g2)
         return args
 
-
 class PowerLawFreeShear(PowerLawParamManager):
 
     """
@@ -368,7 +367,7 @@ class PowerLawFreeShearMultipole(PowerLawParamManager):
         self.kwargs_lens[2]['center_y'] = center_y
         phi, q = ellipticity2phi_q(e1, e2)
         self.kwargs_lens[2]['phi_m'] = phi
-        self.kwargs_lens[2]['a_m'] = self.am_measured_to_physical(self._a4a_init)
+        self.kwargs_lens[2]['a_m'] = self.am_measured_to_physical(self._a4a_init, thetaE, q)
         return self.kwargs_lens
 
 class PowerLawFixedShearMultipole_34(PowerLawFixedShear):

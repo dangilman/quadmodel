@@ -1,6 +1,3 @@
-from quadmodel.Solvers.optimization_param_managers import PowerLawFixedShear, \
-    PowerLawFixedShearMultipole, PowerLawFreeShear, PowerLawFreeShearMultipole, PowerLawFixedShearMultipole_34, \
-    PowerLawFreeShearMultipole_34
 from lenstronomy.LensModel.QuadOptimizer.optimizer import Optimizer
 from quadmodel.Solvers.base import OptimizationBase
 
@@ -40,33 +37,17 @@ class BruteOptimization(OptimizationBase):
         kwargs_lens_final, lens_model_full, [source_x, source_y] = self.fit(data_to_fit, param_class,
                                       constrain_params, verbose, include_substructure, **kwargs_optimizer)
 
+        index_max = self.lens_system.macromodel.n_lens_models
         self.lens_system.clear_static_lensmodel()
         self.lens_system.set_lensmodel_static(lens_model_full, kwargs_lens_final)
-        self.lens_system.update_kwargs_macro(kwargs_lens_final)
+        self.lens_system.update_kwargs_macro(
+            kwargs_lens_final[0:index_max]
+        )
 
         return self.return_results(
             [source_x, source_y], kwargs_lens_final, lens_model_full,
             self.realization_initial, None
         )
-
-    @staticmethod
-    def set_param_class(param_class_name, constrain_params):
-
-        if param_class_name == 'free_shear_powerlaw':
-            return PowerLawFreeShear, None
-        elif param_class_name == 'fixed_shear_powerlaw':
-            return PowerLawFixedShear, [constrain_params['shear']]
-        elif param_class_name == 'free_shear_powerlaw_multipole':
-            return PowerLawFreeShearMultipole, None
-        elif param_class_name == 'fixed_shear_powerlaw_multipole':
-            return PowerLawFixedShearMultipole, [constrain_params['shear']]
-        elif param_class_name == 'fixed_shear_powerlaw_multipole_34':
-            return PowerLawFixedShearMultipole_34, [constrain_params['shear'], constrain_params['delta_phi_m3']]
-        elif param_class_name == 'free_shear_powerlaw_multipole_34':
-            return PowerLawFreeShearMultipole_34, [constrain_params['delta_phi_m3']]
-
-        else:
-            raise Exception('did not recognize param_class_name = '+param_class_name)
 
     def fit(self, data_to_fit, param_class, constrain_params, verbose=False,
                  include_substructure=True, realization=None, re_optimize=False,
@@ -115,13 +96,12 @@ class BruteOptimization(OptimizationBase):
         run_kwargs['numerical_alpha_class'] = numerical_alpha_class
         run_kwargs['parameter_class'] = param_class
 
-        opt = Optimizer(**run_kwargs)
+        opt = Optimizer.full_raytracing(**run_kwargs)
 
         kwargs_lens_final, [source_x, source_y] = opt.optimize(nparticles, self.n_iterations,
                                                                verbose=verbose, threadCount=threadCount)
 
-        ray_shooting_class = opt.fast_rayshooting.lensModel
-
+        ray_shooting_class = opt.ray_shooting_class.lensModel
         return kwargs_lens_final, ray_shooting_class, [source_x, source_y]
 
 class BruteSettingsDefault(object):
