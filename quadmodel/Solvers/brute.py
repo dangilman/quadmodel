@@ -32,7 +32,8 @@ class BruteOptimization(OptimizationBase):
         super(BruteOptimization, self).__init__(lens_system)
 
     def optimize(self, data_to_fit, param_class, constrain_params, verbose=False,
-                 include_substructure=True, kwargs_optimizer={}):
+                 include_substructure=True, kwargs_optimizer={}, log_mlow_mass_sheet=6.0,
+                 subtract_exact_mass_sheets=False):
 
         kwargs_lens_final, lens_model_full, [source_x, source_y] = self.fit(data_to_fit, param_class,
                                       constrain_params, verbose, include_substructure, **kwargs_optimizer)
