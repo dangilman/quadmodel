@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.interpolate import interp1d
 from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
+from lenstronomy.LensModel.Util.decouple_multi_plane_util import setup_grids, coordinates_and_deflections, setup_lens_model
 from quadmodel.Solvers.light_fit_util import kappa_gamma_single, curved_arc_statistics_single
 
 def approx_theta_E(ximg,yimg):
@@ -166,7 +167,6 @@ def curved_arc_statistics(lens_model, kwargs_lens, x_image, y_image, diff_scale,
     dir = []
     dtan_dtan = []
     param_names = []
-    ext = LensModelExtensions(lens_model)
     for diff_counter, diff in enumerate(diff_scale):
         for i in range(0, 4):
             radial_stretch, tangential_stretch, curvature, \
@@ -189,3 +189,92 @@ def curved_arc_statistics(lens_model, kwargs_lens, x_image, y_image, diff_scale,
             param_names.append(param_name5)
     curvedarc_stats = np.hstack((np.array(rs), np.array(ts), np.array(curv), np.array(dir), np.array(dtan_dtan)))
     return curvedarc_stats, param_names
+
+def magnification_finite_decoupled(x_image, y_image, lens_model_init, kwargs_lens_init, kwargs_lens, index_lens_split,
+                                   grid_size, grid_resolution):
+    """
+    """
+    lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
+        setup_lens_model(lens_model_init, kwargs_lens_model, index_lens_split)
+    (
+        x,
+        y,
+        alpha_x_foreground,
+        alpha_y_foreground,
+        alpha_beta_subx,
+        alpha_beta_suby,
+    ) = coordinates_and_deflections(
+        lens_model_fixed,
+        lens_model_free,
+        kwargs_lens_fixed,
+        kwargs_lens_free,
+        x_image,
+        y_image,
+        z_split,
+        z_source,
+        cosmo_bkg,
+    )
+    npix, interp_points = None, None
+    coordinate_type = "MULTIPLE_IMAGES"
+    kwargs_decoupled = class_setup(
+        lens_model_free,
+        x,
+        y,
+        alpha_x_foreground,
+        alpha_y_foreground,
+        alpha_beta_subx,
+        alpha_beta_suby,
+        z_split,
+        coordinate_type,
+        interp_points,
+        x_image,
+        y_image,
+    )
+    lens_model_decoupled = LensModel(**kwargs_decoupled)
+
+
+def magnification_finite_iteration(flux_array,
+        x_image,
+        y_image,
+        grid_x,
+        grid_y,
+        grid_r,
+        r_min,
+        r_max,
+        lensModel,
+        kwargs_lens,
+        source_model,
+        kwargs_source,
+    ):
+    """
+    Placeholder function until I fix this in lenstronomy
+
+    This function computes the surface brightness of coordinates in 'flux_array'
+    that satisfy r_min < grid_r < r_max, where each coordinate in grid_r corresponds
+    to a certain entry in flux_array. Likewise, grid_x, and grid_y.
+
+    :param flux_array: an array that contains the flux in each pixel
+    :param x_image: image x coordinate
+    :param y_image: image y coordinate
+    :param grid_x: an array of x coordinates
+    :param grid_y: an array of y coordinates
+    :param grid_r: an array of projected distances from the origin
+    :param r_min: sets the inner radius of the annulus where ray tracing happens
+    :param r_max: sets the outer radius of the annulus where ray tracing happens
+    :param lensModel: an instance of LensModel
+    :param kwargs_lens: keywords for the lens model
+    :param source_model: an instance of LightModel
+    :param kwargs_source: keywords for the light model
+    :return: the flux array where the surface brightness has been computed for all
+        pixels with r_min < grid_r < r_max.
+    """
+    condition1 = grid_r >= r_min
+    condition2 = grid_r < r_max
+    condition = np.logical_and(condition1, condition2)
+    inds_compute_new = np.where(condition)[0]
+    xcoords = grid_x[inds_compute_new] + x_image
+    ycoords = grid_y[inds_compute_new] + y_image
+    beta_x, beta_y = lensModel.ray_shooting(xcoords, ycoords, kwargs_lens)
+    flux_in_pixels = source_model.surface_brightness(beta_x, beta_y, kwargs_source)
+    flux_array[inds_compute_new] = flux_in_pixels
+    return flux_array, inds_compute_new
