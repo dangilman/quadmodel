@@ -254,6 +254,10 @@ class QuadLensSystem(object):
                              grid_resolution=None,
                              normed=True, grid_resolution_rescale=1.0,
                              source_model='GAUSSIAN', grid_size_rescale=1.0,
+                             decoupled_multi_plane=False,
+                             index_lens_split=None,
+                             lens_model_init=None,
+                             kwargs_lens_init=None,
                              **kwargs_magnification_finite):
 
         """
@@ -281,27 +285,28 @@ class QuadLensSystem(object):
             if grid_rmax is None:
                 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_size
                 grid_rmax = auto_raytracing_grid_size(source_fwhm_pc)
-
+                grid_rmax *= grid_size_rescale
             if grid_resolution is None:
                 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution
                 grid_resolution = auto_raytracing_grid_resolution(source_fwhm_pc)
+                grid_resolution *= grid_resolution_rescale
 
-            grid_rmax *= grid_size_rescale
-            grid_resolution *= grid_resolution_rescale
             source_x, source_y = self.source_centroid_x, self.source_centroid_y
-            if isinstance(lens_model, list):
-                mag = []
-                for i in range(0, len(x)):
-                    extension = LensModelExtensions(lens_model[i])
-                    _mag = extension.magnification_finite_adaptive([x[i]], [y[i]],
-                                                                   source_x, source_y,
-                                                                   kwargs_lensmodel, source_fwhm_pc,
-                                                                   self.zsource, self.astropy,
-                                                                   grid_radius_arcsec=grid_rmax,
-                                                                   grid_resolution=grid_resolution,
-                                                                   axis_ratio=grid_axis_ratio)
-                    mag.append(float(_mag))
-                magnifications = np.array(mag)
+            if decoupled_multi_plane:
+                from quadmodel.util import magnification_finite_decoupled, setup_gaussian_source
+                from lenstronomy.LightModel.light_model import LightModel
+                source_light_model, kwargs_source_model = setup_gaussian_source(source_fwhm_pc,
+                                                                                source_x,
+                                                                                source_y,
+                                                                                self.astropy,
+                                                                                self.zsource)
+                magnifications, _ = magnification_finite_decoupled(source_light_model, kwargs_source_model,
+                                                                   x, y, lens_model_init,
+                                                                   kwargs_lens_init,
+                                                                   kwargs_lensmodel,
+                                                                   index_lens_split,
+                                                                   grid_rmax,
+                                                                   grid_resolution)
             else:
                 extension = LensModelExtensions(lens_model)
                 if source_model == 'GAUSSIAN':
@@ -334,6 +339,84 @@ class QuadLensSystem(object):
 
         return magnifications
 
+    def convergence_at_image_positions(self, x_image, y_image,
+                                        lens_model, kwargs_lens,
+                                        lens_model_macro, kwargs_lens_macro, source_fwhm_pc=None,
+                                        npix=50, rmax=0.25):
+
+        _r = np.linspace(-rmax, rmax, npix)
+        _xx, _yy = np.meshgrid(_r, _r)
+
+        import matplotlib.pyplot as plt
+        if source_fwhm_pc is not None:
+            from lenstronomy.LightModel.light_model import LightModel
+            source_model = LightModel(['GAUSSIAN'])
+            source_sigma = source_fwhm_pc * self.astropy.arcsec_per_kpc_proper(self.zsource)/1000.0/2.3548
+            kwargs_light = [{'amp': 1.0, 'center_x': self.source_centroid_x,
+                             'center_y': self.source_centroid_y, 'sigma': source_sigma}]
+        kappa_map_list = []
+        axes_list = []
+        fig = plt.figure()
+        fig.set_size_inches(12,6)
+        for image_index in range(0, len(x_image)):
+            axes_list.append(plt.subplot(1, len(x_image), image_index + 1))
+
+        for image_index in range(0, len(x_image)):
+            kappa_macro = lens_model_macro.kappa(_xx.ravel() + x_image[image_index],
+                                                 _yy.ravel() + y_image[image_index], kwargs_lens_macro).reshape(
+                npix, npix)
+            if isinstance(lens_model, list):
+                kappa = lens_model[image_index].kappa(_xx.ravel() + x_image[image_index],
+                                                _yy.ravel() + y_image[image_index], kwargs_lens).reshape(npix, npix)
+            else:
+                kappa = lens_model.kappa(_xx.ravel() + x_image[image_index],
+                                                _yy.ravel() + y_image[image_index], kwargs_lens).reshape(npix, npix)
+            if source_fwhm_pc is not None:
+                if isinstance(lens_model, list):
+                    bx, by = lens_model[image_index].ray_shooting(_xx.ravel() + x_image[image_index],
+                                                        _yy.ravel() + y_image[image_index], kwargs_lens)
+                else:
+                    bx, by = lens_model.ray_shooting(_xx.ravel() + x_image[image_index],
+                                                     _yy.ravel() + y_image[image_index], kwargs_lens)
+                sb = source_model.surface_brightness(bx, by, kwargs_light).reshape(npix, npix)
+                axes_list[image_index].imshow(np.log10(sb), alpha=0.9, vmin=-1.0, vmax=0.0, origin='lower')
+            delta_kappa = kappa - kappa_macro
+            axes_list[image_index].imshow(delta_kappa, cmap='bwr', origin='lower', vmin=-0.1, vmax=0.1, alpha=0.9)
+            kappa_map_list.append(delta_kappa)
+        plt.show()
+        return kappa_map_list
+
+    def deflection_field_at_image_positions(self, x_image, y_image,
+                                        lens_model, kwargs_lens, npix=50, rmax=0.25, plot=True):
+
+        _r = np.linspace(-rmax, rmax, npix)
+        _xx, _yy = np.meshgrid(_r, _r)
+
+        import matplotlib.pyplot as plt
+        deflection_x_list = []
+        deflection_y_list = []
+        for image_index in range(0, len(x_image)):
+            if isinstance(lens_model, list):
+                alpha_x, alpha_y = lens_model[image_index].alpha(_xx.ravel() + x_image[image_index],
+                                                    _yy.ravel() + y_image[image_index], kwargs_lens)
+            else:
+                alpha_x, alpha_y = lens_model.alpha(_xx.ravel() + x_image[image_index],
+                                                        _yy.ravel() + y_image[image_index], kwargs_lens)
+            if plot:
+                fig = plt.figure()
+                ax1 = plt.subplot(121)
+                ax2 = plt.subplot(122)
+                vmin = np.median(alpha_x) - 3 * np.std(alpha_x)
+                vmax = np.median(alpha_x) + 3 * np.std(alpha_x)
+                ax1.imshow(alpha_x.reshape(npix, npix), cmap='bwr',
+                           origin='lower', vmin=vmin, vmax=vmax, alpha=0.9)
+                ax2.imshow(alpha_y.reshape(npix, npix), cmap='bwr',
+                           origin='lower', vmin=vmin, vmax=vmax, alpha=0.9)
+                plt.show()
+            deflection_x_list.append(alpha_x)
+            deflection_y_list.append(alpha_y)
+        return deflection_x_list, deflection_y_list
+
     def plot_images(self, x, y, source_fwhm_pc,
                              lens_model,
                              kwargs_lensmodel,
@@ -341,7 +424,12 @@ class QuadLensSystem(object):
                              grid_resolution=None,
                              grid_resolution_rescale=1,
                                 grid_size_rescale=1.0,
-                             source_model='GAUSSIAN', **kwargs_magnification_finite):
+                             source_model='GAUSSIAN',
+                            decoupled_multi_plane=False,
+                            index_lens_split=None,
+                            lens_model_init=None,
+                            kwargs_lens_init=None,
+                            **kwargs_magnification_finite):
 
         source_x, source_y = self.source_centroid_x, self.source_centroid_y
 
@@ -353,22 +441,75 @@ class QuadLensSystem(object):
             grid_resolution = auto_raytracing_grid_resolution(source_fwhm_pc)
         grid_resolution *= grid_resolution_rescale
         grid_rmax *= grid_size_rescale
-        if source_model == 'GAUSSIAN':
-            plot_quasar_images(lens_model, x, y, source_x, source_y, kwargs_lensmodel,
-                                                                     source_fwhm_pc,
-                                                                     self.zsource, self.astropy,
-                                                                     grid_radius_arcsec=grid_rmax,
-                                                                     grid_resolution=grid_resolution)
-        elif source_model == 'DOUBLE_GAUSSIAN':
 
-            plot_quasar_images(lens_model, x, y, source_x, source_y, kwargs_lensmodel,
-                                                                     source_fwhm_pc,
-                                                                     self.zsource, self.astropy,
-                                                                     grid_radius_arcsec=grid_rmax,
-                                                                     grid_resolution=grid_resolution,
-                                                                     source_light_model=source_model,
-                               dx=kwargs_magnification_finite['dx'], dy=kwargs_magnification_finite['dy'],
-                               size_scale=kwargs_magnification_finite['size_scale'], amp_scale=kwargs_magnification_finite['amp_scale'])
+        if decoupled_multi_plane:
+            from quadmodel.util import magnification_finite_decoupled, setup_gaussian_source
+            from lenstronomy.LightModel.light_model import LightModel
+            if source_model == 'GAUSSIAN':
+                source_light_model, kwargs_source_model = setup_gaussian_source(source_fwhm_pc,
+                                                                            source_x,
+                                                                            source_y,
+                                                                            self.astropy,
+                                                                            self.zsource)
+            else:
+                raise Exception('only Guassian sources implemented')
+            magnifications, images = magnification_finite_decoupled(source_light_model, kwargs_source_model,
+                                                               x, y, lens_model_init,
+                                                               kwargs_lens_init,
+                                                               kwargs_lensmodel,
+                                                               index_lens_split,
+                                                               2*grid_rmax,
+                                                               grid_resolution)
+            flux_ratios = magnifications / np.max(magnifications)
+            import matplotlib.pyplot as plt
+            fig = plt.figure(1)
+            fig.set_size_inches(16, 6)
+            N = len(images)
+            for i, (image, mag, fr) in enumerate(zip(images, magnifications, flux_ratios)):
+                ax = plt.subplot(1, N, i + 1)
+                ax.imshow(
+                    image,
+                    origin="lower",
+                    extent=[
+                        -grid_rmax,
+                        grid_rmax,
+                        -grid_rmax,
+                        grid_rmax,
+                    ],
+                )
+                ax.annotate(
+                    "magnification: " + str(np.round(mag, 3)),
+                    xy=(0.05, 0.9),
+                    xycoords="axes fraction",
+                    color="w",
+                    fontsize=12,
+                )
+                ax.annotate(
+                    "flux ratio: " + str(np.round(fr, 3)),
+                    xy=(0.05, 0.8),
+                    xycoords="axes fraction",
+                    color="w",
+                    fontsize=12,
+                )
+            plt.show()
+
+        else:
+            if source_model == 'GAUSSIAN':
+                plot_quasar_images(lens_model, x, y, source_x, source_y, kwargs_lensmodel,
+                                                                         source_fwhm_pc,
+                                                                         self.zsource, self.astropy,
+                                                                         grid_radius_arcsec=grid_rmax,
+                                                                         grid_resolution=grid_resolution)
+            elif source_model == 'DOUBLE_GAUSSIAN':
+
+                plot_quasar_images(lens_model, x, y, source_x, source_y, kwargs_lensmodel,
+                                                                         source_fwhm_pc,
+                                                                         self.zsource, self.astropy,
+                                                                         grid_radius_arcsec=grid_rmax,
+                                                                         grid_resolution=grid_resolution,
+                                                                         source_light_model=source_model,
+                                   dx=kwargs_magnification_finite['dx'], dy=kwargs_magnification_finite['dy'],
+                                   size_scale=kwargs_magnification_finite['size_scale'], amp_scale=kwargs_magnification_finite['amp_scale'])
 
     def solve_lens_equation(self, source_x, source_y):
 
@@ -476,33 +617,3 @@ class QuadLensSystem(object):
                 param_names.append(param_name5)
         curvedarc_stats = np.hstack((np.array(rs), np.array(ts), np.array(curv), np.array(dir), np.array(dtan_dtan)))
         return curvedarc_stats, param_names
-
-
-def setup_raytracing_lens_models(x_image, y_image, lens_model, kwargs_lens, source_fwhm_pc, grid_size, grid_resolution,
-                                 index_lens_split):
-
-    if grid_size is None:
-        from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_size
-        grid_size = auto_raytracing_grid_size(source_fwhm_pc)
-
-    if grid_resolution is None:
-        from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution
-        grid_resolution = auto_raytracing_grid_resolution(source_fwhm_pc)
-
-    lens_models_at_image_position = []
-    for (xi, yi) in zip(x_image, y_image):
-        lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
-            setup_lens_model(lens_model, kwargs_lens, index_lens_split)
-        x_coordinates, y_coordinates, interp_points, npix = setup_grids(grid_size, grid_resolution,
-                                                                        coordinate_center_x=xi, coordinate_center_y=yi)
-        xD, yD, alpha_x_foreground, alpha_y_foreground, alpha_beta_subx, alpha_beta_suby = coordinates_and_deflections(
-            lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free,
-            x_coordinates, y_coordinates, z_split, z_source, cosmo_bkg)
-        kwargs_decoupled_lens_model = class_setup(lens_model_free, xD, yD, alpha_x_foreground, \
-                                                  alpha_y_foreground, alpha_beta_subx, \
-                                                  alpha_beta_suby, z_split, \
-                                                  coordinate_type='GRID', \
-                                                  interp_points=interp_points)
-        lens_model_decoupled = LensModel(**kwargs_decoupled_lens_model)
-        lens_models_at_image_position.append(lens_model_decoupled)
-    return lens_models_at_image_position

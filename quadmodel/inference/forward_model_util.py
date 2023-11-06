@@ -87,39 +87,24 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
     # observed image coordinates to common source position in the presence of all the dark matter halos along the
     # line of sight and in the main lens plane.
     kwargs_multiplane_model = None
-
     if ray_tracing_optimization == 'IMAGE_DATA_FIT':
         raise Exception('not yet implemented')
 
     elif ray_tracing_optimization == 'DECOUPLED_MULTI_PLANE':
-
+        grid_rmax = 2*auto_raytracing_grid_size(source_size_pc) * rescale_grid_size
+        grid_resolution = rescale_grid_resolution * auto_raytracing_grid_resolution(source_size_pc)
         lens_model_init, kwargs_lens_init = lens_system.get_lensmodel(
             log_mlow_mass_sheet=log_mlow_mass_sheet, subtract_exact_mass_sheets=subtract_exact_mass_sheets)
         optimizer = DecoupledMultiPlane(lens_system, lens_model_init, kwargs_lens_init, index_lens_split)
-        kwargs_lens_final, lens_model_image_position, kwargs_return = optimizer.optimize(lens_data_class_sampling,
-                                                                               optimization_routine,
-                                                                               constrain_params_macro,
-                                                                               particle_swarm=False,
-                                                                               verbose=verbose)
-        grid_rmax = auto_raytracing_grid_size(source_size_pc) * rescale_grid_size
-        grid_size = 2*grid_rmax
-        grid_resolution = auto_raytracing_grid_resolution(source_size_pc) * rescale_grid_resolution
-        if verbose:
-            t0 = time()
-        lens_model_full, _ = setup_raytracing_lensmodels(lens_data_class_sampling.x, lens_data_class_sampling.y,
-                                                         lens_model_init, kwargs_lens_init,
-                                                         index_lens_split, grid_size, grid_resolution)
-        if verbose:
-            print('took '+str(time()-t0)+' seconds to compute the ray-tracing grids.')
-
-        mags = lens_system.quasar_magnification(lens_data_class_sampling.x,
-                                                lens_data_class_sampling.y,
-                                                source_size_pc,
-                                                lens_model=lens_model_full,
-                                                kwargs_lensmodel=kwargs_lens_final, grid_axis_ratio=1.0,
-                                                grid_rmax=grid_rmax,
-                                                grid_resolution=grid_resolution,
-                                                normed=False)
+        kwargs_lens_final, lens_model_final, _ = optimizer.optimize(lens_data_class_sampling, constrain_params=constrain_params_macro,
+                                                                    param_class_name=optimization_routine,
+                                                                    verbose=verbose)
+        kwargs_multiplane_model = lens_model_final.lens_model.kwargs_multiplane_model
+        mags = lens_system.quasar_magnification(lens_data_class_sampling.x, lens_data_class_sampling.y,
+                                                source_size_pc, lens_model_final, kwargs_lens_final,
+                                                grid_rmax=grid_rmax, grid_resolution=grid_resolution,
+                                                decoupled_multi_plane=True, index_lens_split=index_lens_split,
+                                                lens_model_init=lens_model_init, kwargs_lens_init=kwargs_lens_init)
 
     elif ray_tracing_optimization == 'default' or ray_tracing_optimization == 'brute':
         grid_rmax = auto_raytracing_grid_size(source_size_pc) * rescale_grid_size
@@ -151,19 +136,17 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
 
     if test_mode:
         import matplotlib.pyplot as plt
-        lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, source_size_pc,
-                                lens_model_full,
-                                kwargs_lens_final,
-                                grid_rmax=grid_rmax,
-                                grid_resolution=grid_resolution,
-                                **kwargs_source_model)
-        plt.show()
 
         _r = np.linspace(-2.0 * R_ein_approx, 2.0 * R_ein_approx, 200)
         xx, yy = np.meshgrid(_r, _r)
         shape0 = xx.shape
         if ray_tracing_optimization == 'DECOUPLED_MULTI_PLANE':
-
+            lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y,
+                                    source_size_pc, None, kwargs_lens_final, grid_rmax=grid_rmax,
+                                    grid_resolution=grid_resolution, decoupled_multi_plane=True,
+                                    index_lens_split=index_lens_split, lens_model_init=lens_model_init,
+                                    kwargs_lens_init=kwargs_lens_init)
+            plt.show()
             lens_model_fixed, lens_model_free, kwargs_lens_fixed, kwargs_lens_free, z_source, z_split, cosmo_bkg = \
                 setup_lens_model(
                 lens_model_init, kwargs_lens_init, index_lens_split)
@@ -184,6 +167,13 @@ def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realizati
                                                        coordinate_type='GRID', interp_points=interp_points)
             lens_model_hessian = LensModel(**kwargs_multiplane_lens_model_full_grid)
         else:
+            lens_system.plot_images(lens_data_class_sampling.x, lens_data_class_sampling.y, source_size_pc,
+                                    lens_model_full,
+                                    kwargs_lens_final,
+                                    grid_rmax=grid_rmax,
+                                    grid_resolution=grid_resolution,
+                                    **kwargs_source_model)
+            plt.show()
             lens_model_hessian = lens_model_full
         fxx, fxy, fyx, fyy = lens_model_hessian.hessian(xx.ravel(), yy.ravel(), kwargs_lens_final)
         kappa = 0.5 * (fxx + fyy)
