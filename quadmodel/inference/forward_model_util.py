@@ -7,12 +7,11 @@ from quadmodel.Solvers.multiplane_decoupled import DecoupledMultiPlane
 from quadmodel.inference.realization_setup import setup_realization
 from quadmodel.macromodel import MacroLensModel
 from quadmodel.quad_model import QuadLensSystem
-from lenstronomy.LensModel.Util.decouple_multi_plane_util import setup_raytracing_lensmodels, setup_grids,\
+from lenstronomy.LensModel.Util.decouple_multi_plane_util import setup_grids,\
     coordinates_and_deflections, class_setup, setup_lens_model
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_size
 from lenstronomy.Util.magnification_finite_util import auto_raytracing_grid_resolution
 from lenstronomy.LensModel.lens_model import LensModel
-from time import time
 
 def _evaluate_model(lens_data_class, kwargs_sample_realization, kwargs_realization_other,
                     kwargs_sample_macromodel, ray_tracing_optimization, test_mode, verbose, crit_curves_in_test_mode,
