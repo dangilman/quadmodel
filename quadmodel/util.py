@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.interpolate import interp1d
 from quadmodel.Solvers.light_fit_util import kappa_gamma_single, curved_arc_statistics_single
-from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.LensModel.Util.decouple_multi_plane_util import setup_grids, coordinates_and_deflections, class_setup, \
     setup_lens_model
 from lenstronomy.LightModel.light_model import LightModel
