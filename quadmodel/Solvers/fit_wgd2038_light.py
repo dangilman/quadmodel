@@ -93,8 +93,8 @@ def fit_wgd2038_light(hst_data, simulation_output, astrometric_uncertainty,
 
     point_source_list = ['UNLENSED']
     kwargs_ps_sigma = [{'ra_image': [0.01] * len(x_image), 'dec_image': [0.01] * len(y_image)}]
-    kwargs_ps_lower = [{'ra_image': x_image - 0.1, 'dec_image': y_image - 0.1}]
-    kwargs_ps_upper = [{'ra_image': x_image + 0.1, 'dec_image': y_image + 0.1}]
+    kwargs_ps_lower = [{'ra_image': x_image - 0.25, 'dec_image': y_image - 0.25}]
+    kwargs_ps_upper = [{'ra_image': x_image + 0.25, 'dec_image': y_image + 0.25}]
     kwargs_ps_fixed = [{'ra_image': x_image, 'dec_image': y_image}]
     kwargs_ps_init = [{'ra_image': y_image, 'dec_image': x_image}]
 

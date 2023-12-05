@@ -242,7 +242,7 @@ class PowerLawFixedShearMultipole(PowerLawFixedShear):
     multipole term are fixed to that of the EPL profile
     """
 
-    def __init__(self, kwargs_lens_init):
+    def __init__(self, kwargs_lens_init, shear_strength):
 
         """
 
@@ -250,7 +250,7 @@ class PowerLawFixedShearMultipole(PowerLawFixedShear):
         """
 
         self._a4a_init = deepcopy(kwargs_lens_init[2]['a_m'])
-        super(PowerLawFreeShearMultipole, self).__init__(kwargs_lens_init)
+        super(PowerLawFixedShearMultipole, self).__init__(kwargs_lens_init, shear_strength)
 
     @property
     def to_vary_index(self):

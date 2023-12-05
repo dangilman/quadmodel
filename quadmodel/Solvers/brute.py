@@ -90,7 +90,7 @@ class BruteOptimization(OptimizationBase):
         if args_param_class is None:
             param_class = param_class(kwargs_lens)
         else:
-            param_class = param_class(kwargs_lens, *args_param_class)
+            param_class = param_class(kwargs_lens, *tuple(args_param_class))
 
         run_kwargs['lens_model_list'] = lens_model_list
         run_kwargs['redshift_list'] = redshift_list

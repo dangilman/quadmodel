@@ -78,12 +78,9 @@ class QuadLensSystem(object):
 
         lens_system_init = QuadLensSystem(macromodel, zsource, None,
                                           pyhalo_cosmology=cosmo)
-
         lens_system_init.initialize(lens_data_class, opt_routine=opt_routine, constrain_params=constrain_params,
                                     kwargs_optimizer={'particle_swarm': particle_swarm_init, 're_optimize': re_optimize}, verbose=verbose)
-
         source_x, source_y = lens_system_init.source_centroid_x, lens_system_init.source_centroid_y
-
         ray_interp_x, ray_interp_y = interpolate_ray_paths_system(
             lens_data_class.x, lens_data_class.y, lens_system_init,
             include_substructure=False, terminate_at_source=True, source_x=source_x,
